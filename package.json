@@ -1,7 +1,7 @@
 {
-  "name": "service-template-node",
-  "version": "0.8.0",
-  "description": "A blueprint for MediaWiki REST API services",
+  "name": "function-orchestrator",
+  "version": "0.0.1",
+  "description": "A Wikifunctions service to orchestrate WikiLambda function executors",
   "main": "./app.js",
   "scripts": {
     "start": "service-runner",
@@ -15,21 +15,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/wikimedia/service-template-node.git"
+    "url": "ssh://gerrit.wikimedia.org:29418/mediawiki/services/function-orchestrator"
   },
   "keywords": [
-    "REST",
-    "API",
-    "service template",
-    "MediaWiki"
+    "lambda function",
+    "Wikifunctions",
+    "Abstract Wikipedia"
   ],
-  "author": "Wikimedia Service Team <services@lists.wikimedia.org>",
+  "author": "Abstract Wikipedia Team <wikitech-l@lists.wikimedia.org>",
   "contributors": [],
-  "license": "Apache-2.0",
+  "license": "MIT",
   "bugs": {
-    "url": "https://phabricator.wikimedia.org/tag/service-template-node/"
+    "url": "https://phabricator.wikimedia.org/tag/abstract_wikipedia/"
   },
-  "homepage": "https://github.com/wikimedia/service-template-node",
+  "homepage": "http://meta.wikimedia.org/wiki/Abstract%20Wikipedia",
   "dependencies": {
     "bluebird": "^3.5.5",
     "body-parser": "^1.19.0",
