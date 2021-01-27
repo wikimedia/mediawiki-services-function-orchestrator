@@ -20,10 +20,10 @@ describe('orchestrate', function () {
 
     after(() => server.stop());
 
-    const test = function (name, input, output) {
+    const testString = function (name, input, output) {
         it(name, function () {
             return preq.get(
-                uri + encodeURIComponent(JSON.stringify(input))
+                uri + encodeURIComponent(input)
             )
             .then(function (res) {
                 assert.status(res, 200);
@@ -31,6 +31,10 @@ describe('orchestrate', function () {
                 assert.deepEqual(res.body, output, name);
             });
         });
+    };
+
+    const test = function (name, input, output) {
+      return testString(name, JSON.stringify(input), output);
     };
 
     test(
@@ -328,4 +332,58 @@ describe('orchestrate', function () {
       }
     );
 
+    // Parser
+
+    testString('simple string parsed', '"test"', 'test');
+
+    testString(
+      'invalid JSON',
+      '{ bad JSON! Tut, tut.',
+      {
+        Z1K1: 'Z5',
+        Z5K1: {
+          Z1K1: 'Z401',
+          Z401K1: 'Unexpected token b in JSON at position 2',
+          Z401K2: '{ bad JSON! Tut, tut.'
+        }
+      }
+    );
+
+    testString('empty string', '""', '');
+
+    test('escapted empty string', '""', '""');
+
+    testString(
+      'well formed Z6 string',
+      '{ "Z1K1": "Z6", "Z6K1": "" }',
+      { Z1K1: 'Z6', Z6K1: '' }
+    );
+
+    testString(
+      'just word',
+      'Test',
+      {
+        Z1K1: 'Z5',
+        Z5K1: {
+          Z1K1: 'Z401',
+          Z401K1: 'Unexpected token T in JSON at position 0',
+          Z401K2: 'Test'
+        }
+      }
+    );
+
+    // TODO: testString('empty', '', ...);
+
+    testString(
+      'messy string',
+      '"This is a [basic] complicated test {string}!"',
+      'This is a [basic] complicated test {string}!'
+    );
+    // TODO: what about quotes in strings, tabulators and new lines?
+
+    testString('empty list', '[]', []);
+
+    testString('string singleton list', '["Test"]', [ 'Test' ]);
+
+    testString('multiple list', '["Test", [] , "3"]', [ 'Test', [], '3' ]);
 });
