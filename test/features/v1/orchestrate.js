@@ -3,6 +3,7 @@
 const preq   = require('preq');
 const assert = require('../../utils/assert.js');
 const Server = require('../../utils/server.js');
+const error = require('../../../src/error.js');
 
 describe('orchestrate', function () {
 
@@ -95,31 +96,17 @@ describe('orchestrate', function () {
     test(
       'record multiple list with error',
       [ { Z1K1: 'Z6', Z2K1: 'Test' }, { Z1K1: 'Test2!', Z2K1: 'Test2?' } ],
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z422',
-            Z422K1: '1',
-            Z422K2: {
-              Z1K1: 'Z5',
-              Z5K1: {
-                Z1K1: 'Z402',
-                Z402K1: {
-                  Z1K1: 'Z424',
-                  Z424K1: {
-                    Z1K1: 'Test2!',
-                    Z2K1: 'Test2?'
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+      error(
+        [error.not_wellformed, error.array_element_not_well_formed],
+        [
+          '1',
+          error(
+            [error.not_wellformed, error.z1k1_must_not_be_string_or_array],
+            [{ Z1K1: 'Test2!', Z2K1: 'Test2?' }]
+          )
+        ]
+      )
     );
-    // TODO: rewrite that using error syntax
 
     test(
       'record multiple list',
@@ -130,77 +117,31 @@ describe('orchestrate', function () {
     test(
       'invalid record singleton list',
       [ { Z2K1: 'Test' } ],
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z422',
-            Z422K1: '0',
-            Z422K2: {
-              Z1K1: 'Z5',
-              Z5K1: {
-                Z1K1: 'Z402',
-                Z402K1: {
-                  Z1K1: 'Z423',
-                  Z423K1: {
-                    Z2K1: 'Test'
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+      error(
+        [error.not_wellformed, error.array_element_not_well_formed],
+        [
+          '0',
+          error([error.not_wellformed, error.missing_type], [{ Z2K1: 'Test' }])
+        ]
+      )
     );
 
     test(
       'empty record',
       {},
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z423',
-            Z423K1: {}
-          }
-        }
-      }
+      error([error.not_wellformed, error.missing_type], [{}])
     );
 
     test(
       'singleton string record no Z1K1',
       { Z2K1: 'Test' },
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z423',
-            Z423K1: {
-              Z2K1: 'Test'
-            }
-          }
-        }
-      }
+      error([error.not_wellformed, error.missing_type], [{ Z2K1: 'Test' }])
     );
 
     test(
       'singleton string record invalid key',
       { 'Z1K ': 'Z1' },
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z423',
-            Z423K1: {
-              'Z1K ': 'Z1'
-            }
-          }
-        }
-      }
+      error([error.not_wellformed, error.missing_type], [{ 'Z1K ': 'Z1' }])
     );
 
     test(
@@ -212,16 +153,7 @@ describe('orchestrate', function () {
     test(
       'string record with invalid key',
       { Z1K1: 'Z6', ZK1: 'Test' },
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z435',
-            Z435K1: 'ZK1'
-          }
-        }
-      }
+      error([error.not_wellformed, error.invalid_key], ['ZK1'])
     );
 
     test(
@@ -233,103 +165,67 @@ describe('orchestrate', function () {
     test(
       'record with list and invalid sub-record',
       { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { K2: 'Test' } },
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z426',
-            Z426K1: 'Z2K1',
-            Z426K2: {
-              Z1K1: 'Z5',
-              Z5K1: {
-                Z1K1: 'Z402',
-                Z402K1: {
-                  Z1K1: 'Z423',
-                  Z423K1: {
-                    K2: 'Test'
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+      error(
+        [error.not_wellformed, error.not_wellformed_value],
+        [
+          'Z2K1',
+          error([error.not_wellformed, error.missing_type], [{ K2: 'Test' }])
+        ]
+      )
     );
 
     test(
       'invalid zobject (int not string/list/record)',
       { Z1K1: 'Z2', Z2K1: 2 },
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z426',
-            Z426K1: 'Z2K1',
-            Z426K2: {
-              Z1K1: 'Z5',
-              Z5K1: {
-                Z1K1: 'Z402',
-                Z402K1: {
-                  Z1K1: 'Z421',
-                  Z421K1: 2
-                }
-              }
-            }
-          }
-        }
-      }
+      error(
+        [error.not_wellformed, error.not_wellformed_value],
+        [
+          'Z2K1',
+          error(
+            [
+              error.not_wellformed,
+              error.zobject_must_not_be_number_or_boolean_or_null
+            ],
+            [2]
+          )
+        ]
+      )
     );
 
     test(
       'invalid zobject (float not string/list/record)',
       { Z1K1: 'Z2', Z2K1: 2.0 },
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z426',
-            Z426K1: 'Z2K1',
-            Z426K2: {
-              Z1K1: 'Z5',
-              Z5K1: {
-                Z1K1: 'Z402',
-                Z402K1: {
-                  Z1K1: 'Z421',
-                  Z421K1: 2.0
-                }
-              }
-            }
-          }
-        }
-      }
+      error(
+        [error.not_wellformed, error.not_wellformed_value],
+        [
+          'Z2K1',
+          error(
+            [
+              error.not_wellformed,
+              error.zobject_must_not_be_number_or_boolean_or_null
+            ],
+            [2.0]
+          )
+        ]
+      )
     );
 
     test(
       'number in array',
       [ 2 ],
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z402',
-          Z402K1: {
-            Z1K1: 'Z422',
-            Z422K1: '0',
-            Z422K2: {
-              Z1K1: 'Z5',
-              Z5K1: {
-                Z1K1: 'Z402',
-                Z402K1: {
-                  Z1K1: 'Z421',
-                  Z421K1: 2
-                }
-              }
-            }
-          }
-        }
-      }
+      error(
+        [error.not_wellformed, error.array_element_not_well_formed],
+        [
+          '0',
+          error(
+            [
+              error.not_wellformed,
+              error.zobject_must_not_be_number_or_boolean_or_null
+            ],
+            [2]
+          )
+        ]
+      )
     );
 
     // Parser
@@ -339,14 +235,13 @@ describe('orchestrate', function () {
     testString(
       'invalid JSON',
       '{ bad JSON! Tut, tut.',
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z401',
-          Z401K1: 'Unexpected token b in JSON at position 2',
-          Z401K2: '{ bad JSON! Tut, tut.'
-        }
-      }
+      error(
+        [error.syntax_error],
+        [
+          'Unexpected token b in JSON at position 2',
+          '{ bad JSON! Tut, tut.'
+        ]
+      )
     );
 
     testString('empty string', '""', '');
@@ -362,14 +257,13 @@ describe('orchestrate', function () {
     testString(
       'just word',
       'Test',
-      {
-        Z1K1: 'Z5',
-        Z5K1: {
-          Z1K1: 'Z401',
-          Z401K1: 'Unexpected token T in JSON at position 0',
-          Z401K2: 'Test'
-        }
-      }
+      error(
+        [error.syntax_error],
+        [
+          'Unexpected token T in JSON at position 0',
+          'Test'
+        ]
+      )
     );
 
     // TODO: testString('empty', '', ...);

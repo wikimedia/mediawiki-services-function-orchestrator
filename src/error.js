@@ -44,7 +44,7 @@ error.zobject_must_not_be_number_or_boolean_or_null = 'Z421'; // offending text 
 error.array_element_not_well_formed = 'Z422'; // offending index in array, propagated error (sub of Z402)
 error.missing_type = 'Z423'; // no Z1K1 (sub of Z402)
 error.z1k1_must_not_be_string_or_array = 'Z424'; // value of z1k1 (sub of 402)
-error.invalid_key = 'Z435'; // invalid key (sub of 402)
+error.invalid_key = 'Z425'; // invalid key (sub of 402)
 error.not_wellformed_value = 'Z426'; // key, propagated error (sub of 402)
 
 error.z6_must_have_2_keys = 'Z431'; // whole object
