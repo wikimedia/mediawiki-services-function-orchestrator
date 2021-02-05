@@ -11,8 +11,12 @@ const router = sUtil.router();
 
 /** ROUTE DECLARATIONS GO HERE **/
 router.get('/:data', function (req, res) {
-  const input = orchestrate(req.params.data);
-  res.json(input);
+	const input = orchestrate(req.params.data);
+	res.json(input);
+});
+
+router.get('/', function (req, res) {
+	res.send(200);
 });
 
 module.exports = function (appObj) {
