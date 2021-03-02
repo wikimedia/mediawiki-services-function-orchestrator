@@ -36,7 +36,7 @@
     "compression": "^1.7.4",
     "domino": "^2.1.3",
     "express": "^4.17.1",
-    "function-schemata": "git+https://gerrit.wikimedia.org/r/mediawiki/services/function-schemata#f3af4c67411cdc02a394034b4e10c05a31b75af7",
+    "function-schemata": "file:./function-schemata",
     "http-shutdown": "^1.2.1",
     "js-yaml": "^3.13.1",
     "preq": "^0.5.9",
