@@ -12,6 +12,7 @@ COMMITHASH=$1
 
 # Removes function-schemata submodule.
 rm .gitmodules
+rm -rf function-schemata
 git add .gitmodules
 git submodule deinit -f function-schemata
 git rm --cached function-schemata

@@ -18,6 +18,7 @@ function innerError(codes, args) {
 }
 
 function error(codes, args) {
+    // TODO: Create normalized error types and helpers.
 	return {
 		Z1K1: 'Z5',
 		Z5K1: innerError(codes, args)

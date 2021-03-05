@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const preq   = require('preq');
 const assert = require('../../utils/assert.js');
 const Server = require('../../utils/server.js');
@@ -280,4 +281,122 @@ describe('orchestrate', function () {
     testString('string singleton list', '["Test"]', [ 'Test' ]);
 
     testString('multiple list', '["Test", [] , "3"]', [ 'Test', [], '3' ]);
+
+    function readJSON(fileName) {
+        return JSON.parse(fs.readFileSync(fileName, { encoding: 'utf8' }));
+    }
+
+    // Tests function calls.
+    test(
+        'function call for the true Z902 (if), the good if',
+        readJSON('./test/features/v1/test_data/Z902_true.json'),
+        readJSON('./test/features/v1/test_data/Z902_true_expected.json')
+    );
+
+    test(
+        'function call for the false Z902 (if), the dissembler',
+        readJSON('./test/features/v1/test_data/Z902_false.json'),
+        readJSON('./test/features/v1/test_data/Z902_false_expected.json')
+    );
+
+    test(
+        'function call for Z903 (value by key)',
+        readJSON('./test/features/v1/test_data/Z903.json'),
+        {
+            Z1K1: 'Z6',
+            Z6K1: 'funicle'
+        }
+    );
+
+    test(
+        'function call for Z905 (reify)',
+        readJSON('./test/features/v1/test_data/Z905.json'),
+        readJSON('./test/features/v1/test_data/Z905_expected.json')
+    );
+
+    test(
+        'function call for Z908 (abstract)',
+        readJSON('./test/features/v1/test_data/Z908.json'),
+        readJSON('./test/features/v1/test_data/Z908_expected.json')
+    );
+
+    test(
+        'function call for Z910 (cons)',
+        readJSON('./test/features/v1/test_data/Z910.json'),
+        readJSON('./test/features/v1/test_data/Z910_expected.json')
+    );
+
+    test(
+        'function call for Z911 (head)',
+        readJSON('./test/features/v1/test_data/Z911.json'),
+        { Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
+    );
+
+    test(
+        'function call for Z912 (tail)',
+        readJSON('./test/features/v1/test_data/Z912.json'),
+        {
+            Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
+            Z10K1: { Z1K1: 'Z6', Z6K1: 'specific ZObject' },
+            Z10K2: {
+                Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' }
+            }
+        }
+    );
+
+    // TODO: Enable test using ./test/features/v1/test_data/Z913_Z13.json once
+    // Z13 validates as a Z10.
+    test(
+        'function call for Z913 (empty) with an empty Z10',
+        readJSON('./test/features/v1/test_data/Z913_empty_Z10.json'),
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z41' } }
+    );
+
+    test(
+        'function call for Z913 (empty) with a full Z10',
+        readJSON('./test/features/v1/test_data/Z913_full_Z10.json'),
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z42' } }
+    );
+
+    test(
+        'function call for Z921 (first)',
+        readJSON('./test/features/v1/test_data/Z921.json'),
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' } }
+    );
+
+    test(
+        'function call for Z922 (second)',
+        readJSON('./test/features/v1/test_data/Z922.json'),
+        { Z1K1: 'Z9', Z9K1: 'Z13' }
+    );
+
+    test(
+        'function call for Z968 (string to characters)',
+        readJSON('./test/features/v1/test_data/Z968.json'),
+        readJSON('./test/features/v1/test_data/Z968_expected.json')
+    );
+
+    test(
+        'function call for Z986 (characters to string)',
+        readJSON('./test/features/v1/test_data/Z986.json'),
+        { Z1K1: 'Z6', Z6K1: 'mus' }
+    );
+
+    test(
+        'function call for Z988 (same), and the arguments are truly same',
+        readJSON('./test/features/v1/test_data/Z988_same.json'),
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z41' } }
+    );
+
+    test(
+        'function call for Z988 (same), and lo, they are not same',
+        readJSON('./test/features/v1/test_data/Z988_different.json'),
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z42' } }
+    );
+
+    test(
+        'function call for Z999 (unquote)',
+        readJSON('./test/features/v1/test_data/Z999.json'),
+        { Z1K1: 'Z9', Z9K1: 'Z10' }
+    );
 });
