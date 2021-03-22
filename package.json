@@ -11,7 +11,7 @@
     "docker-start": "service-runner docker-start",
     "docker-test": "service-runner docker-test",
     "test-build": "service-runner docker-test && service-runner build --deploy-repo --force",
-    "coverage": "PREQ_CONNECT_TIMEOUT=15 nyc --reporter=lcov _mocha"
+    "coverage": "PREQ_CONNECT_TIMEOUT=15 nyc _mocha"
   },
   "repository": {
     "type": "git",
