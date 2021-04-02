@@ -35,21 +35,22 @@ start the server hosting the REST API, simply run (inside the repo's directory)
 npm start
 ```
 
-This starts an HTTP server listening on `localhost:6927`. There are several
-routes you may query (with a browser, or `curl` and friends):
+This starts an HTTP server listening on `localhost:6254`. You can test queries
+via the Swagger UI at `localhost:6254/?doc`. There are several routes you may
+query (with a browser, or `curl` and friends):
 
-* `http://localhost:6927/_info/`
-* `http://localhost:6927/_info/name`
-* `http://localhost:6927/_info/version`
-* `http://localhost:6927/_info/home`
-* `http://localhost:6927/{domain}/v1/siteinfo{/prop}`
-* `http://localhost:6927/{domain}/v1/page/{title}`
-* `http://localhost:6927/{domain}/v1/page/{title}/lead`
-* `http://localhost:6927/ex/err/array`
-* `http://localhost:6927/ex/err/file`
-* `http://localhost:6927/ex/err/manual/error`
-* `http://localhost:6927/ex/err/manual/deny`
-* `http://localhost:6927/ex/err/auth`
+* `http://localhost:6254/_info/`
+* `http://localhost:6254/_info/name`
+* `http://localhost:6254/_info/version`
+* `http://localhost:6254/_info/home`
+* `http://localhost:6254/{domain}/v1/siteinfo{/prop}`
+* `http://localhost:6254/{domain}/v1/page/{title}`
+* `http://localhost:6254/{domain}/v1/page/{title}/lead`
+* `http://localhost:6254/ex/err/array`
+* `http://localhost:6254/ex/err/file`
+* `http://localhost:6254/ex/err/manual/error`
+* `http://localhost:6254/ex/err/manual/deny`
+* `http://localhost:6254/ex/err/auth`
 
 ### Tests
 

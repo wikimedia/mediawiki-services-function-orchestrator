@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   version: 0.7.0
   title: WikiLambda Function Orchestrator Service
-  description: The WikiLambda Function Orchestrator. Anything you should wish to do with functions--do it here. Whether engineer or trader, please try our API without compunction.
+  description: The WikiLambda Function Orchestrator. Anything you should wish to do with functions—do it here. Whether engineer or trader, please try our API without compunction.
   termsOfService: https://wikimediafoundation.org/wiki/Terms_of_Use
   contact:
     name: the Abstract Wikipedia team
@@ -22,10 +22,25 @@ paths:
       tags:
         - Evaluate
       parameters:
-        - $ref: '#/components/parameters/EvaluationRequest'
+        - $ref: '#components/parameters/EvaluationRequest'
       responses:
         200:
           description: Successful Orchestration
+  /{domain}/v1/evaluate/{functionCall}:
+    get:
+      summary: Evaluates a ZObject
+      description: Evaluates a ZObject
+      tags:
+        - Evaluate
+      parameters:
+        - $ref: '#components/parameters/FunctionCall'
+      responses:
+        200:
+          description: Successful Function Evaluation
+          content:
+            application/json:
+              schema:
+                $ref: '/spec/Z1#/definitions/objects/Z1_generic'
   # from routes/root.js
   /robots.txt:
     get:
@@ -201,7 +216,7 @@ components:
       description: |
         Site info prop.
     EvaluationRequest:
-      in: path 
+      in: path
       name: data
       required: true
       description: |
@@ -215,3 +230,19 @@ components:
           value: "{\"Z1K1\": \"Z5\"}"
         Malformed-ZObject:
           value: "{\"malformed\": \"zobject\"}"
+    FunctionCall:
+      in: path
+      name: functionCall
+      required: true
+      description: Z7 to evaluate.
+      schema:
+        type: string
+      examples:
+        BooleanTrue:
+          $ref: "/test-data/Z902_true"
+        Reify:
+          $ref: "/test-data/Z905"
+        ListHead:
+          $ref: "/test-data/Z911"
+        ListTail:
+          $ref: "/test-data/Z912"
