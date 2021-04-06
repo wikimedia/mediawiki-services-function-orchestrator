@@ -367,7 +367,7 @@ describe('orchestrate', function () {
     test(
         'function call for Z922 (second)',
         readJSON('./test/features/v1/test_data/Z922.json'),
-        { Z1K1: 'Z9', Z9K1: 'Z13' }
+        { Z1K1: 'Z9', Z9K1: 'Z10' }
     );
 
     test(

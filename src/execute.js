@@ -6,6 +6,7 @@ const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js
 const utils = require('./utils.js');
 
 const normalFactory = SchemaFactory.NORMAL();
+const Z7Validator = normalFactory.create('Z7');
 
 /**
  * Validates a ZObject against the function call schema.
@@ -14,12 +15,7 @@ const normalFactory = SchemaFactory.NORMAL();
  * @return {bool} whether Z1 can validate as function call
  */
 function isFunctionCall(Z1) {
-    // TODO: Replace this with validation via a SchemaFactory.NORMAL().
-    try {
-        return Z1.Z1K1.Z9K1 === 'Z7';
-    } catch (TypeError) {
-        return false;
-    }
+    return Z7Validator.validate(Z1);
 }
 
 const Z6Validator = normalFactory.create('Z6');
