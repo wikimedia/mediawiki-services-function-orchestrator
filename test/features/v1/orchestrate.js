@@ -4,7 +4,7 @@ const fs = require('fs');
 const preq   = require('preq');
 const assert = require('../../utils/assert.js');
 const Server = require('../../utils/server.js');
-const error = require('../../../src/error.js');
+const { canonicalError, error } = require('../../../function-schemata/javascript/src/error');
 
 describe('orchestrate', function () {
 
@@ -97,11 +97,11 @@ describe('orchestrate', function () {
     test(
       'record multiple list with error',
       [ { Z1K1: 'Z6', Z2K1: 'Test' }, { Z1K1: 'Test2!', Z2K1: 'Test2?' } ],
-      error(
+      canonicalError(
         [error.not_wellformed, error.array_element_not_well_formed],
         [
           '1',
-          error(
+          canonicalError(
             [error.not_wellformed, error.z1k1_must_not_be_string_or_array],
             [{ Z1K1: 'Test2!', Z2K1: 'Test2?' }]
           )
@@ -118,11 +118,11 @@ describe('orchestrate', function () {
     test(
       'invalid record singleton list',
       [ { Z2K1: 'Test' } ],
-      error(
+      canonicalError(
         [error.not_wellformed, error.array_element_not_well_formed],
         [
           '0',
-          error([error.not_wellformed, error.missing_type], [{ Z2K1: 'Test' }])
+          canonicalError([error.not_wellformed, error.missing_type], [{ Z2K1: 'Test' }])
         ]
       )
     );
@@ -130,19 +130,19 @@ describe('orchestrate', function () {
     test(
       'empty record',
       {},
-      error([error.not_wellformed, error.missing_type], [{}])
+      canonicalError([error.not_wellformed, error.missing_type], [{}])
     );
 
     test(
       'singleton string record no Z1K1',
       { Z2K1: 'Test' },
-      error([error.not_wellformed, error.missing_type], [{ Z2K1: 'Test' }])
+      canonicalError([error.not_wellformed, error.missing_type], [{ Z2K1: 'Test' }])
     );
 
     test(
       'singleton string record invalid key',
       { 'Z1K ': 'Z1' },
-      error([error.not_wellformed, error.missing_type], [{ 'Z1K ': 'Z1' }])
+      canonicalError([error.not_wellformed, error.missing_type], [{ 'Z1K ': 'Z1' }])
     );
 
     test(
@@ -154,7 +154,7 @@ describe('orchestrate', function () {
     test(
       'string record with invalid key',
       { Z1K1: 'Z6', ZK1: 'Test' },
-      error([error.not_wellformed, error.invalid_key], ['ZK1'])
+      canonicalError([error.not_wellformed, error.invalid_key], ['ZK1'])
     );
 
     test(
@@ -166,11 +166,11 @@ describe('orchestrate', function () {
     test(
       'record with list and invalid sub-record',
       { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { K2: 'Test' } },
-      error(
+      canonicalError(
         [error.not_wellformed, error.not_wellformed_value],
         [
           'Z2K1',
-          error([error.not_wellformed, error.missing_type], [{ K2: 'Test' }])
+          canonicalError([error.not_wellformed, error.missing_type], [{ K2: 'Test' }])
         ]
       )
     );
@@ -178,11 +178,11 @@ describe('orchestrate', function () {
     test(
       'invalid zobject (int not string/list/record)',
       { Z1K1: 'Z2', Z2K1: 2 },
-      error(
+      canonicalError(
         [error.not_wellformed, error.not_wellformed_value],
         [
           'Z2K1',
-          error(
+          canonicalError(
             [
               error.not_wellformed,
               error.zobject_must_not_be_number_or_boolean_or_null
@@ -196,11 +196,11 @@ describe('orchestrate', function () {
     test(
       'invalid zobject (float not string/list/record)',
       { Z1K1: 'Z2', Z2K1: 2.0 },
-      error(
+      canonicalError(
         [error.not_wellformed, error.not_wellformed_value],
         [
           'Z2K1',
-          error(
+          canonicalError(
             [
               error.not_wellformed,
               error.zobject_must_not_be_number_or_boolean_or_null
@@ -214,11 +214,11 @@ describe('orchestrate', function () {
     test(
       'number in array',
       [ 2 ],
-      error(
+      canonicalError(
         [error.not_wellformed, error.array_element_not_well_formed],
         [
           '0',
-          error(
+          canonicalError(
             [
               error.not_wellformed,
               error.zobject_must_not_be_number_or_boolean_or_null
@@ -236,7 +236,7 @@ describe('orchestrate', function () {
     testString(
       'invalid JSON',
       '{ bad JSON! Tut, tut.',
-      error(
+      canonicalError(
         [error.syntax_error],
         [
           'Unexpected token b in JSON at position 2',
@@ -258,7 +258,7 @@ describe('orchestrate', function () {
     testString(
       'just word',
       'Test',
-      error(
+      canonicalError(
         [error.syntax_error],
         [
           'Unexpected token T in JSON at position 0',

@@ -1,7 +1,7 @@
 'use strict';
 
-const error = require('./error.js');
-const utils = require('./utils.js');
+const { canonicalError, error } = require('../function-schemata/javascript/src/error');
+const utils = require('../function-schemata/javascript/src/utils');
 
 /**
  * HELPER FUNCTIONS
@@ -50,7 +50,7 @@ function BUILTIN_VALUE_BY_KEY_(Z39, Z1) {
     // TODO: Add test for error case.
     const key = Z39.Z39K1.Z6K1;
     if (Z1[key] === undefined) {
-        return error(
+        return canonicalError(
             [ error.error_in_evaluation ],
             [ 'Object did not contain key "' + key + '"' ]);
     }
@@ -119,7 +119,7 @@ function BUILTIN_CONS_(Z1, Z10) {
 
 function BUILTIN_HEAD_(Z10) {
     if (utils.isEmpty(Z10)) {
-        return error(
+        return canonicalError(
             [ error.argument_type_error ],
             [ 'An empty list has no head.' ]);
     }
@@ -129,7 +129,7 @@ function BUILTIN_HEAD_(Z10) {
 
 function BUILTIN_TAIL_(Z10) {
     if (utils.isEmpty(Z10)) {
-        return error(
+        return canonicalError(
             [ error.argument_type_error ],
             [ 'An empty list has no tail.' ]);
     }

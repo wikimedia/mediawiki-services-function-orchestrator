@@ -1,6 +1,6 @@
 'use strict';
 
-const error = require('./error.js');
+const { canonicalError, error } = require('../function-schemata/javascript/src/error');
 
 // any serialized string as input
 // the output is either an error object of error type Z401, or the JSON object parsed
@@ -10,7 +10,7 @@ function parse(str) {
 		return zobject;
 	} catch (err) {
 		const m = (err.name === 'SyntaxError') ? err.message : err.name;
-		return error([ error.syntax_error ], [ m, str ]);
+		return canonicalError([ error.syntax_error ], [ m, str ]);
 	}
 }
 

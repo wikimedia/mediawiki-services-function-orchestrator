@@ -1,9 +1,9 @@
 'use strict';
 
-const error = require('./error.js');
+const utils = require('../function-schemata/javascript/src/utils');
+const { canonicalError, error } = require('../function-schemata/javascript/src/error');
 const { createImplementation } = require('./implementation.js');
 const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
-const utils = require('./utils.js');
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z7Validator = normalFactory.create('Z7');
@@ -45,7 +45,7 @@ function execute(zobject) {
     const ZID = zobject.Z7K1.Z8K5.Z9K1;
     const implementation = createImplementation(ZID, 'FUNCTION');
     if (implementation === null) {
-        return error(
+        return canonicalError(
             [error.not_wellformed],
             ['Could not execute non-builtin function ' + ZID]);
     }
@@ -61,7 +61,7 @@ function execute(zobject) {
         const argumentName = Z17.Z17K2.Z6K1;
         const argument = zobject[argumentName];
         if (argument === undefined) {
-            return error(
+            return canonicalError(
                 [ error.argument_value_error ],
                 [ 'No value for supplied for declared argument ' + argumentName ]);
         }
@@ -86,12 +86,12 @@ function execute(zobject) {
 
         const actualSchema = normalFactory.create(argumentType);
         if (!doSkip && !declarationSchema.validate(argument)) {
-            return error(
+            return canonicalError(
                 [error.argument_type_error],
                 ['Could not validate argument as type ' + Z17.Z17K1.Z9K1]);
         }
         if (!doSkip && !actualSchema.validate(argument)) {
-            return error(
+            return canonicalError(
                 [error.argument_type_error],
                 ['Could not validate argument as type ' + argumentType]);
         }
@@ -105,7 +105,7 @@ function execute(zobject) {
     const returnValidator = normalFactory.create(returnType);
     const result = implementation.execute(argumentDict);
     if (!returnValidator.validate(result)) {
-        return error(
+        return canonicalError(
             [error.argument_type_error],
             ['Could not validate return value as type ' + returnType]);
     }
