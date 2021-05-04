@@ -399,4 +399,10 @@ describe('orchestrate', function () {
         readJSON('./test/features/v1/test_data/Z999.json'),
         { Z1K1: 'Z9', Z9K1: 'Z10' }
     );
+
+    test(
+      'non-normalized function call with array',
+      readJSON('./test/features/v1/test_data/Z988_different_non-normalized.json'),
+      { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z42' } }
+    );
 });

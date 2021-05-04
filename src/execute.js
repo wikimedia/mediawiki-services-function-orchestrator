@@ -15,7 +15,13 @@ const Z7Validator = normalFactory.create('Z7');
  * @return {bool} whether Z1 can validate as function call
  */
 function isFunctionCall(Z1) {
-    return Z7Validator.validate(Z1);
+    return new Promise((resolve, reject) => {
+        if (Z7Validator.validate(Z1)) {
+            resolve(Z1);
+        } else {
+            reject();
+        }
+    });
 }
 
 const Z6Validator = normalFactory.create('Z6');

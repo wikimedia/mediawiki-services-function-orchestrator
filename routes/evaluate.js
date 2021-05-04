@@ -10,8 +10,8 @@ const orchestrate = require('../src/orchestrate.js');
 const router = sUtil.router();
 
 /** ROUTE DECLARATIONS GO HERE **/
-router.get('/:data', function (req, res) {
-	const input = orchestrate(req.params.data);
+router.get('/:data', async function (req, res) {
+	const input = await orchestrate(req.params.data);
 	res.json(input);
 });
 
