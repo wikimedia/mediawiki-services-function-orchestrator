@@ -288,15 +288,30 @@ describe('orchestrate', function () {
 
     // Tests function calls.
     test(
-        'function call for the true Z902 (if), the good if',
-        readJSON('./test/features/v1/test_data/Z902_true.json'),
-        readJSON('./test/features/v1/test_data/Z902_true_expected.json')
+        'function call for Z802 with reference to Z902',
+        readJSON('./test/features/v1/test_data/Z802_false.json'),
+        readJSON('./test/features/v1/test_data/Z902_false_expected.json')
     );
 
     test(
         'function call for the false Z902 (if), the dissembler',
         readJSON('./test/features/v1/test_data/Z902_false.json'),
         readJSON('./test/features/v1/test_data/Z902_false_expected.json')
+    );
+
+    test(
+        'function call for the true Z902 (if), the good if',
+        readJSON('./test/features/v1/test_data/Z902_true.json'),
+        readJSON('./test/features/v1/test_data/Z902_true_expected.json')
+    );
+
+    test(
+        'function call for Z803 with reference to Z903',
+        readJSON('./test/features/v1/test_data/Z903.json'),
+        {
+            Z1K1: 'Z6',
+            Z6K1: 'funicle'
+        }
     );
 
     test(
@@ -309,9 +324,21 @@ describe('orchestrate', function () {
     );
 
     test(
+        'function call for Z805 with reference to Z905',
+        readJSON('./test/features/v1/test_data/Z805.json'),
+        readJSON('./test/features/v1/test_data/Z905_expected.json')
+    );
+
+    test(
         'function call for Z905 (reify)',
         readJSON('./test/features/v1/test_data/Z905.json'),
         readJSON('./test/features/v1/test_data/Z905_expected.json')
+    );
+
+    test(
+        'function call for Z808 with reference to Z908',
+        readJSON('./test/features/v1/test_data/Z808.json'),
+        readJSON('./test/features/v1/test_data/Z908_expected.json')
     );
 
     test(
@@ -321,15 +348,39 @@ describe('orchestrate', function () {
     );
 
     test(
+        'function call for Z810 with reference to Z910',
+        readJSON('./test/features/v1/test_data/Z810.json'),
+        readJSON('./test/features/v1/test_data/Z910_expected.json')
+    );
+
+    test(
         'function call for Z910 (cons)',
         readJSON('./test/features/v1/test_data/Z910.json'),
         readJSON('./test/features/v1/test_data/Z910_expected.json')
     );
 
     test(
+        'function call for Z811 with reference to Z911',
+        readJSON('./test/features/v1/test_data/Z811.json'),
+        { Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
+    );
+
+    test(
         'function call for Z911 (head)',
         readJSON('./test/features/v1/test_data/Z911.json'),
         { Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
+    );
+
+    test(
+        'function call for Z812 with reference to Z912',
+        readJSON('./test/features/v1/test_data/Z812.json'),
+        {
+            Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
+            Z10K1: { Z1K1: 'Z6', Z6K1: 'specific ZObject' },
+            Z10K2: {
+                Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' }
+            }
+        }
     );
 
     test(
@@ -347,15 +398,27 @@ describe('orchestrate', function () {
     // TODO: Enable test using ./test/features/v1/test_data/Z913_Z13.json once
     // Z13 validates as a Z10.
     test(
+        'function call for Z813 with reference to Z913',
+        readJSON('./test/features/v1/test_data/Z813_empty_Z10.json'),
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
+    );
+
+    test(
         'function call for Z913 (empty) with an empty Z10',
         readJSON('./test/features/v1/test_data/Z913_empty_Z10.json'),
-        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z41' } }
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
     );
 
     test(
         'function call for Z913 (empty) with a full Z10',
         readJSON('./test/features/v1/test_data/Z913_full_Z10.json'),
-        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z42' } }
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
+    );
+
+    test(
+        'function call for Z821 with reference to Z921',
+        readJSON('./test/features/v1/test_data/Z821.json'),
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' } }
     );
 
     test(
@@ -365,9 +428,21 @@ describe('orchestrate', function () {
     );
 
     test(
+        'function call for Z822 with reference to Z922',
+        readJSON('./test/features/v1/test_data/Z822.json'),
+        { Z1K1: 'Z9', Z9K1: 'Z10' }
+    );
+
+    test(
         'function call for Z922 (second)',
         readJSON('./test/features/v1/test_data/Z922.json'),
         { Z1K1: 'Z9', Z9K1: 'Z10' }
+    );
+
+    test(
+        'function call for Z868 with reference to Z968',
+        readJSON('./test/features/v1/test_data/Z868.json'),
+        readJSON('./test/features/v1/test_data/Z968_expected.json')
     );
 
     test(
@@ -377,21 +452,39 @@ describe('orchestrate', function () {
     );
 
     test(
+        'function call for Z886 with reference to Z986',
+        readJSON('./test/features/v1/test_data/Z886.json'),
+        { Z1K1: 'Z6', Z6K1: 'mus' }
+    );
+
+    test(
         'function call for Z986 (characters to string)',
         readJSON('./test/features/v1/test_data/Z986.json'),
         { Z1K1: 'Z6', Z6K1: 'mus' }
     );
 
     test(
+        'function call for Z888 with reference to Z988',
+        readJSON('./test/features/v1/test_data/Z888_same.json'),
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
+    );
+
+    test(
         'function call for Z988 (same), and the arguments are truly same',
         readJSON('./test/features/v1/test_data/Z988_same.json'),
-        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z41' } }
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
     );
 
     test(
         'function call for Z988 (same), and lo, they are not same',
         readJSON('./test/features/v1/test_data/Z988_different.json'),
-        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z42' } }
+        { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
+    );
+
+    test(
+        'function call for Z899 with reference to Z999',
+        readJSON('./test/features/v1/test_data/Z899.json'),
+        { Z1K1: 'Z9', Z9K1: 'Z10' }
     );
 
     test(
@@ -403,6 +496,6 @@ describe('orchestrate', function () {
     test(
       'non-normalized function call with array',
       readJSON('./test/features/v1/test_data/Z988_different_non-normalized.json'),
-      { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z42' } }
+      { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
     );
 });

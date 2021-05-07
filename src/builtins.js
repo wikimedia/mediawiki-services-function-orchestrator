@@ -1,6 +1,7 @@
 'use strict';
 
 const { canonicalError, error } = require('../function-schemata/javascript/src/error');
+const normalize = require('../function-schemata/javascript/src/normalize');
 const utils = require('../function-schemata/javascript/src/utils');
 
 /**
@@ -13,7 +14,7 @@ const utils = require('../function-schemata/javascript/src/utils');
  * @return {Object} a reference to Z41 (true)
  */
 function BUILTIN_TRUE_() {
-    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z41' } };
+    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } };
 }
 
 /**
@@ -22,7 +23,7 @@ function BUILTIN_TRUE_() {
  * @return {Object} a reference to Z42 (false)
  */
 function BUILTIN_FALSE_() {
-    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z6', Z6K1: 'Z42' } };
+    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } };
 }
 
 /**
@@ -32,7 +33,7 @@ function BUILTIN_FALSE_() {
  * @return {bool} whether Z40 corresponds to Z41 (true) or not
  */
 function isTrue(Z40) {
-    return Z40.Z40K1.Z6K1 === BUILTIN_TRUE_().Z40K1.Z6K1;
+    return Z40.Z40K1.Z9K1 === BUILTIN_TRUE_().Z40K1.Z9K1;
 }
 
 /**
@@ -225,4 +226,138 @@ function getFunction(ZID) {
     return result;
 }
 
-module.exports = { getFunction };
+/**
+ * Creates a Z17.
+ *
+ * @param {string} ZType type of argument (Z17K1)
+ * @param {string} argumentName identifier used when calling (Z17K2)
+ * @return {Object} a Z17
+ */
+function createArgument(ZType, argumentName) {
+    return {
+        Z1K1: 'Z17',
+        Z17K1: ZType,
+        Z17K2: {
+            Z1K1: 'Z6',
+            Z6K1: argumentName
+        },
+        Z17K3: {
+            Z1K1: 'Z12',
+            Z12K1: {
+                Z1K1: 'Z10'
+            }
+        }
+    };
+}
+
+/**
+ * Creates a Z8 corresponding to a bulitin function.
+ *
+ * @param {Array} argumentList list of Z17s
+ * @param {string} returnType ZID of return type
+ * @param {string} builtinName ZID reference to builtin implementation
+ * @return {Object} a Z8
+ */
+function createZ8(argumentList, returnType, builtinName) {
+    return normalize({
+        Z1K1: 'Z8',
+        Z8K1: argumentList,
+        Z8K2: returnType,
+        Z8K3: [],
+        Z8K5: builtinName
+    });
+}
+
+const builtinReferences = new Map();
+builtinReferences.set('Z802', createZ8(
+    [
+        createArgument('Z40', 'Z802K1'),
+        createArgument('Z1', 'Z802K2'),
+        createArgument('Z1', 'Z802K3')
+    ], 'Z1', 'Z902'
+));
+builtinReferences.set('Z803', createZ8(
+    [
+        createArgument('Z39', 'Z803K1'),
+        createArgument('Z1', 'Z803K2')
+    ], 'Z1', 'Z903'
+));
+builtinReferences.set('Z805', createZ8(
+    [
+        createArgument('Z1', 'Z805K1')
+    ], 'Z1', 'Z905'
+));
+builtinReferences.set('Z808', createZ8(
+    [
+        createArgument('Z1', 'Z808K1')
+    ], 'Z1', 'Z908'
+));
+builtinReferences.set('Z810', createZ8(
+    [
+        createArgument('Z1', 'Z810K1'),
+        createArgument('Z10', 'Z810K2')
+    ], 'Z1', 'Z910'
+));
+builtinReferences.set('Z811', createZ8(
+    [
+        createArgument('Z10', 'Z811K1')
+    ], 'Z1', 'Z911'
+));
+builtinReferences.set('Z812', createZ8(
+    [
+        createArgument('Z10', 'Z812K1')
+    ], 'Z1', 'Z912'
+));
+builtinReferences.set('Z813', createZ8(
+    [
+        createArgument('Z10', 'Z813K1')
+    ], 'Z1', 'Z913'
+));
+builtinReferences.set('Z821', createZ8(
+    [
+        createArgument('Z22', 'Z821K1')
+    ], 'Z1', 'Z921'
+));
+builtinReferences.set('Z822', createZ8(
+    [
+        createArgument('Z22', 'Z822K1')
+    ], 'Z1', 'Z922'
+));
+builtinReferences.set('Z868', createZ8(
+    [
+        createArgument('Z6', 'Z868K1')
+    ], 'Z1', 'Z968'
+));
+builtinReferences.set('Z886', createZ8(
+    [
+        createArgument('Z10', 'Z886K1')
+    ], 'Z1', 'Z986'
+));
+builtinReferences.set('Z888', createZ8(
+    [
+        createArgument('Z86', 'Z888K1'),
+        createArgument('Z86', 'Z888K2')
+    ], 'Z1', 'Z988'
+));
+builtinReferences.set('Z899', createZ8(
+    [
+        createArgument('Z99', 'Z899K1')
+    ], 'Z1', 'Z999'
+));
+
+/**
+ * Creates a Z8 corresponding to a bulitin function.
+ *
+ * @param {string} ZID reference to a builtin function
+ * @return {Object} a Z8
+ */
+function resolveReference(ZID) {
+    // TODO: Resolve all terminal references (especially Z40), NOT just Z7K1.
+    const result = builtinReferences.get(ZID);
+    if (result === undefined) {
+        throw Error('Not contained in builtinReferences');
+    }
+    return result;
+}
+
+module.exports = { getFunction, resolveReference };
