@@ -40,7 +40,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '/spec/Z1#/definitions/objects/Z1_generic'
+                $ref: '/spec/Z1#/definitions/objects/Z1_literal'
   # from routes/root.js
   /robots.txt:
     get:

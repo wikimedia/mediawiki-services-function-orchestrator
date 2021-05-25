@@ -59,6 +59,7 @@ describe('orchestrate', function () {
         }
     }
 
+    // eslint-disable-next-line no-unused-vars
     const testEvaluatedFunctionCall = function (name, input, response, output = null, error = null) {
         it(name, function () {
 
@@ -551,15 +552,15 @@ describe('orchestrate', function () {
       { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
     );
 
-    testEvaluatedFunctionCall(
-      'evaluated function call',
-      {
-          zobject: readJSON('./test/features/v1/test_data/evaluated.json'),
-          evaluatorUri: 'http://localhost:6927/en.wikipedia.org/v1/evaluate'
-      },
-      canonicalize(utils.makePair({ Z1K1: 'Z6', Z6K1: '13' }, null)),
-      { Z1K1: 'Z6', Z6K1: '13' }
-    );
+    // testEvaluatedFunctionCall(
+    //   'evaluated function call',
+    //   {
+    //       zobject: readJSON('./test/features/v1/test_data/evaluated.json'),
+    //       evaluatorUri: 'http://localhost:6927/en.wikipedia.org/v1/evaluate'
+    //   },
+    //   canonicalize(utils.makePair({ Z1K1: 'Z6', Z6K1: '13' }, null)),
+    //   { Z1K1: 'Z6', Z6K1: '13' }
+    // );
 
     /*
      * Enable this while running the evaluator at 6927 for integration testing.
@@ -572,4 +573,48 @@ describe('orchestrate', function () {
       { Z1K1: 'Z6', Z6K1: '13' }
     );
     */
+
+    // validation
+    testFunctionCall(
+      'invalid argument key for function call',
+      readJSON('./test/features/v1/test_data/invalid_call_argument_key.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_call_argument_key_expected.json')
+    );
+
+    testFunctionCall(
+      'invalid argument type for function call',
+      readJSON('./test/features/v1/test_data/invalid_call_argument_type.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_call_argument_type_expected.json')
+    );
+
+    testFunctionCall(
+      'invalid duplicated argument key in function definition',
+      readJSON('./test/features/v1/test_data/invalid_key_duplicated.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_key_duplicated_expected.json')
+    );
+
+    testFunctionCall(
+      'invalid key for first argument in function definition',
+      readJSON('./test/features/v1/test_data/invalid_key_first_name.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_key_first_name_expected.json')
+    );
+
+    testFunctionCall(
+      'invalid key name for argument in function definition',
+      readJSON('./test/features/v1/test_data/invalid_key_name.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_key_name_expected.json')
+    );
+
+    testFunctionCall(
+      'invalid non-sequential key for argument in function definition',
+      readJSON('./test/features/v1/test_data/invalid_key_nonsequential.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_key_nonsequential_expected.json')
+    );
+
 });

@@ -4,16 +4,18 @@ const parse = require('./parse.js');
 const wellformed = require('./wellformed.js');
 const normalize = require('../function-schemata/javascript/src/normalize.js');
 const canonicalize = require('../function-schemata/javascript/src/canonicalize.js');
-const { isReference, isFunctionCall } = require('./validation.js');
+const { arrayToZ10 } = require('../function-schemata/javascript/src/utils.js');
+const { validate, isReference, isFunctionCall } = require('./validation.js');
 const { execute } = require('./execute.js');
 const { resolveReference } = require('./builtins.js');
+const { makePair } = require('./utils');
 
 function normalizeZObject(zobject) {
     return new Promise((resolve, reject) => {
         try {
             resolve(normalize(zobject));
         } catch (err) {
-            reject();
+            reject(err);
         }
     });
 }
@@ -23,7 +25,7 @@ function canonicalizeZObject(zobject) {
         try {
             resolve(canonicalize(zobject));
         } catch (err) {
-            reject();
+            reject(err);
         }
     });
 }
@@ -58,8 +60,16 @@ function orchestrate(str) {
      */
     const evaluatorUri = orchestrationRequest.evaluatorUri || null;
 
-    const executeBound = (zObj) => {
-        return execute(zObj, evaluatorUri);
+    const executeBound = async (zObj) => {
+        const errors = await validate(zObj);
+
+        /**
+         * TODO: errors should be rejected. For now, they are being returned
+         * to avoid the "wellformed" flow.
+         */
+        return errors.length === 0 ?
+            execute(zObj, evaluatorUri) :
+            makePair(null, arrayToZ10(errors));
     };
 
     return normalizeZObject(zobject)

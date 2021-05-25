@@ -2,7 +2,7 @@
 
 // TODO: T282891
 function Z23() {
-	return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z23' } };
+	return { Z1K1: 'Z9', Z9K1: 'Z23' };
 }
 
 // TODO: T282891
