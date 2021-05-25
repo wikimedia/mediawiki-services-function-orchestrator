@@ -34,12 +34,27 @@ function withReferenceResolved(zobject) {
 }
 
 function orchestrate(str) {
-    const zobject = parse(str);
+
+    const orchestrationRequest = parse(str);
+    let zobject = orchestrationRequest.zobject;
+    if (zobject === undefined) {
+        zobject = orchestrationRequest;
+    }
+
+    /*
+     * TODO: Receiving the evaluator URI as a parameter (especially a GET
+     * param!) is no good. Find a way to share config among services.
+     */
+    const evaluatorUri = orchestrationRequest.evaluatorUri || null;
+
+    const executeBound = (zObj) => {
+        return execute(zObj, evaluatorUri);
+    };
 
     return normalizeZObject(zobject)
         .then(withReferenceResolved)
         .then(isFunctionCall)
-        .then(execute)
+        .then(executeBound)
         .catch(() => wellformed(zobject));
 }
 

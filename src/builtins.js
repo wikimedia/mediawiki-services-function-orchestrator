@@ -3,6 +3,7 @@
 const { canonicalError, error } = require('../function-schemata/javascript/src/error');
 const normalize = require('../function-schemata/javascript/src/normalize');
 const utils = require('../function-schemata/javascript/src/utils');
+const { makePair } = require('./utils.js');
 
 /**
  * HELPER FUNCTIONS
@@ -41,21 +42,27 @@ function isTrue(Z40) {
  */
 
 function BUILTIN_IF_(antecedent, trueConsequent, falseConsequent) {
+    let result;
     if (isTrue(antecedent)) {
-        return trueConsequent;
+        result = trueConsequent;
+    } else {
+        result = falseConsequent;
     }
-    return falseConsequent;
+    return makePair(result, null);
 }
 
 function BUILTIN_VALUE_BY_KEY_(Z39, Z1) {
     // TODO: Add test for error case.
+    let goodResult = null, badResult = null;
     const key = Z39.Z39K1.Z6K1;
     if (Z1[key] === undefined) {
-        return canonicalError(
+        badResult = canonicalError(
             [ error.error_in_evaluation ],
             [ 'Object did not contain key "' + key + '"' ]);
+    } else {
+        goodResult = Z1[key];
     }
-    return Z1[key];
+    return makePair(goodResult, badResult);
 }
 
 function reifyRecursive(Z1) {
@@ -90,7 +97,7 @@ function reifyRecursive(Z1) {
 }
 
 function BUILTIN_REIFY_(Z1) {
-    return reifyRecursive(Z1);
+    return makePair(reifyRecursive(Z1), null);
 }
 
 function abstractRecursive(Z10) {
@@ -109,48 +116,55 @@ function abstractRecursive(Z10) {
 function BUILTIN_ABSTRACT_(Z10) {
     // TODO: Validate that List is a reified list, i.e. that all elements
     // are Z22s.
-    return abstractRecursive(Z10);
+    return makePair(abstractRecursive(Z10), null);
 }
 
 function BUILTIN_CONS_(Z1, Z10) {
     const result = utils.arrayToZ10([Z1]);
     result.Z10K2 = Z10;
-    return result;
+    return makePair(result, null);
 }
 
 function BUILTIN_HEAD_(Z10) {
     if (utils.isEmpty(Z10)) {
-        return canonicalError(
-            [ error.argument_type_error ],
-            [ 'An empty list has no head.' ]);
+        return makePair(
+            null,
+            canonicalError(
+                [ error.argument_type_error ],
+                [ 'An empty list has no head.' ]));
     }
 
-    return Z10.Z10K1;
+    return makePair(Z10.Z10K1, null);
 }
 
 function BUILTIN_TAIL_(Z10) {
     if (utils.isEmpty(Z10)) {
-        return canonicalError(
-            [ error.argument_type_error ],
-            [ 'An empty list has no tail.' ]);
+        return makePair(
+            null,
+            canonicalError(
+                [ error.argument_type_error ],
+                [ 'An empty list has no tail.' ]));
     }
 
-    return Z10.Z10K2;
+    return makePair(Z10.Z10K2, null);
 }
 
 function BUILTIN_EMPTY_(Z10) {
+    let result;
     if (utils.isEmpty(Z10)) {
-        return BUILTIN_TRUE_();
+        result = BUILTIN_TRUE_();
+    } else {
+        result = BUILTIN_FALSE_();
     }
-    return BUILTIN_FALSE_();
+    return makePair(result, null);
 }
 
 function BUILTIN_FIRST_(Z22) {
-    return Z22.Z22K1;
+    return makePair(Z22.Z22K1, null);
 }
 
 function BUILTIN_SECOND_(Z22) {
-    return Z22.Z22K2;
+    return makePair(Z22.Z22K2, null);
 }
 
 function stringToCharsInternal(characterArray) {
@@ -165,7 +179,7 @@ function stringToCharsInternal(characterArray) {
 }
 
 function BUILTIN_STRING_TO_CHARS_(Z6) {
-    return stringToCharsInternal(Z6.Z6K1.split(''));
+    return makePair(stringToCharsInternal(Z6.Z6K1.split('')), null);
 }
 
 function charsToStringInternal(Z10) {
@@ -179,21 +193,27 @@ function charsToStringInternal(Z10) {
 
 function BUILTIN_CHARS_TO_STRING_(Z10) {
     // TODO: Validate all members of Z10 are Z86.
-    return {
-        Z1K1: 'Z6',
-        Z6K1: charsToStringInternal(Z10).join('')
-    };
+    return makePair(
+        {
+            Z1K1: 'Z6',
+            Z6K1: charsToStringInternal(Z10).join('')
+        },
+        null
+    );
 }
 
 function BUILTIN_SAME_(Z86_1, Z86_2) {
+    let result;
     if (Z86_1.Z86K1.Z6K1 === Z86_2.Z86K1.Z6K1) {
-        return BUILTIN_TRUE_();
+        result = BUILTIN_TRUE_();
+    } else {
+        result = BUILTIN_FALSE_();
     }
-    return BUILTIN_FALSE_();
+    return makePair(result, null);
 }
 
 function BUILTIN_UNQUOTE_(Z99) {
-    return Z99.Z99K1;
+    return makePair(Z99.Z99K1, null);
 }
 
 const builtinFunctions = new Map();
