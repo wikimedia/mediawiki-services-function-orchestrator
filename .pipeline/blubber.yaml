@@ -10,7 +10,7 @@ variants:
     base: docker-registry.wikimedia.org/buster-nodejs10-devel
     copies: [local]
     apt: { packages: [git, build-essential, python-pkgconfig] }
-    node: { requirements: [package.json, function-schemata/package.json] }
+    node: { requirements: [package.json, package-lock.json, function-schemata/package.json, function-schemata/package-lock.json] }
     runs: { environment: { LINK: g++ } }
   development:
     includes: [build]
