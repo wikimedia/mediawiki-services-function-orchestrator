@@ -3,6 +3,7 @@
 const parse = require('./parse.js');
 const wellformed = require('./wellformed.js');
 const normalize = require('../function-schemata/javascript/src/normalize.js');
+const canonicalize = require('../function-schemata/javascript/src/canonicalize.js');
 const { isReference, isFunctionCall } = require('./validation.js');
 const { execute } = require('./execute.js');
 const { resolveReference } = require('./builtins.js');
@@ -11,6 +12,16 @@ function normalizeZObject(zobject) {
     return new Promise((resolve, reject) => {
         try {
             resolve(normalize(zobject));
+        } catch (err) {
+            reject();
+        }
+    });
+}
+
+function canonicalizeZObject(zobject) {
+    return new Promise((resolve, reject) => {
+        try {
+            resolve(canonicalize(zobject));
         } catch (err) {
             reject();
         }
@@ -55,6 +66,7 @@ function orchestrate(str) {
         .then(withReferenceResolved)
         .then(isFunctionCall)
         .then(executeBound)
+        .then(canonicalizeZObject)
         .catch(() => wellformed(zobject));
 }
 

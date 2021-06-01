@@ -6,6 +6,7 @@ const preq   = require('preq');
 const assert = require('../../utils/assert.js');
 const Server = require('../../utils/server.js');
 const { canonicalError, error } = require('../../../function-schemata/javascript/src/error');
+const canonicalize = require('../../../function-schemata/javascript/src/canonicalize.js');
 const utils = require('../../../src/utils.js');
 const sinon = require('sinon');
 
@@ -43,7 +44,7 @@ describe('orchestrate', function () {
     };
 
     const testFunctionCall = function (name, input, output = null, error = null) {
-      return testString(name, JSON.stringify(input), utils.makePair(output, error));
+      return testString(name, JSON.stringify(input), canonicalize(utils.makePair(output, error)));
     };
 
     class Response {
@@ -63,7 +64,7 @@ describe('orchestrate', function () {
 
             sinon.stub(fetch, 'Promise').returns(Promise.resolve(new Response(response)));
 
-            const expected = utils.makePair(output, error);
+            const expected = canonicalize(utils.makePair(output, error));
             return preq.get(
                 uri + encodeURIComponent(JSON.stringify(input))
             )
@@ -556,7 +557,7 @@ describe('orchestrate', function () {
           zobject: readJSON('./test/features/v1/test_data/evaluated.json'),
           evaluatorUri: 'http://localhost:6927/en.wikipedia.org/v1/evaluate'
       },
-      utils.makePair({ Z1K1: 'Z6', Z6K1: '13' }, null),
+      canonicalize(utils.makePair({ Z1K1: 'Z6', Z6K1: '13' }, null)),
       { Z1K1: 'Z6', Z6K1: '13' }
     );
 
