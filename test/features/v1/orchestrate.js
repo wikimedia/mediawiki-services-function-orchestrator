@@ -478,8 +478,24 @@ describe('orchestrate', function () {
       { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
     );
 
+    testFunctionCall(
+      'composition',
+      { zobject: readJSON('./test/features/v1/test_data/composition.json') },
+      { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
+    );
+
     /*
      * TODO: Enable when mocking works.
+    testFunctionCall(
+      'composed function call: tail of the tail',
+      { zobject: readJSON('./test/features/v1/test_data/Z912_compose_Z912.json') },
+      {
+          Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
+          Z10K1: { Z1K1: 'Z6', Z6K1: 'three' },
+          Z10K2: { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' } }
+      }
+    );
+
     testEvaluatedFunctionCall(
       'evaluated function call',
       {

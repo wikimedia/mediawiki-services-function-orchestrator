@@ -25,7 +25,7 @@ function orchestrate(str) {
     const orchestrationRequest = parse(str);
     let zobject = orchestrationRequest.zobject;
     if (zobject === undefined) {
-        zobject = orchestrationRequest;
+       zobject = orchestrationRequest;
     }
 
     /*
@@ -38,18 +38,15 @@ function orchestrate(str) {
     // TODO: Default to true; add switch in tests to override default in CI.
     const doValidate = orchestrationRequest.doValidate || false;
 
-    const validateBound = (zObj) => {
+    function validateBound(zObj) {
         return new Promise((resolve, reject) => {
-            // TODO: Fix it
-            let toWait;
+            let errorPromise;
             if (doValidate) {
-                toWait = validate(zObj, resolver);
+                errorPromise = validate(zObj, resolver);
             } else {
-                toWait = new Promise((res, rej) => {
-                    res([]);
-                });
+                errorPromise = Promise.resolve([]);
             }
-            toWait.then((errors) => {
+            errorPromise.then((errors) => {
                 if (errors.length > 0) {
                     reject(makePair(null, arrayToZ10(errors)));
                 } else {
@@ -57,7 +54,7 @@ function orchestrate(str) {
                 }
             });
         });
-    };
+    }
 
     // In this promise chain, any function that rejects must reject with a
     // pair (Z22); any function that resolves (except execute) must resolve the

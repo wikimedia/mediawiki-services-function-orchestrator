@@ -3,57 +3,12 @@
 const Bluebird = require('bluebird');
 const builtins = require('./builtins.js');
 const fetch = require('node-fetch');
-const utils = require('../function-schemata/javascript/src/utils');
-const { mutate } = require('./zobject.js');
-const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
-const { canonicalError, error } = require('../function-schemata/javascript/src/error');
-const { makePair } = require('./utils.js');
 
 fetch.Promise = Bluebird;
 
-const normalFactory = SchemaFactory.NORMAL();
-
-class Implementation {
-
-    async withReturnValidated(result, zobject) {
-        // No need to validate result if it's an error.
-        if (result.Z22K1 !== undefined) {
-            await mutate(zobject, [ 'Z7K1' ], this.resolver_);
-            const returnType = zobject.Z7K1.Z8K2;
-            const returnValidator = normalFactory.create(returnType.Z9K1);
-            if (!returnValidator.validate(result.Z22K1)) {
-                return makePair(
-                    null,
-                    canonicalError(
-                        [error.argument_type_error],
-                        ['Could not validate return value as type ' + returnType]));
-            }
-        }
-        return result;
-    }
-
-    async getArgumentsDict(zobject) {
-        const argumentDict = {};
-        await mutate(zobject, [ 'Z7K1', 'Z8K1' ], this.resolver_);
-        const Z8K1 = zobject.Z7K1.Z8K1;
-
-        for (const Z17 of utils.Z10ToArray(Z8K1)) {
-            await mutate(Z17, [ 'Z17K2', 'Z6K1' ], this.resolver_);
-            const argumentName = Z17.Z17K2.Z6K1;
-            await mutate(zobject, [argumentName], this.resolver_);
-            const argument = zobject[ argumentName ];
-
-            argumentDict[ argumentName ] = argument;
-        }
-
-        return argumentDict;
-    }
-}
-
-class BuiltIn extends Implementation {
+class BuiltIn {
 
     constructor(functor, resolver) {
-        super();
         this.functor_ = functor;
         this.resolver_ = resolver;
     }
@@ -62,46 +17,52 @@ class BuiltIn extends Implementation {
      * Calls this implementation's functor with the provided arguments.
      *
      * @param {Object} zobject
+     * @param {Array} argumentList
      * @return {Object} the result of calling this.functor_ with provided arguments
      */
-    async execute(zobject) {
-        const argumentDictionary = await this.getArgumentsDict(zobject);
-
+    async execute(zobject, argumentList) {
         // TODO: This is a kludge, since argument names may not necessarily be
         // sorted. Find something akin to Python's **.
-        const keys = Object.keys(argumentDictionary);
+        const keys = [];
+        const nameToArgument = new Map();
+        for (const argumentDict of argumentList) {
+            keys.push(argumentDict.name);
+            nameToArgument.set(argumentDict.name, argumentDict.argument);
+        }
         keys.sort();
         const callArgs = [];
         for (const key of keys) {
-            callArgs.push(argumentDictionary[key]);
+            callArgs.push(nameToArgument.get(key));
         }
         callArgs.push(this.resolver_);
-        const result = this.functor_.apply(null, callArgs);
-        return this.withReturnValidated(result, zobject);
+        return this.functor_.apply(null, callArgs);
     }
 
 }
 
-class Evaluated extends Implementation {
+class Evaluated {
 
-    constructor(evaluatorUri, resolver) {
-        super();
+    constructor(evaluatorUri) {
         this.uri_ = evaluatorUri;
-        this.resolver_ = resolver;
     }
 
     /**
      * Calls this implementation's functor with the provided arguments.
      *
      * @param {Object} zobject
+     * @param {Array} argumentList
      * @return {Object} the result of calling this.functor_ with provided arguments
      */
-    execute(zobject) {
-        const toValidate = fetch(
+    async execute(zobject, argumentList) {
+        const Z7 = { ...zobject };
+        for (const argumentDict of argumentList) {
+            Z7[ argumentDict.name ] = argumentDict.argument;
+        }
+        return fetch(
             this.uri_,
             {
                 method: 'POST',
-                body: JSON.stringify(zobject),
+                body: JSON.stringify(Z7),
                 headers: { 'Content-Type': 'application/json' }
             })
             .then((result) => {
@@ -111,9 +72,6 @@ class Evaluated extends Implementation {
                 // TODO: Create an error here.
                 return problem;
             });
-        return this.withReturnValidated(toValidate, zobject).then((result) => {
-            return result;
-        });
     }
 
 }
@@ -148,10 +106,10 @@ function createImplementation(ZID, implementationType, evaluatorUri, referenceRe
     }
 
     if (evaluatorUri !== null) {
-        return new Evaluated(evaluatorUri, referenceResolver);
+        return new Evaluated(evaluatorUri);
     }
 
     return null;
 }
 
-module.exports = { createImplementation, makePair };
+module.exports = { createImplementation };
