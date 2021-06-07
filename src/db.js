@@ -1,36 +1,57 @@
 'use strict';
 
+const Bluebird = require('bluebird');
 const fetch = require('node-fetch');
+const { normalizePromise } = require('./utils.js');
 
-// TODO: hardcoded for now, must be changed when we agree on a way to define configs.
-const fetchUri = 'https://notwikilambda.toolforge.org/w/api.php';
+fetch.Promise = Bluebird;
 
-/**
- * Gets the ZObjects of a list of ZIDs.
- *
- * @param {Array} ZIDs A list of ZIDs to fetch.
- * @return {Object} An object mapping ZIDs to ZObjects
- */
-function fetchTypeZObject(ZIDs) {
-  const ZIDsParam = [...new Set(ZIDs)].join('|');
+class ReferenceResolver {
 
-  const url = new URL(fetchUri);
+    constructor(wikiUri) {
+        this.wikiUri_ = wikiUri;
+    }
 
-  url.searchParams.append('action', 'wikilambda_fetch');
-  url.searchParams.append('format', 'json');
-  url.searchParams.append('zids', ZIDsParam);
+    /**
+     * Gets the ZObjects of a list of ZIDs.
+     *
+     * @param {Array} ZIDs A list of ZIDs to fetch.
+     * @return {Object} An object mapping ZIDs to ZObjects
+     */
+    async dereference(ZIDs) {
+        // TODO: Why is the top-level resolveBuiltinReference undefined here?
+        const { resolveBuiltinReference } = require('./builtins.js');
+        const unresolved = new Set(ZIDs);
+        const dereferenced = {};
 
-  return fetch(url)
-    .then((res) => res.json())
-    .then((res) => {
-      const typeZ1s = {};
+        // Resolve references to builtins directly within the orchestrator.
+        for (const ZID of unresolved) {
+            const builtin = resolveBuiltinReference(ZID);
+            if (builtin !== null) {
+                unresolved.delete(ZID);
+                dereferenced[ ZID ] = { Z2K2: builtin };
+            }
+        }
 
-      for (const key in res) {
-        typeZ1s[key] = JSON.parse(res[key].wikilambda_fetch);
-      }
+        // Otherwise, consult the wiki.
+        if ((this.wikiUri_ !== null) && (unresolved.size > 0)) {
+            const url = new URL(this.wikiUri_);
+            url.searchParams.append('action', 'wikilambda_fetch');
+            url.searchParams.append('format', 'json');
+            url.searchParams.append('zids', [...unresolved].join('|'));
 
-      return typeZ1s;
-    });
+            const fetched = await fetch(url, { method: 'GET' });
+            const result = await fetched.json();
+
+            await Promise.all([ ...unresolved ].map(async (ZID) => {
+                const zobject = JSON.parse(result[ ZID ].wikilambda_fetch);
+                return await normalizePromise(zobject);
+            }));
+        }
+
+        return dereferenced;
+    }
+
 }
 
-module.exports = { fetchTypeZObject };
+module.exports = { ReferenceResolver };

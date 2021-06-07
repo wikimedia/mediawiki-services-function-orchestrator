@@ -1,12 +1,11 @@
 'use strict';
 
 const traverse = require('json-schema-traverse');
-const { fetchTypeZObject } = require('./db');
-const { resolveReference } = require('./builtins.js');
 const { createImplementation } = require('./implementation.js');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error.js');
 const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
+const { makePair } = require('./utils');
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z7Validator = normalFactory.create('Z7');
@@ -48,32 +47,34 @@ function createValidatorZ7(Z8, Z1) {
  *
  * @param {Object} Z1 the Z1/Object
  * @param {Object} typeZObject the type ZObject
+ * @param {ReferenceResolver} resolver used to resolve references
  * @return {Array} an array of Z5/Error
  */
-async function runTypeValidator(Z1, typeZObject) {
+async function runTypeValidator(Z1, typeZObject, resolver) {
     const validatorZid = typeZObject.Z2K2.Z4K3;
 
     try {
-        const validatorZ8 = resolveReference(validatorZid);
+        const validatorZ8 = (
+            await resolver.dereference([ validatorZid.Z9K1 ])
+        )[ validatorZid.Z9K1 ].Z2K2;
 
         // validator builtin implementation id
         const implementationId = validatorZ8.Z8K4.Z10K1.Z14K4.Z6K1;
-        const implementation = createImplementation(implementationId, 'FUNCTION');
+        const implementation = createImplementation(implementationId, 'FUNCTION', null, resolver);
 
         const validatorZ7 = createValidatorZ7(validatorZ8, Z1);
         const result = await implementation.execute(validatorZ7);
 
         return Z10ToArray(result);
     } catch (err) {
-        console.log(err);
         return [
             normalError(
                 [error.zid_not_found],
-                [`Builtin validator "${validatorZid}" not found for "${typeZObject.Z2K1}"`]
+                [`Builtin validator "${validatorZid.Z9K1}" not found for "${typeZObject.Z2K1.Z9K1}"`]
             )
         ];
     }
-  }
+}
 
 /**
  * Validates a ZObject against the function call schema.
@@ -86,7 +87,7 @@ function isFunctionCall(Z1) {
         if (Z7Validator.validate(Z1)) {
             resolve(Z1);
         } else {
-            reject();
+            reject(makePair(Z1, null));
         }
     });
 }
@@ -121,16 +122,17 @@ function isReference(Z1) {
  * and return their ZObjects. The ZObjects are fetched from the database.
  *
  * @param {Object} zobject the zobject in normal.
+ * @param {ReferenceResolver} resolver used to resolve references
  * @return {Object} an object mapping the ZID to the ZObject of the type.
  */
-async function getContainedTypeZObjects(zobject) {
+async function getContainedTypeZObjects(zobject, resolver) {
     const containedTypes = new Set();
 
     traverse(zobject, { allKeys: true }, (Z1) =>
       containedTypes.add(isRefOrString(Z1) ? Z1.Z1K1 : Z1.Z1K1.Z9K1)
     );
 
-    return fetchTypeZObject(containedTypes);
+    return resolver.dereference(containedTypes);
 }
 
 /**
@@ -138,12 +140,13 @@ async function getContainedTypeZObjects(zobject) {
  * validator.
  *
  * @param {Object} zobject the zobject in normal form.
+ * @param {ReferenceResolver} resolver used to resolve references
  * @return {Array} an array of validation errors.
  */
-async function validate(zobject) {
+async function validate(zobject, resolver) {
     const errors = [];
     const validatorPromises = [];
-    const ZObjectTypes = await getContainedTypeZObjects(zobject);
+    const ZObjectTypes = await getContainedTypeZObjects(zobject, resolver);
 
     traverse(zobject, { allKeys: true }, (Z1) => {
         const typeZID = isRefOrString(Z1) ? Z1.Z1K1 : Z1.Z1K1.Z9K1;
@@ -158,7 +161,7 @@ async function validate(zobject) {
                 )
             );
         } else {
-            validatorPromises.push(runTypeValidator(Z1, ZObjectTypes[typeZID]));
+            validatorPromises.push(runTypeValidator(Z1, ZObjectTypes[typeZID], resolver));
         }
     });
 

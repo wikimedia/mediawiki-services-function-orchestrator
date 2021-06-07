@@ -1,48 +1,22 @@
 'use strict';
 
 const parse = require('./parse.js');
-const wellformed = require('./wellformed.js');
-const normalize = require('../function-schemata/javascript/src/normalize.js');
 const canonicalize = require('../function-schemata/javascript/src/canonicalize.js');
 const { arrayToZ10 } = require('../function-schemata/javascript/src/utils.js');
-const { validate, isReference, isFunctionCall } = require('./validation.js');
+const { validate, isFunctionCall } = require('./validation.js');
 const { execute } = require('./execute.js');
-const { resolveReference } = require('./builtins.js');
 const { makePair } = require('./utils');
-
-function normalizeZObject(zobject) {
-    return new Promise((resolve, reject) => {
-        try {
-            resolve(normalize(zobject));
-        } catch (err) {
-            reject(err);
-        }
-    });
-}
+const { normalizePromise } = require('./utils.js');
+const { ReferenceResolver } = require('./db.js');
 
 function canonicalizeZObject(zobject) {
     return new Promise((resolve, reject) => {
         try {
-            resolve(canonicalize(zobject));
+            const result = canonicalize(zobject);
+            resolve(result);
         } catch (err) {
-            reject(err);
+            resolve(zobject);
         }
-    });
-}
-
-function fixRef(zobject) {
-    if (isReference(zobject.Z7K1)) {
-        const clone = {};
-        Object.assign(clone, zobject);
-        clone.Z7K1 = resolveReference(clone.Z7K1.Z9K1);
-        return clone;
-    }
-    return zobject;
-}
-
-function withReferenceResolved(zobject) {
-    return new Promise((resolve, reject) => {
-        resolve(fixRef(zobject));
     });
 }
 
@@ -55,29 +29,72 @@ function orchestrate(str) {
     }
 
     /*
-     * TODO: Receiving the evaluator URI as a parameter (especially a GET
-     * param!) is no good. Find a way to share config among services.
+     * TODO: Receiving the evaluator and wiki URIs as parameters (especially a
+     * GET param!) is no good. Find a way to share config among services.
      */
     const evaluatorUri = orchestrationRequest.evaluatorUri || null;
+    const wikiUri = orchestrationRequest.wikiUri || null;
+    const resolver = new ReferenceResolver(wikiUri);
+    // TODO: Default to true; add switch in tests to override default in CI.
+    const doValidate = orchestrationRequest.doValidate || false;
 
-    const executeBound = async (zObj) => {
-        const errors = await validate(zObj);
-
-        /**
-         * TODO: errors should be rejected. For now, they are being returned
-         * to avoid the "wellformed" flow.
-         */
-        return errors.length === 0 ?
-            execute(zObj, evaluatorUri) :
-            makePair(null, arrayToZ10(errors));
+    const validateBound = (zObj) => {
+        return new Promise((resolve, reject) => {
+            // TODO: Fix it
+            let toWait;
+            if (doValidate) {
+                toWait = validate(zObj, resolver);
+            } else {
+                toWait = new Promise((res, rej) => {
+                    res([]);
+                });
+            }
+            toWait.then((errors) => {
+                if (errors.length > 0) {
+                    reject(makePair(null, arrayToZ10(errors)));
+                } else {
+                    resolve(zObj);
+                }
+            });
+        });
     };
 
-    return normalizeZObject(zobject)
-        .then(withReferenceResolved)
-        .then(isFunctionCall)
-        .then(executeBound)
-        .then(canonicalizeZObject)
-        .catch(() => wellformed(zobject));
+    // In this promise chain, any function that rejects must reject with a
+    // pair (Z22); any function that resolves (except execute) must resolve the
+    // "good" ZObject that will be processed by the subsequent function. execute
+    // also resolves with a Z22. This ensures that the orchestrator always
+    // returns a pair containing either
+    //
+    // Z22K1: the original ZObject OR
+    // Z22K1: the result of calling the original ZObject (if a Z7) OR
+    // Z22K2: an error.
+    const result = normalizePromise(zobject)
+        .then((normalized) => {
+            return validateBound(normalized);
+        })
+        .then((dereferenced) => {
+            // TODO: Run embedded function calls, not just top-level.
+            return isFunctionCall(dereferenced);
+        })
+        .then((Z7) => {
+            return execute(Z7, evaluatorUri, resolver);
+        })
+        .catch((problem) => {
+            return problem;
+        });
+
+    // Attempt to canonicalize if possible.
+    // TODO: Fix canonicalization code in function-schemata to handle mixed forms.
+    return result.then((executed) => {
+            return new Promise((resolve, reject) => {
+                try {
+                    const canonicalized = canonicalizeZObject(executed);
+                    resolve(canonicalized);
+                } catch (error) {
+                    resolve(executed);
+                }
+            });
+        });
 }
 
 module.exports = orchestrate;

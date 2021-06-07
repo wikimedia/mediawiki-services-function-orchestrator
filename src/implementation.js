@@ -4,6 +4,7 @@ const Bluebird = require('bluebird');
 const builtins = require('./builtins.js');
 const fetch = require('node-fetch');
 const utils = require('../function-schemata/javascript/src/utils');
+const { mutate } = require('./zobject.js');
 const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
 const { canonicalError, error } = require('../function-schemata/javascript/src/error');
 const { makePair } = require('./utils.js');
@@ -14,11 +15,12 @@ const normalFactory = SchemaFactory.NORMAL();
 
 class Implementation {
 
-    withReturnValidated(result, zobject) {
+    async withReturnValidated(result, zobject) {
         // No need to validate result if it's an error.
         if (result.Z22K1 !== undefined) {
-            const returnType = zobject.Z7K1.Z8K2.Z9K1;
-            const returnValidator = normalFactory.create(returnType);
+            await mutate(zobject, [ 'Z7K1' ], this.resolver_);
+            const returnType = zobject.Z7K1.Z8K2;
+            const returnValidator = normalFactory.create(returnType.Z9K1);
             if (!returnValidator.validate(result.Z22K1)) {
                 return makePair(
                     null,
@@ -30,13 +32,16 @@ class Implementation {
         return result;
     }
 
-    getArgumentsDict(zobject) {
+    async getArgumentsDict(zobject) {
         const argumentDict = {};
-        const functionCall = zobject.Z7K1;
+        await mutate(zobject, [ 'Z7K1', 'Z8K1' ], this.resolver_);
+        const Z8K1 = zobject.Z7K1.Z8K1;
 
-        for (const Z17 of utils.Z10ToArray(functionCall.Z8K1)) {
+        for (const Z17 of utils.Z10ToArray(Z8K1)) {
+            await mutate(Z17, [ 'Z17K2', 'Z6K1' ], this.resolver_);
             const argumentName = Z17.Z17K2.Z6K1;
-            const argument = zobject[argumentName];
+            await mutate(zobject, [argumentName], this.resolver_);
+            const argument = zobject[ argumentName ];
 
             argumentDict[ argumentName ] = argument;
         }
@@ -47,9 +52,10 @@ class Implementation {
 
 class BuiltIn extends Implementation {
 
-    constructor(functor) {
+    constructor(functor, resolver) {
         super();
         this.functor_ = functor;
+        this.resolver_ = resolver;
     }
 
     /**
@@ -58,8 +64,8 @@ class BuiltIn extends Implementation {
      * @param {Object} zobject
      * @return {Object} the result of calling this.functor_ with provided arguments
      */
-    execute(zobject) {
-        const argumentDictionary = this.getArgumentsDict(zobject);
+    async execute(zobject) {
+        const argumentDictionary = await this.getArgumentsDict(zobject);
 
         // TODO: This is a kludge, since argument names may not necessarily be
         // sorted. Find something akin to Python's **.
@@ -69,19 +75,19 @@ class BuiltIn extends Implementation {
         for (const key of keys) {
             callArgs.push(argumentDictionary[key]);
         }
+        callArgs.push(this.resolver_);
         const result = this.functor_.apply(null, callArgs);
-        return new Promise((resolve, reject) => {
-            resolve(this.withReturnValidated(result, zobject));
-        });
+        return this.withReturnValidated(result, zobject);
     }
 
 }
 
 class Evaluated extends Implementation {
 
-    constructor(evaluatorUri) {
+    constructor(evaluatorUri, resolver) {
         super();
         this.uri_ = evaluatorUri;
+        this.resolver_ = resolver;
     }
 
     /**
@@ -91,7 +97,7 @@ class Evaluated extends Implementation {
      * @return {Object} the result of calling this.functor_ with provided arguments
      */
     execute(zobject) {
-        return fetch(
+        const toValidate = fetch(
             this.uri_,
             {
                 method: 'POST',
@@ -99,12 +105,15 @@ class Evaluated extends Implementation {
                 headers: { 'Content-Type': 'application/json' }
             })
             .then((result) => {
-                return this.withReturnValidated(result.json(), zobject);
+                return result.json();
             })
             .catch((problem) => {
                 // TODO: Create an error here.
-                return this.withReturnValidated(problem, zobject);
+                return problem;
             });
+        return this.withReturnValidated(toValidate, zobject).then((result) => {
+            return result;
+        });
     }
 
 }
@@ -123,9 +132,10 @@ implementationTypes.set('FUNCTION', builtins.getFunction);
  * @param {string} ZID the function to retrieve an implementation for
  * @param {string} implementationType the kind of function to retrieve
  * @param {string} evaluatorUri
+ * @param {ReferenceResolver} referenceResolver
  * @return {Function} the function or implementation
  */
-function createImplementation(ZID, implementationType, evaluatorUri) {
+function createImplementation(ZID, implementationType, evaluatorUri, referenceResolver = null) {
     const getter = implementationTypes.get(implementationType);
     if (getter === undefined) {
         // TODO: Error.
@@ -134,11 +144,11 @@ function createImplementation(ZID, implementationType, evaluatorUri) {
 
     const builtin = getter(ZID);
     if (builtin !== null) {
-        return new BuiltIn(builtin);
+        return new BuiltIn(builtin, referenceResolver);
     }
 
     if (evaluatorUri !== null) {
-        return new Evaluated(evaluatorUri);
+        return new Evaluated(evaluatorUri, referenceResolver);
     }
 
     return null;

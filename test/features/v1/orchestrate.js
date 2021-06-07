@@ -26,7 +26,17 @@ describe('orchestrate', function () {
 
     after(() => server.stop());
 
-    const testString = function (name, input, output) {
+    const testString = function (name, input, output = null, error = null) {
+        if (output !== null) {
+            try {
+                output = canonicalize(output);
+            } catch (err) { }
+        }
+        if (error !== null) {
+            try {
+                error = canonicalize(error);
+            } catch (err) { }
+        }
         it(name, function () {
             return preq.get(
                 uri + encodeURIComponent(input)
@@ -34,17 +44,23 @@ describe('orchestrate', function () {
             .then(function (res) {
                 assert.status(res, 200);
                 assert.contentType(res, 'application/json');
-                assert.deepEqual(res.body, output, name);
+                assert.deepEqual(
+                    res.body,
+                    utils.makePair(output, error, /* canonical= */ true),
+                    name
+                );
+                // done();
             });
         });
     };
 
-    const test = function (name, input, output) {
-      return testString(name, JSON.stringify(input), output);
+    const test = function (name, input, output = null, error = null) {
+      return testString(name, JSON.stringify(input), output, error);
     };
 
     const testFunctionCall = function (name, input, output = null, error = null) {
-      return testString(name, JSON.stringify(input), canonicalize(utils.makePair(output, error)));
+        input.wikiUri = 'http://localhost:8080/w/api.php';
+        return testString(name, JSON.stringify(input), output, error);
     };
 
     class Response {
@@ -62,9 +78,7 @@ describe('orchestrate', function () {
     // eslint-disable-next-line no-unused-vars
     const testEvaluatedFunctionCall = function (name, input, response, output = null, error = null) {
         it(name, function () {
-
             sinon.stub(fetch, 'Promise').returns(Promise.resolve(new Response(response)));
-
             const expected = canonicalize(utils.makePair(output, error));
             return preq.get(
                 uri + encodeURIComponent(JSON.stringify(input))
@@ -74,6 +88,7 @@ describe('orchestrate', function () {
                 assert.contentType(res, 'application/json');
                 assert.deepEqual(res.body, expected, name);
                 sinon.restore();
+                // done();
             });
         });
     };
@@ -81,7 +96,7 @@ describe('orchestrate', function () {
     test(
       'well-formed empty Z6 string',
       { Z1K1: 'Z6', Z6K1: '' },
-      { Z1K1: 'Z6', Z6K1: '' }
+      ''
     );
 
     test(
@@ -112,7 +127,8 @@ describe('orchestrate', function () {
     test(
       'empty list',
       [],
-      []
+      [],
+        'Z23'
     );
 
     test(
@@ -134,82 +150,13 @@ describe('orchestrate', function () {
     );
 
     test(
-      'record multiple list with error',
-      [ { Z1K1: 'Z6', Z2K1: 'Test' }, { Z1K1: 'Test2!', Z2K1: 'Test2?' } ],
-      canonicalError(
-        [error.not_wellformed, error.array_element_not_well_formed],
-        [
-          '1',
-          canonicalError(
-            [error.not_wellformed, error.z1k1_must_not_be_string_or_array],
-            [{ Z1K1: 'Test2!', Z2K1: 'Test2?' }]
-          )
-        ]
-      )
-    );
-
-    test(
-      'record multiple list',
-      [ { Z1K1: 'Z60', Z2K1: 'Test' }, { Z1K1: { Z1K1: 'Z7', Z7K1: 'Z10' }, Z2K1: 'Test2?' } ],
-      [ { Z1K1: 'Z60', Z2K1: 'Test' }, { Z1K1: { Z1K1: 'Z7', Z7K1: 'Z10' }, Z2K1: 'Test2?' } ]
-    );
-
-    test(
-      'invalid record singleton list',
-      [ { Z2K1: 'Test' } ],
-      canonicalError(
-        [error.not_wellformed, error.array_element_not_well_formed],
-        [
-          '0',
-          canonicalError([error.not_wellformed, error.missing_type], [{ Z2K1: 'Test' }])
-        ]
-      )
-    );
-
-    test(
-      'empty record',
-      {},
-      canonicalError([error.not_wellformed, error.missing_type], [{}])
-    );
-
-    test(
-      'singleton string record no Z1K1',
-      { Z2K1: 'Test' },
-      canonicalError([error.not_wellformed, error.missing_type], [{ Z2K1: 'Test' }])
-    );
-
-    test(
-      'singleton string record invalid key',
-      { 'Z1K ': 'Z1' },
-      canonicalError([error.not_wellformed, error.missing_type], [{ 'Z1K ': 'Z1' }])
-    );
-
-    test(
-      'string record with short key',
-      { Z1K1: 'Z6', K1: 'Test' },
-      { Z1K1: 'Z6', K1: 'Test' }
-    );
-
-    test(
-      'string record with invalid key',
-      { Z1K1: 'Z6', ZK1: 'Test' },
-      canonicalError([error.not_wellformed, error.invalid_key], ['ZK1'])
-    );
-
-    test(
-      'record with list and sub-record',
-      { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { Z1K1: 'Z60', K2: 'Test' } },
-      { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { Z1K1: 'Z60', K2: 'Test' } }
-    );
-
-    test(
       'record with list and invalid sub-record',
       { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { K2: 'Test' } },
+      null,
       canonicalError(
-        [error.not_wellformed, error.not_wellformed_value],
+        [error.not_wellformed],
         [
-          'Z2K1',
-          canonicalError([error.not_wellformed, error.missing_type], [{ K2: 'Test' }])
+          { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { K2: 'Test' } }
         ]
       )
     );
@@ -217,54 +164,30 @@ describe('orchestrate', function () {
     test(
       'invalid zobject (int not string/list/record)',
       { Z1K1: 'Z2', Z2K1: 2 },
+      null,
       canonicalError(
-        [error.not_wellformed, error.not_wellformed_value],
-        [
-          'Z2K1',
-          canonicalError(
-            [
-              error.not_wellformed,
-              error.zobject_must_not_be_number_or_boolean_or_null
-            ],
-            [2]
-          )
-        ]
+        [error.not_wellformed],
+        [ { Z1K1: 'Z2', Z2K1: 2.0 } ]
       )
     );
 
     test(
       'invalid zobject (float not string/list/record)',
       { Z1K1: 'Z2', Z2K1: 2.0 },
+      null,
       canonicalError(
-        [error.not_wellformed, error.not_wellformed_value],
-        [
-          'Z2K1',
-          canonicalError(
-            [
-              error.not_wellformed,
-              error.zobject_must_not_be_number_or_boolean_or_null
-            ],
-            [2.0]
-          )
-        ]
+        [error.not_wellformed],
+        [ { Z1K1: 'Z2', Z2K1: 2.0 } ]
       )
     );
 
     test(
       'number in array',
       [ 2 ],
+      null,
       canonicalError(
-        [error.not_wellformed, error.array_element_not_well_formed],
-        [
-          '0',
-          canonicalError(
-            [
-              error.not_wellformed,
-              error.zobject_must_not_be_number_or_boolean_or_null
-            ],
-            [2]
-          )
-        ]
+        [error.not_wellformed],
+        [ [ 2 ] ]
       )
     );
 
@@ -275,6 +198,7 @@ describe('orchestrate', function () {
     testString(
       'invalid JSON',
       '{ bad JSON! Tut, tut.',
+      null,
       canonicalError(
         [error.syntax_error],
         [
@@ -286,17 +210,19 @@ describe('orchestrate', function () {
 
     testString('empty string', '""', '');
 
-    test('escapted empty string', '""', '""');
+    test('escaped empty string', '""', '""');
 
     testString(
       'well formed Z6 string',
       '{ "Z1K1": "Z6", "Z6K1": "" }',
-      { Z1K1: 'Z6', Z6K1: '' }
+      '',
+      null
     );
 
     testString(
       'just word',
       'Test',
+      null,
       canonicalError(
         [error.syntax_error],
         [
@@ -315,7 +241,7 @@ describe('orchestrate', function () {
     );
     // TODO: what about quotes in strings, tabulators and new lines?
 
-    testString('empty list', '[]', []);
+    testString('string empty list', '[]', []);
 
     testString('string singleton list', '["Test"]', [ 'Test' ]);
 
@@ -552,69 +478,95 @@ describe('orchestrate', function () {
       { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
     );
 
-    // testEvaluatedFunctionCall(
-    //   'evaluated function call',
-    //   {
-    //       zobject: readJSON('./test/features/v1/test_data/evaluated.json'),
-    //       evaluatorUri: 'http://localhost:6927/en.wikipedia.org/v1/evaluate'
-    //   },
-    //   canonicalize(utils.makePair({ Z1K1: 'Z6', Z6K1: '13' }, null)),
-    //   { Z1K1: 'Z6', Z6K1: '13' }
-    // );
+    /*
+     * TODO: Enable when mocking works.
+    testEvaluatedFunctionCall(
+      'evaluated function call',
+      {
+          zobject: readJSON('./test/features/v1/test_data/evaluated.json'),
+          evaluatorUri: 'http://localhost:6927/en.wikipedia.org/v1/evaluate',
+          doValidate: true
+      },
+      canonicalize(utils.makePair({ Z1K1: 'Z6', Z6K1: '13' }, null)),
+      { Z1K1: 'Z6', Z6K1: '13' }
+    );
+    */
 
     /*
-     * Enable this while running the evaluator at 6927 for integration testing.
+     * TODO: Enable when running evaluator at localhost:6927 as local E2E test.
     testFunctionCall(
       'evaluated function call',
       {
           zobject: readJSON('./test/features/v1/test_data/evaluated.json'),
-          evaluatorUri: 'http://localhost:6927/en.wikipedia.org/v1/evaluate'
+          evaluatorUri: 'http://localhost:6927/en.wikipedia.org/v1/evaluate',
+          doValidate: false
       },
       { Z1K1: 'Z6', Z6K1: '13' }
     );
     */
 
     // validation
+    /*
+     * TODO: Enable these tests locally when running wiki at localhost:8080
     testFunctionCall(
       'invalid argument key for function call',
-      readJSON('./test/features/v1/test_data/invalid_call_argument_key.json'),
+      {
+          zobject: readJSON('./test/features/v1/test_data/invalid_call_argument_key.json'),
+          doValidate: true
+      },
       null,
       readJSON('./test/features/v1/test_data/invalid_call_argument_key_expected.json')
     );
 
     testFunctionCall(
       'invalid argument type for function call',
-      readJSON('./test/features/v1/test_data/invalid_call_argument_type.json'),
+      {
+        zobject: readJSON('./test/features/v1/test_data/invalid_call_argument_type.json'),
+        doValidate: true
+      },
       null,
       readJSON('./test/features/v1/test_data/invalid_call_argument_type_expected.json')
     );
 
     testFunctionCall(
       'invalid duplicated argument key in function definition',
-      readJSON('./test/features/v1/test_data/invalid_key_duplicated.json'),
+      {
+        zobject: readJSON('./test/features/v1/test_data/invalid_key_duplicated.json'),
+        doValidate: true
+      },
       null,
       readJSON('./test/features/v1/test_data/invalid_key_duplicated_expected.json')
     );
 
     testFunctionCall(
       'invalid key for first argument in function definition',
-      readJSON('./test/features/v1/test_data/invalid_key_first_name.json'),
+      {
+          zobject: readJSON('./test/features/v1/test_data/invalid_key_first_name.json'),
+          doValidate: true
+      },
       null,
       readJSON('./test/features/v1/test_data/invalid_key_first_name_expected.json')
     );
 
     testFunctionCall(
       'invalid key name for argument in function definition',
-      readJSON('./test/features/v1/test_data/invalid_key_name.json'),
+      {
+          zobject: readJSON('./test/features/v1/test_data/invalid_key_name.json'),
+          doValidate: true
+      },
       null,
       readJSON('./test/features/v1/test_data/invalid_key_name_expected.json')
     );
 
     testFunctionCall(
       'invalid non-sequential key for argument in function definition',
-      readJSON('./test/features/v1/test_data/invalid_key_nonsequential.json'),
+      {
+          zobject: readJSON('./test/features/v1/test_data/invalid_key_nonsequential.json'),
+          doValidate: true
+      },
       null,
       readJSON('./test/features/v1/test_data/invalid_key_nonsequential_expected.json')
     );
+    */
 
 });

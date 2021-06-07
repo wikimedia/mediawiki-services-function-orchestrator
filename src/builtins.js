@@ -2,6 +2,7 @@
 
 const utils = require('../function-schemata/javascript/src/utils');
 const normalize = require('../function-schemata/javascript/src/normalize');
+const { mutate } = require('./zobject.js');
 const { makePair } = require('./utils.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 
@@ -301,11 +302,13 @@ function BUILTIN_Z4_TYPE_VALIDATOR_(Z1) {
     return utils.arrayToZ10(errors);
 }
 
-function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1) {
+async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, resolver) {
     const argumentTypes = {};
     const errors = [];
 
-    for (const arg of utils.Z10ToArray(Z1.Z7K1.Z8K1)) {
+    await mutate(Z1, [ 'Z7K1', 'Z8K1' ], resolver);
+    const Z8K1 = Z1.Z7K1.Z8K1;
+    for (const arg of utils.Z10ToArray(Z8K1)) {
         argumentTypes[arg.Z17K2.Z6K1] = arg.Z17K1.Z9K1;
     }
 
@@ -316,7 +319,7 @@ function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1) {
 
         const type = Z1[key].Z1K1.Z9K1 || Z1[key].Z1K1;
 
-        if (!argumentTypes[key]) {
+        if (argumentTypes[key] === undefined) {
             errors.push(
                 normalError(
                     [error.invalid_key],
@@ -596,15 +599,15 @@ builtinReferences.set('Z899', createZ8(
  * Creates a Z8 corresponding to a bulitin function.
  *
  * @param {string} ZID reference to a builtin function
- * @return {Object} a Z8
+ * @return {Object} a Z8 or null
  */
-function resolveReference(ZID) {
+function resolveBuiltinReference(ZID) {
     // TODO: Resolve all terminal references (especially Z40), NOT just Z7K1.
     const result = builtinReferences.get(ZID);
     if (result === undefined) {
-        throw Error('Not contained in builtinReferences');
+        return null;
     }
     return result;
 }
 
-module.exports = { getFunction, resolveReference };
+module.exports = { getFunction, resolveBuiltinReference };
