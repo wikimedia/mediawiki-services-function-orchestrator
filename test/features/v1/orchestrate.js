@@ -10,6 +10,10 @@ const canonicalize = require('../../../function-schemata/javascript/src/canonica
 const utils = require('../../../src/utils.js');
 const sinon = require('sinon');
 
+function readJSON(fileName) {
+  return JSON.parse(fs.readFileSync(fileName, { encoding: 'utf8' }));
+}
+
 describe('orchestrate', function () {
 
     this.timeout(20000);
@@ -96,57 +100,65 @@ describe('orchestrate', function () {
     test(
       'well-formed empty Z6 string',
       { Z1K1: 'Z6', Z6K1: '' },
-      ''
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
       'return string literal',
       { Z1K1: 'Z6', Z6K1: 'Hello' },
-      { Z1K1: 'Z6', Z6K1: 'Hello' }
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
       'return string literal with space',
       { Z1K1: 'Z6', Z6K1: 'Hello World!' },
-      { Z1K1: 'Z6', Z6K1: 'Hello World!' }
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
       'empty Z6 string',
       '',
-      ''
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
       'messy string',
       'This is a [basic] complicated test {string}!',
-      'This is a [basic] complicated test {string}!'
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
     // TODO: what about quotes in strings, tabulators and new lines?
 
     test(
       'empty list',
       [],
-      [],
-        'Z23'
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
       'string singleton list',
       [ 'Test' ],
-      [ 'Test' ]
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
       'string multiple list',
       [ 'Test', 'Test2', 'Test3' ],
-      [ 'Test', 'Test2', 'Test3' ]
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
       'record singleton list',
       [ { Z1K1: 'Z60', Z2K1: 'Test' } ],
-      [ { Z1K1: 'Z60', Z2K1: 'Test' } ]
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
@@ -193,43 +205,17 @@ describe('orchestrate', function () {
 
     // Parser
 
-    testString('simple string parsed', '"test"', 'test');
+    testString('simple string parsed', '"test"', null, readJSON('./test/features/v1/test_data/error-not-fn.json'));
 
-    testString(
-      'invalid JSON',
-      '{ bad JSON! Tut, tut.',
-      null,
-      canonicalError(
-        [error.syntax_error],
-        [
-          'Unexpected token b in JSON at position 2',
-          '{ bad JSON! Tut, tut.'
-        ]
-      )
-    );
+    testString('empty string', '""', null, readJSON('./test/features/v1/test_data/error-not-fn.json'));
 
-    testString('empty string', '""', '');
-
-    test('escaped empty string', '""', '""');
+    test('escaped empty string', '""', null, readJSON('./test/features/v1/test_data/error-not-fn.json'));
 
     testString(
       'well formed Z6 string',
       '{ "Z1K1": "Z6", "Z6K1": "" }',
-      '',
-      null
-    );
-
-    testString(
-      'just word',
-      'Test',
       null,
-      canonicalError(
-        [error.syntax_error],
-        [
-          'Unexpected token T in JSON at position 0',
-          'Test'
-        ]
-      )
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     // TODO: testString('empty', '', ...);
@@ -237,19 +223,16 @@ describe('orchestrate', function () {
     testString(
       'messy string',
       '"This is a [basic] complicated test {string}!"',
-      'This is a [basic] complicated test {string}!'
+      null,
+      readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
     // TODO: what about quotes in strings, tabulators and new lines?
 
-    testString('string empty list', '[]', []);
+    testString('string empty list', '[]', null, readJSON('./test/features/v1/test_data/error-not-fn.json'));
 
-    testString('string singleton list', '["Test"]', [ 'Test' ]);
+    testString('string singleton list', '["Test"]', null, readJSON('./test/features/v1/test_data/error-not-fn.json'));
 
-    testString('multiple list', '["Test", [] , "3"]', [ 'Test', [], '3' ]);
-
-    function readJSON(fileName) {
-        return JSON.parse(fs.readFileSync(fileName, { encoding: 'utf8' }));
-    }
+    testString('multiple list', '["Test", [] , "3"]', null, readJSON('./test/features/v1/test_data/error-not-fn.json'));
 
     // Tests function calls.
     testFunctionCall(

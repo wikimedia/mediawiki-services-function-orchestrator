@@ -28,6 +28,10 @@ function orchestrate(str) {
        zobject = orchestrationRequest;
     }
 
+    if (zobject.Z1K1 && zobject.Z1K1.Z9K1 && zobject.Z1K1.Z9K1 === 'Z5') {
+        return makePair(null, zobject, true);
+    }
+
     /*
      * TODO: Receiving the evaluator and wiki URIs as parameters (especially a
      * GET param!) is no good. Find a way to share config among services.
@@ -77,7 +81,11 @@ function orchestrate(str) {
             return execute(Z7, evaluatorUri, resolver);
         })
         .catch((problem) => {
-            return problem;
+            // TODO: Why is the problem already a pair some of the time?
+            if (problem.Z1K1 === 'Z22') {
+                return problem;
+            }
+            return makePair(null, problem, true);
         });
 
     // Attempt to canonicalize if possible.

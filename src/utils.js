@@ -59,4 +59,32 @@ function normalizePromise(zobject) {
     });
 }
 
-module.exports = { makePair, Z23, normalizePromise };
+function generateError(error = 'An unknown error occurred') {
+    return {
+        Z1K1: {
+            Z1K1: 'Z9',
+            Z9K1: 'Z5'
+        },
+        Z5K2: {
+            Z1K1: {
+                Z1K1: 'Z9',
+                Z9K1: 'Z10'
+            },
+            Z10K1: {
+                Z1K1: {
+                    Z1K1: 'Z9',
+                    Z9K1: 'Z6'
+                },
+                Z6K1: error
+            },
+            Z10K2: {
+                Z1K1: {
+                    Z1K1: 'Z9',
+                    Z9K1: 'Z10'
+                }
+            }
+        }
+    };
+}
+
+module.exports = { makePair, Z23, generateError, normalizePromise };

@@ -5,7 +5,7 @@ const { createImplementation } = require('./implementation.js');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error.js');
 const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
-const { makePair } = require('./utils');
+const { generateError } = require('./utils.js');
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z7Validator = normalFactory.create('Z7');
@@ -87,7 +87,7 @@ function isFunctionCall(Z1) {
         if (Z7Validator.validate(Z1)) {
             resolve(Z1);
         } else {
-            reject(makePair(Z1, null));
+            reject(generateError('The provided object is not a function call'));
         }
     });
 }
