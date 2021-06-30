@@ -362,6 +362,28 @@ function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1) {
     return utils.arrayToZ10(errors);
 }
 
+function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_(Z1) {
+    const errors = [];
+    const Z31s = utils.Z10ToArray(Z1.Z32K1);
+    const languages = Z31s.map((Z31) => Z31.Z31K1.Z60K1.Z6K1);
+
+    const seen = new Set();
+    for (let i = 0; i < languages.length; ++i) {
+        if (seen.has(languages[i])) {
+            errors.push(
+                normalError(
+                    [error.array_element_not_well_formed],
+                    [`Duplicate Z31K1/language element in Z32/Multilingual stringset: '${languages[i]}'`]
+                )
+            );
+        }
+
+        seen.add(languages[i]);
+    }
+
+    return utils.arrayToZ10(errors);
+}
+
 function BUILTIN_ERROR_TYPE_VALIDATOR_(Z1) {
     return arrayValidator(
         Z1.Z50K1,
@@ -409,6 +431,8 @@ builtinFunctions.set('Z220', BUILTIN_EMPTY_VALIDATOR_);
 builtinFunctions.set('Z221', BUILTIN_EMPTY_VALIDATOR_);
 builtinFunctions.set('Z222', BUILTIN_EMPTY_VALIDATOR_);
 builtinFunctions.set('Z223', BUILTIN_EMPTY_VALIDATOR_);
+builtinFunctions.set('Z231', BUILTIN_EMPTY_VALIDATOR_);
+builtinFunctions.set('Z232', BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_);
 builtinFunctions.set('Z239', BUILTIN_EMPTY_VALIDATOR_);
 builtinFunctions.set('Z240', BUILTIN_EMPTY_VALIDATOR_);
 builtinFunctions.set('Z241', BUILTIN_EMPTY_VALIDATOR_);
