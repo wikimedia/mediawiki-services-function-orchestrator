@@ -163,7 +163,12 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
     let argument = argumentDict.argument;
     if (Z7Schema.validate(argument)) {
         const evaluationResult = await execute(argument, evaluatorUri, resolver, scope);
-        if (evaluationResult.Z22K2.Z9K1 !== 'Z23') {
+
+        const errorKey = evaluationResult.Z22K2.Z1K1.Z9K1 ?
+            evaluationResult.Z22K2.Z1K1.Z9K1 :
+            evaluationResult.Z22K2.Z9K1;
+
+        if (errorKey !== 'Z23') {
             return evaluationResult;
         }
         argument = evaluationResult.Z22K1;
@@ -215,6 +220,7 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null) {
 
     // Ensure Z8 is fully populated.
     await mutate(zobject, [ 'Z7K1', 'Z8K4' ], resolver);
+
     let implementations = [];
     if (zobject.Z7K1.Z8K4 !== undefined) {
         implementations = Z10ToArray(zobject.Z7K1.Z8K4);
@@ -279,6 +285,7 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null) {
         argumentInstantiations.push({ name: name, argument: argument  });
     }
     const result = await implementation.execute(zobject, argumentInstantiations);
+
     return validateReturnType(result, zobject, resolver);
 };
 
