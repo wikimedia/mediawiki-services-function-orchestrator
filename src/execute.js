@@ -218,12 +218,17 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
  */
 execute = async function (zobject, evaluatorUri, resolver, scope = null) {
 
-    // Ensure Z8 is fully populated.
-    await mutate(zobject, [ 'Z7K1', 'Z8K4' ], resolver);
-
-    let implementations = [];
+    // Ensure Z8 (Z7K1) is dereferenced. Also ensure implementations are
+    // dereferenced (Z8K4 and all elements thereof).
+    await mutate(zobject, ['Z7K1', 'Z8K4'], resolver);
+    const implementations = [];
     if (zobject.Z7K1.Z8K4 !== undefined) {
-        implementations = Z10ToArray(zobject.Z7K1.Z8K4);
+        let root = zobject.Z7K1.Z8K4;
+        while (root.Z10K1 !== undefined) {
+            await mutate(root, [ 'Z10K1' ], resolver);
+            implementations.push(root.Z10K1);
+            root = root.Z10K2;
+        }
     }
 
     // Retrieve argument declarations and instantiations.
@@ -286,7 +291,7 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null) {
     }
     const result = await implementation.execute(zobject, argumentInstantiations);
 
-    return validateReturnType(result, zobject, resolver);
+    return await validateReturnType(result, zobject, resolver);
 };
 
 module.exports = { execute };
