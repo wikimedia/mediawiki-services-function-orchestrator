@@ -5,7 +5,6 @@ const { Z10ToArray } = require('../function-schemata/javascript/src/utils');
 const { createImplementation } = require('./implementation.js');
 const { makePair } = require('./utils.js');
 const { mutate } = require('./zobject.js');
-const { isRefOrString, normalFactory } = require('./validation.js');
 
 /**
  * Retrieve argument declarations and instantiations from a Z7.
@@ -159,6 +158,8 @@ class Scope {
 let execute = null;
 
 async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
+    // TODO: Why is the top-level normalFactory not recognized?
+    const { isRefOrString, normalFactory } = require('./validation.js');
     const Z7Schema = normalFactory.create('Z7');
     const Z18Schema = normalFactory.create('Z18');
 
@@ -216,12 +217,14 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
  * to execute with supplied arguments.
  *
  * @param {Object} zobject object describing a function call
- * @param {string} evaluatorUri
- * @param {ReferenceResolver} resolver
- * @param {Scope} scope
+ * @param {string} evaluatorUri URI of native code evaluator service
+ * @param {ReferenceResolver} resolver handles resolution of Z9s
+ * @param {Scope} scope current variable bindings
+ * @param {boolean} doRecurse whether to execute embedded function calls;
+ * disable for builtin validation
  * @return {Object} result of executing function call
  */
-execute = async function (zobject, evaluatorUri, resolver, scope = null) {
+execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecurse = true) {
 
     // Ensure Z8 (Z7K1) is dereferenced. Also ensure implementations are
     // dereferenced (Z8K4 and all elements thereof).
@@ -240,11 +243,19 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null) {
     const argumentDicts = await getArgumentDicts(zobject, resolver);
 
     // Validate arguments; make recursive function calls if necessary.
-    const argumentPromises = [];
-    for (const argumentDict of argumentDicts) {
-        argumentPromises.push(processArgument(argumentDict, evaluatorUri, resolver, scope));
+    let values;
+    if (doRecurse) {
+        const argumentPromises = [];
+        for (const argumentDict of argumentDicts) {
+            argumentPromises.push(processArgument(argumentDict, evaluatorUri, resolver, scope));
+        }
+        values = await Promise.all(argumentPromises);
+    } else {
+        values = [];
+        for (const argumentDict of argumentDicts) {
+            values.push({ name: argumentDict.name, argument: argumentDict.argument });
+        }
     }
-    const values = await Promise.all(argumentPromises);
 
     // Populate new frame with newly-declared arguments.
     if (scope === null) {

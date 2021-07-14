@@ -1,11 +1,11 @@
 'use strict';
 
 const traverse = require('json-schema-traverse');
-const { createImplementation } = require('./implementation.js');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error.js');
 const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
 const { generateError } = require('./utils.js');
+const { execute } = require('./execute.js');
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z7Validator = normalFactory.create('Z7');
@@ -54,17 +54,11 @@ async function runTypeValidator(Z1, typeZObject, resolver) {
     const validatorZid = typeZObject.Z2K2.Z4K3;
 
     try {
-        const validatorZ8 = (
-            await resolver.dereference([ validatorZid.Z9K1 ])
-        )[ validatorZid.Z9K1 ].Z2K2;
-
-        // validator builtin implementation id
-        const implementationId = validatorZ8.Z8K4.Z10K1.Z14K4.Z6K1;
-        const implementation = createImplementation(implementationId, 'FUNCTION', null, resolver);
-
+        // TODO: Catch errors when async functions reject.
+        const dereferenced = await resolver.dereference([ validatorZid.Z9K1 ]);
+        const validatorZ8 = dereferenced[ validatorZid.Z9K1 ].Z2K2;
         const validatorZ7 = createValidatorZ7(validatorZ8, Z1);
-        const result = await implementation.execute(validatorZ7);
-
+        const result = await execute(validatorZ7, null, resolver, null, false);
         return Z10ToArray(result);
     } catch (err) {
         return [
@@ -79,7 +73,7 @@ async function runTypeValidator(Z1, typeZObject, resolver) {
 /**
  * Validates a ZObject against the function call schema.
  *
- * @param {Object} Z1 object to be validated
+  @param {Object} Z1 object to be validated
  * @return {bool} whether Z1 can validate as function call
  */
 function isFunctionCall(Z1) {
@@ -132,7 +126,7 @@ async function getContainedTypeZObjects(zobject, resolver) {
       containedTypes.add(isRefOrString(Z1) ? Z1.Z1K1 : Z1.Z1K1.Z9K1)
     );
 
-    return resolver.dereference(containedTypes);
+    return await resolver.dereference(containedTypes);
 }
 
 /**
@@ -144,12 +138,19 @@ async function getContainedTypeZObjects(zobject, resolver) {
  * @return {Array} an array of validation errors.
  */
 async function validate(zobject, resolver) {
+
     const errors = [];
     const validatorPromises = [];
     const ZObjectTypes = await getContainedTypeZObjects(zobject, resolver);
 
     traverse(zobject, { allKeys: true }, (Z1) => {
         const typeZID = isRefOrString(Z1) ? Z1.Z1K1 : Z1.Z1K1.Z9K1;
+
+        // TODO(T286936): Figure out why non-sequential error pops with duplicate keys.
+        // TODO(T286939): Figure out why Z9 validation doesn't work.
+        if (typeZID === 'Z9') {
+            return;
+        }
         const schemaValidator = getSchemaValidator(typeZID);
 
         if (!schemaValidator.validate(Z1)) {

@@ -1,6 +1,5 @@
 'use strict';
 
-const fetch = require('node-fetch');
 const fs = require('fs');
 const preq   = require('preq');
 const assert = require('../../utils/assert.js');
@@ -8,13 +7,163 @@ const Server = require('../../utils/server.js');
 const { canonicalError, error } = require('../../../function-schemata/javascript/src/error');
 const canonicalize = require('../../../function-schemata/javascript/src/canonicalize.js');
 const utils = require('../../../src/utils.js');
-const sinon = require('sinon');
+const { rest } = require('msw');
+const { setupServer } = require('msw/node');
+const orchestrate = require('../../../src/orchestrate.js');
 
 function readJSON(fileName) {
-  return JSON.parse(fs.readFileSync(fileName, { encoding: 'utf8' }));
+    return JSON.parse(fs.readFileSync(fileName, { encoding: 'utf8' }));
+}
+
+class Canned {
+
+    constructor() {
+        this.reset();
+    }
+
+    reset() {
+        // TODO: Read this and data on wiki from central location, maybe
+        // function-schemata.
+        this.dict_ = {
+            wiki: readJSON('test/features/v1/test_data/wikilambda_fetch.json'),
+            evaluator: {}
+        };
+    }
+
+    setWiki(key, value) {
+        this.dict_.wiki[ key ] = value;
+    }
+
+    setEvaluator(key, value) {
+        this.dict_.evaluator[ key ] = value;
+    }
+
+    getWiki(key) {
+        return this.dict_.wiki[ key ];
+    }
+
+    getEvaluator(key) {
+        return this.dict_.evaluator[ key ];
+    }
+
 }
 
 describe('orchestrate', function () {
+    const cannedResponses = new Canned();
+
+    const restHandlers = [
+        rest.get('http://thewiki', (req, res, ctx) => {
+            const zids = req.url.searchParams.get('zids');
+            const result = {};
+            for (const ZID of zids.split('|')) {
+                result[ ZID ] = {
+                    wikilambda_fetch: JSON.stringify(cannedResponses.getWiki(ZID))
+                };
+            }
+            return res(ctx.status(200), ctx.json(result));
+        }),
+
+        rest.post('http://theevaluator', (req, res, ctx) => {
+            const ZID = req.body.Z7K1.Z8K5.Z9K1;
+            return res(ctx.status(200), ctx.json(cannedResponses.getEvaluator(ZID)));
+        })
+    ];
+    const mockServiceWorker = setupServer(...restHandlers);
+
+    beforeEach(() => mockServiceWorker.listen());
+
+    afterEach(() => {
+        return mockServiceWorker.resetHandlers();
+    });
+
+    const test = function (name, zobject, output = null, error = null) {
+        const input = {
+            zobject: zobject,
+            wikiUri: 'http://thewiki',
+            evaluatorUri: 'http://theevaluator',
+            doValidate: true
+        };
+        if (output !== null) {
+            try {
+                output = canonicalize(output);
+            } catch (err) { }
+        }
+        if (error !== null) {
+            try {
+                error = canonicalize(error);
+            } catch (err) { }
+        }
+        it(name, (done) => {
+            const inputEncoded = JSON.stringify(input);
+            orchestrate(inputEncoded)
+            .then((result) => {
+                assert.deepEqual(
+                    result,
+                    utils.makePair(output, error, /* canonical= */ true),
+                    name
+                );
+                done();
+            }).catch((problem) => {
+                assert.deepEqual(0, problem, 'nope');
+                done();
+            });
+        });
+    };
+
+    test(
+      'validation error: invalid argument key for function call',
+      readJSON('./test/features/v1/test_data/invalid_call_argument_key.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_call_argument_key_expected.json')
+    );
+
+    test(
+      'validation error: invalid argument type for function call',
+      readJSON('./test/features/v1/test_data/invalid_call_argument_type.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_call_argument_type_expected.json')
+    );
+
+    test(
+      'validation error: invalid duplicated argument key in function definition',
+      readJSON('./test/features/v1/test_data/invalid_key_duplicated.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_key_duplicated_expected.json')
+    );
+
+    test(
+      'validation error: invalid key for first argument in function definition',
+      readJSON('./test/features/v1/test_data/invalid_key_first_name.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_key_first_name_expected.json')
+    );
+
+    test(
+      'validation error: invalid key name for argument in function definition',
+      readJSON('./test/features/v1/test_data/invalid_key_name.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_key_name_expected.json')
+    );
+
+    test(
+      'validation error: invalid non-sequential key for argument in function definition',
+      readJSON('./test/features/v1/test_data/invalid_key_nonsequential.json'),
+      null,
+      readJSON('./test/features/v1/test_data/invalid_key_nonsequential_expected.json')
+    );
+
+    {
+        cannedResponses.setEvaluator('Z1000', utils.makePair({ Z1K1: 'Z6', Z6K1: '13' }, null));
+        test(
+          'evaluated function call',
+          readJSON('./test/features/v1/test_data/evaluated.json'),
+          { Z1K1: 'Z6', Z6K1: '13' },
+          null
+        );
+    }
+});
+
+describe('orchestration endpoint', function () {
 
     this.timeout(20000);
 
@@ -53,48 +202,16 @@ describe('orchestrate', function () {
                     utils.makePair(output, error, /* canonical= */ true),
                     name
                 );
-                // done();
             });
         });
     };
 
     const test = function (name, input, output = null, error = null) {
-      return testString(name, JSON.stringify(input), output, error);
-    };
-
-    const testFunctionCall = function (name, input, output = null, error = null) {
-        input.wikiUri = 'http://localhost:8080/w/api.php';
         return testString(name, JSON.stringify(input), output, error);
     };
 
-    class Response {
-        constructor(body) {
-            this.body_ = body;
-        }
-
-        json() {
-            return new Promise((resolve, reject) => {
-                resolve(this.body_);
-            });
-        }
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    const testEvaluatedFunctionCall = function (name, input, response, output = null, error = null) {
-        it(name, function () {
-            sinon.stub(fetch, 'Promise').returns(Promise.resolve(new Response(response)));
-            const expected = canonicalize(utils.makePair(output, error));
-            return preq.get(
-                uri + encodeURIComponent(JSON.stringify(input))
-            )
-            .then(function (res) {
-                assert.status(res, 200);
-                assert.contentType(res, 'application/json');
-                assert.deepEqual(res.body, expected, name);
-                sinon.restore();
-                // done();
-            });
-        });
+    const testFunctionCall = function (name, input, output = null, error = null) {
+        return testString(name, JSON.stringify(input), output, error);
     };
 
     test(
@@ -231,8 +348,6 @@ describe('orchestrate', function () {
     testString('string empty list', '[]', null, readJSON('./test/features/v1/test_data/error-not-fn.json'));
 
     testString('string singleton list', '["Test"]', null, readJSON('./test/features/v1/test_data/error-not-fn.json'));
-
-    testString('multiple list', '["Test", [] , "3"]', null, readJSON('./test/features/v1/test_data/error-not-fn.json'));
 
     // Tests function calls.
     testFunctionCall(
@@ -469,26 +584,6 @@ describe('orchestrate', function () {
 
     /*
      * TODO: Enable when mocking works.
-    testFunctionCall(
-      'composed function call: tail of the tail',
-      { zobject: readJSON('./test/features/v1/test_data/Z912_compose_Z912.json') },
-      {
-          Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
-          Z10K1: { Z1K1: 'Z6', Z6K1: 'three' },
-          Z10K2: { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' } }
-      }
-    );
-
-    testEvaluatedFunctionCall(
-      'evaluated function call',
-      {
-          zobject: readJSON('./test/features/v1/test_data/evaluated.json'),
-          evaluatorUri: 'http://localhost:6927/en.wikipedia.org/v1/evaluate',
-          doValidate: true
-      },
-      canonicalize(utils.makePair({ Z1K1: 'Z6', Z6K1: '13' }, null)),
-      { Z1K1: 'Z6', Z6K1: '13' }
-    );
     */
 
     /*
@@ -501,70 +596,6 @@ describe('orchestrate', function () {
           doValidate: false
       },
       { Z1K1: 'Z6', Z6K1: '13' }
-    );
-    */
-
-    // validation
-    /*
-     * TODO: Enable these tests locally when running wiki at localhost:8080
-    testFunctionCall(
-      'invalid argument key for function call',
-      {
-          zobject: readJSON('./test/features/v1/test_data/invalid_call_argument_key.json'),
-          doValidate: true
-      },
-      null,
-      readJSON('./test/features/v1/test_data/invalid_call_argument_key_expected.json')
-    );
-
-    testFunctionCall(
-      'invalid argument type for function call',
-      {
-        zobject: readJSON('./test/features/v1/test_data/invalid_call_argument_type.json'),
-        doValidate: true
-      },
-      null,
-      readJSON('./test/features/v1/test_data/invalid_call_argument_type_expected.json')
-    );
-
-    testFunctionCall(
-      'invalid duplicated argument key in function definition',
-      {
-        zobject: readJSON('./test/features/v1/test_data/invalid_key_duplicated.json'),
-        doValidate: true
-      },
-      null,
-      readJSON('./test/features/v1/test_data/invalid_key_duplicated_expected.json')
-    );
-
-    testFunctionCall(
-      'invalid key for first argument in function definition',
-      {
-          zobject: readJSON('./test/features/v1/test_data/invalid_key_first_name.json'),
-          doValidate: true
-      },
-      null,
-      readJSON('./test/features/v1/test_data/invalid_key_first_name_expected.json')
-    );
-
-    testFunctionCall(
-      'invalid key name for argument in function definition',
-      {
-          zobject: readJSON('./test/features/v1/test_data/invalid_key_name.json'),
-          doValidate: true
-      },
-      null,
-      readJSON('./test/features/v1/test_data/invalid_key_name_expected.json')
-    );
-
-    testFunctionCall(
-      'invalid non-sequential key for argument in function definition',
-      {
-          zobject: readJSON('./test/features/v1/test_data/invalid_key_nonsequential.json'),
-          doValidate: true
-      },
-      null,
-      readJSON('./test/features/v1/test_data/invalid_key_nonsequential_expected.json')
     );
     */
 
