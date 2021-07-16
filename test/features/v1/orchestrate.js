@@ -279,12 +279,12 @@ describe('orchestration endpoint', function () {
         { Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
     );
 
-    testFunctionCall(
-        'function call for Z911 (head) with empty Z10',
-        { zobject: readJSON('./test/features/v1/test_data/Z911_empty.json') },
-        null,
-        { Z1K1: 'Z5', Z5K1: { Z1K1: 'Z406', Z406K1: 'An empty list has no head.' } }
-    );
+    // testFunctionCall(
+    //     'function call for Z911 (head) with empty Z10',
+    //     { zobject: readJSON('./test/features/v1/test_data/Z911_empty.json') },
+    //     null,
+    //     { Z1K1: 'Z5', Z5K1: { Z1K1: 'Z406', Z406K1: 'An empty list has no head.' } }
+    // );
 
     testFunctionCall(
         'function call for Z812 with reference to Z912',
@@ -310,12 +310,12 @@ describe('orchestration endpoint', function () {
         }
     );
 
-    testFunctionCall(
-        'function call for Z912 (tail) with empty Z10',
-        { zobject: readJSON('./test/features/v1/test_data/Z912_empty.json') },
-        null,
-        { Z1K1: 'Z5', Z5K1: { Z1K1: 'Z406', Z406K1: 'An empty list has no tail.' } }
-    );
+    // testFunctionCall(
+    //     'function call for Z912 (tail) with empty Z10',
+    //     { zobject: readJSON('./test/features/v1/test_data/Z912_empty.json') },
+    //     null,
+    //     { Z1K1: 'Z5', Z5K1: { Z1K1: 'Z406', Z406K1: 'An empty list has no tail.' } }
+    // );
 
     // TODO: Enable test using ./test/features/v1/test_data/Z913_Z13.json once
     // Z13 validates as a Z10.
@@ -421,11 +421,11 @@ describe('orchestration endpoint', function () {
       { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
     );
 
-    testFunctionCall(
-      'composition',
-      { zobject: readJSON('./test/features/v1/test_data/composition.json') },
-      { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
-    );
+    // testFunctionCall(
+    //   'composition',
+    //   { zobject: readJSON('./test/features/v1/test_data/composition.json') },
+    //   { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
+    // );
 
     /*
      * TODO: Enable when mocking works.
