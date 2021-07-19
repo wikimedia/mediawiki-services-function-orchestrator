@@ -291,6 +291,11 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null) {
     }
     const result = await implementation.execute(zobject, argumentInstantiations);
 
+    // If the first value in the pair is Z23, return without validating type.
+    if (result.Z22K1.Z1K1.Z9K1 === 'Z23') {
+        return result;
+    }
+
     return await validateReturnType(result, zobject, resolver);
 };
 
