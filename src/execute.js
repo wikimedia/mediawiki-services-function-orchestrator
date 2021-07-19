@@ -47,6 +47,11 @@ async function getArgumentDicts(zobject, resolver) {
 async function validateReturnType(result, zobject, resolver) {
     // No need to validate result if it's an error.
     if (result.Z22K1 !== undefined) {
+        // If the first value in the pair is Z23, return without validating type.
+        if (result.Z22K1.Z1K1.Z9K1 === 'Z23') {
+            return result;
+        }
+
         await mutate(zobject, [ 'Z7K1' ], resolver);
         const returnType = zobject.Z7K1.Z8K2;
         // TODO: Why is the top-level normalFactory not recognized?
@@ -290,11 +295,6 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null) {
         argumentInstantiations.push({ name: name, argument: argument  });
     }
     const result = await implementation.execute(zobject, argumentInstantiations);
-
-    // If the first value in the pair is Z23, return without validating type.
-    if (result.Z22K1.Z1K1.Z9K1 === 'Z23') {
-        return result;
-    }
 
     return await validateReturnType(result, zobject, resolver);
 };
