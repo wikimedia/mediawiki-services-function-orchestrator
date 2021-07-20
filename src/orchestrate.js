@@ -82,7 +82,7 @@ function orchestrate(str) {
         })
         .catch((problem) => {
             // TODO: Why is the problem already a pair some of the time?
-            if (problem.Z1K1 === 'Z22') {
+            if (problem.Z1K1 === 'Z22' || problem.Z1K1.Z9K1 === 'Z22') {
                 return problem;
             }
             return makePair(null, problem, true);
