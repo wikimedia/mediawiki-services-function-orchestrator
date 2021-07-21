@@ -7,7 +7,7 @@ const { arrayToZ10 } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error');
 const { validate } = require('./validation.js');
 const { execute } = require('./execute.js');
-const { containsError, isError, isFunctionCall, makePair, maybeNormalize } = require('./utils');
+const { containsError, isError, isFunctionCall, isNothing, makePair, maybeNormalize } = require('./utils');
 const { ReferenceResolver } = require('./db.js');
 
 /**
@@ -24,6 +24,7 @@ async function maybeValidate(zobject, doValidate, resolver) {
     if (doValidate) {
         const errors = await validate(zobject, resolver);
         if (errors.length > 0) {
+            // TODO: Wrap errors in a Z5.
             return makePair(null, arrayToZ10(errors));
         }
     }
@@ -93,7 +94,9 @@ async function orchestrate(str) {
 
     for (const callTuple of callTuples) {
         console.log('calling function', callTuple[2], 'on currentPair:', currentPair);
-        if (containsError(currentPair)) {
+        // TODO(T287986): isNothing check is redundant once validation returns
+        // correct type.
+        if (containsError(currentPair) || isNothing(currentPair.Z22K1)) {
             break;
         }
         const callable = callTuple[0];
@@ -106,6 +109,7 @@ async function orchestrate(str) {
         return await canonicalize(currentPair);
     } catch (err) {
         // If canonicalization fails, return normalized form instead.
+        console.log('Could not canonicalize; outputting in normal form.');
         return currentPair;
     }
 }

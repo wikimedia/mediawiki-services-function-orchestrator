@@ -5,12 +5,50 @@ const normalize = require('../function-schemata/javascript/src/normalize.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 
 const normalFactory = SchemaFactory.NORMAL();
-const Z5Validator = normalFactory.create('Z5');
+const Z1Validator = normalFactory.create('Z1');
 const Z6Validator = normalFactory.create('Z6');
 const Z7Validator = normalFactory.create('Z7');
 const Z9Validator = normalFactory.create('Z9');
 const Z18Validator = normalFactory.create('Z18');
 const Z23Validator = normalFactory.create('Z23');
+
+/**
+ * Validates a ZObject.
+ *
+  @param {Object} Z1 object to be validated
+ * @return {bool} whether Z1 can validate as a Z1
+ */
+function isZObject(Z1) {
+    return Z1Validator.validate(Z1);
+}
+
+/**
+ * Validates a ZObject against the Error schema.
+ *
+  @param {Object} Z1 object to be validated
+ * @return {bool} whether Z1 can validate as an Error
+ */
+function isError(Z1) {
+    // TODO(T287921): Assay that Z1 validates as Z5 but not as Z9 or Z18.
+    try {
+        return Z1.Z1K1 === 'Z5' || Z1.Z1K1.Z9K1 === 'Z5';
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
+ * Determines whether argument is a Z6 or Z9. These two types' Z1K1s are
+ * strings instead of Z9s, so some checks below need to special-case their
+ * logic.
+ *
+ * @param {Object} Z1 a ZObject
+ * @return {bool} true if Z1 validates as either Z6 or Z7
+ */
+function isRefOrString(Z1) {
+    // TODO: Prohibit Z18s.
+    return Z6Validator.validate(Z1) || Z9Validator.validate(Z1);
+}
 
 /**
  * Validates a ZObject against the Function Call schema.
@@ -26,31 +64,6 @@ function isFunctionCall(Z1) {
 }
 
 /**
- * Validates a ZObject against the Error schema.
- *
-  @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validate as an Error
- */
-function isError(Z1) {
-    return (
-        Z5Validator.validate(Z1) &&
-        !(Z9Validator.validate(Z1)) &&
-        !(Z18Validator.validate(Z1)));
-}
-
-/**
- * Determines whether argument is a Z6 or Z9. These two types' Z1K1s are
- * strings instead of Z9s, so some checks below need to special-case their
- * logic.
- *
- * @param {Object} Z1 a ZObject
- * @return {bool} true if Z1 validates as either Z6 or Z7
- */
-function isRefOrString(Z1) {
-    return Z6Validator.validate(Z1) || Z9Validator.validate(Z1);
-}
-
-/**
  * Determines whether argument is a Z9.
  *
  * @param {Object} Z1 a ZObject
@@ -60,12 +73,14 @@ function isReference(Z1) {
     return Z9Validator.validate(Z1);
 }
 
-// TODO: T282891
-function Z23(canonical = false) {
-    if (canonical) {
-        return 'Z23';
-    }
-	return { Z1K1: 'Z9', Z9K1: 'Z23' };
+/**
+ * Determines whether argument is a Z18.
+ *
+ * @param {Object} Z1 a ZObject
+ * @return {bool} true if Z1 validates as Z18
+ */
+function isArgumentReference(Z1) {
+    return Z18Validator.validate(Z1) && !Z9Validator.validate(Z1);
 }
 
 /**
@@ -82,13 +97,31 @@ function isNothing(Z1) {
 }
 
 /**
+ * Determines whether a pair contains an error.
+ *
+ * @param {Object} pair a Z22
+ * @return {bool} true if Z22K2 is a Z5; false otherwise
+ */
+function containsError(pair) {
+    return isError(pair.Z22K2);
+}
+
+/**
  * Determines whether a pair contains an error Z23.
  *
  * @param {Object} pair a Z22
  * @return {bool} true if Z22K2 is not the Unit; false otherwise
  */
-function containsError(pair) {
-    return !(isNothing(pair.Z22K2));
+function containsValue(pair) {
+    return isZObject(pair.Z22K1) && !(isNothing(pair.Z22K1));
+}
+
+// TODO: T282891
+function Z23(canonical = false) {
+    if (canonical) {
+        return 'Z23';
+    }
+	return { Z1K1: 'Z9', Z9K1: 'Z23' };
 }
 
 // TODO: T282891
@@ -148,7 +181,7 @@ function generateError(errorString = 'An unknown error occurred') {
 async function maybeNormalize(zobject) {
     try {
         const result = normalize(zobject);
-        return makePair(result, null, true);
+        return makePair(result, null);
     } catch (err) {
         // TODO(T287886): failing to normalize() should return Z5s instead of throwing errors.
         return makePair(
@@ -162,5 +195,5 @@ async function maybeNormalize(zobject) {
 }
 
 module.exports = {
-    containsError, generateError, isError, isFunctionCall, isNothing,
-    isRefOrString, isReference, makePair, maybeNormalize, normalFactory, Z23 };
+    containsError, containsValue, generateError, isArgumentReference, isError, isFunctionCall,
+    isNothing, isRefOrString, isReference, makePair, maybeNormalize, normalFactory, Z23 };

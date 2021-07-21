@@ -1,9 +1,9 @@
 'use strict';
 
-const { canonicalError, error } = require('../function-schemata/javascript/src/error');
+const { normalError, error } = require('../function-schemata/javascript/src/error');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils');
 const { createImplementation } = require('./implementation.js');
-const { containsError, isRefOrString, makePair, normalFactory } = require('./utils.js');
+const { containsError, containsValue, isArgumentReference, isFunctionCall, isRefOrString, makePair, normalFactory } = require('./utils.js');
 const { mutate } = require('./zobject.js');
 
 /**
@@ -11,23 +11,21 @@ const { mutate } = require('./zobject.js');
  *
  * @param {Object} zobject
  * @param {ReferenceResolver} resolver
+ * @param {Scope} scope
  * @return {Array} list of objects containing argument names
  */
-async function getArgumentDicts(zobject, resolver) {
+async function getArgumentDicts(zobject, resolver, scope) {
     const argumentDicts = [];
-    await mutate(zobject, [ 'Z7K1', 'Z8K1' ], resolver);
-    const Z8K1 = zobject.Z7K1.Z8K1;
+    const Z8K1 = await mutate(zobject, [ 'Z7K1', 'Z8K1' ], resolver, scope);
 
     for (const Z17 of Z10ToArray(Z8K1)) {
         const argumentDict = {};
-        await mutate(Z17, [ 'Z17K2', 'Z6K1' ], resolver);
-        const argumentName = Z17.Z17K2.Z6K1;
+        const argumentName = await mutate(Z17, [ 'Z17K2', 'Z6K1' ], resolver, scope);
         argumentDict.name = argumentName;
         // TODO: This is flaky to rely on; find a better way to determine type.
         const declaredType = Z17.Z17K1.Z9K1;
         argumentDict.declaredType = declaredType;
-        await mutate(zobject, [argumentName], resolver);
-        const argument = zobject[ argumentName ];
+        const argument = await mutate(zobject, [argumentName], resolver, scope);
         argumentDict.argument = argument;
         argumentDicts.push(argumentDict);
     }
@@ -41,26 +39,39 @@ async function getArgumentDicts(zobject, resolver) {
  * @param {Object} result
  * @param {Object} zobject
  * @param {ReferenceResolver} resolver
+ * @param {Scope} scope
  * @return {Object} zobject if validation succeeds; error tuple otherwise
  */
-async function validateReturnType(result, zobject, resolver) {
-    // No need to validate result if it's an error.
-    if (result.Z22K1 !== undefined) {
-        // If the first value in the pair is Z23, return without validating type.
-        if (result.Z22K1.Z1K1.Z9K1 === 'Z23') {
-            return result;
-        }
+async function validateReturnType(result, zobject, resolver, scope) {
+    // eslint-disable-next-line no-bitwise
+    const thebits = (containsValue(result) << 1) | containsError(result);
 
+    if (thebits === 0) {
+        // Neither value nor error.
+        return makePair(
+            null,
+            normalError(
+                [error.not_wellformed_value],
+                ['Function evaluation returned an empty object.']));
+    } else if (thebits === 2) {
+        // Value returned; validate its return type..
         await mutate(zobject, [ 'Z7K1' ], resolver);
         const returnType = zobject.Z7K1.Z8K2;
         const returnValidator = normalFactory.create(returnType.Z9K1);
         if (!returnValidator.validate(result.Z22K1)) {
             return makePair(
                 null,
-                canonicalError(
+                normalError(
                     [error.argument_type_mismatch],
                     ['Could not validate return value as type ' + returnType]));
         }
+    } else if (thebits === 3) {
+        // Both value and error.
+        return makePair(
+            null,
+            normalError(
+                [error.not_wellformed_value],
+                ['Function evaluation returned both a value and an error.']));
     }
     return result;
 }
@@ -156,18 +167,23 @@ class Scope {
 let execute = null;
 
 async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
-    // TODO: Why is the top-level normalFactory not recognized?
-    const Z7Schema = normalFactory.create('Z7');
-    const Z18Schema = normalFactory.create('Z18');
-
     // TODO: If we could statically analyze type compatibility (i.e., "Z6
     // can be a Z1"), we could perform validation before executing the
     // function and exit early.
     let argument = argumentDict.argument;
-    if (Z18Schema.validate(argument)) {
-        // TODO: reject with error if could not retrieve argument ( argument === null ).
-        argument = scope.retrieveArgument(argument.Z18K1.Z6K1);
-    } else if (Z7Schema.validate(argument)) {
+    if (isArgumentReference(argument)) {
+        const argumentName = argument.Z18K1.Z6K1;
+        argument = scope.retrieveArgument(argumentName);
+        if (argument === null) {
+            return makePair(
+                null,
+                normalError(
+                    // TODO(T287919): Reconsider error type.
+                    [error.invalid_key],
+                    ['No argument called ' + argumentName + ' in scope.'])
+            );
+        }
+    } else if (isFunctionCall(argument)) {
         const evaluationResult = await execute(argument, evaluatorUri, resolver, scope);
         if (containsError(evaluationResult)) {
             return evaluationResult;
@@ -185,12 +201,12 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
     const declarationSchema = normalFactory.create(argumentDict.declaredType);
     const actualSchema = normalFactory.create(argumentType);
     if (!declarationSchema.validate(argument)) {
-        return makePair(null, canonicalError(
+        return makePair(null, normalError(
                 [error.argument_type_mismatch],
                 ['Could not validate argument as type ' + argumentDict.declaredType]));
     }
     if (!actualSchema.validate(argument)) {
-        return makePair(null, canonicalError(
+        return makePair(null, normalError(
                 [error.argument_type_mismatch],
                 ['Could not validate argument as type ' + argumentType]));
     }
@@ -211,21 +227,28 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
  */
 execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecurse = true) {
 
+    // TODO(T287102): Address the more general case that Z18s can crop up in a
+    // lot of places. Guard all ZObject member access with a function that
+    // transparently resolves Z18s.
+    if (isArgumentReference(zobject)) {
+        return makePair(scope.retrieveArgument(zobject.Z18K1.Z6K1), null);
+    }
+
     // Ensure Z8 (Z7K1) is dereferenced. Also ensure implementations are
     // dereferenced (Z8K4 and all elements thereof).
-    await mutate(zobject, ['Z7K1', 'Z8K4'], resolver);
+    const Z8K4 = await mutate(zobject, ['Z7K1', 'Z8K4'], resolver, scope);
     const implementations = [];
-    if (zobject.Z7K1.Z8K4 !== undefined) {
-        let root = zobject.Z7K1.Z8K4;
+    if (Z8K4 !== undefined) {
+        let root = Z8K4;
         while (root.Z10K1 !== undefined) {
-            await mutate(root, [ 'Z10K1' ], resolver);
-            implementations.push(root.Z10K1);
+            const Z10K1 = await mutate(root, [ 'Z10K1' ], resolver, scope);
+            implementations.push(Z10K1);
             root = root.Z10K2;
         }
     }
 
     // Retrieve argument declarations and instantiations.
-    const argumentDicts = await getArgumentDicts(zobject, resolver);
+    const argumentDicts = await getArgumentDicts(zobject, resolver, scope);
 
     // Validate arguments; make recursive function calls if necessary.
     let values;
@@ -271,14 +294,20 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecur
         // Otherwise, retrieve the function by Z8K5 reference.
         ZID = zobject.Z7K1.Z8K5.Z9K1;
         // Ensure that required references are resolved before sending to evaluator.
-        await mutate(zobject, [ 'Z7K1', 'Z8K4', 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], resolver);
+        if (Z8K4 !== undefined) {
+            let root = Z8K4;
+            while (root.Z10K1 !== undefined) {
+                await mutate(root, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], resolver, scope);
+                root = root.Z10K2;
+            }
+        }
     }
 
     const implementation = createImplementation(ZID, 'FUNCTION', evaluatorUri, resolver);
     if (implementation === null) {
         return makePair(
             null,
-            canonicalError(
+            normalError(
                 [error.not_wellformed],
                 ['Could not execute non-builtin function ' + ZID]));
     }
@@ -292,7 +321,7 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecur
     }
     const result = await implementation.execute(zobject, argumentInstantiations);
 
-    return await validateReturnType(result, zobject, resolver);
+    return await validateReturnType(result, zobject, resolver, scope);
 };
 
 module.exports = { execute };

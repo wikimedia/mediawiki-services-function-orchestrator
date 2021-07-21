@@ -429,6 +429,18 @@ describe('orchestration endpoint', function () {
       { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
     );
 
+    testFunctionCall(
+      'composition consisting of an argument reference',
+      { zobject: readJSON('./test/features/v1/test_data/composition_arg_only.json') },
+      { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
+    );
+
+    testFunctionCall(
+      'composition consisting of an argument reference again',
+      { zobject: readJSON('./test/features/v1/test_data/composition_arg_only_false.json') },
+      { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
+    );
+
     /*
      * TODO: Enable when mocking works.
     */

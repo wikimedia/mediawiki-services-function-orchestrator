@@ -8,9 +8,10 @@ fetch.Promise = Bluebird;
 
 class BuiltIn {
 
-    constructor(functor, resolver) {
+    constructor(functor, resolver, scope) {
         this.functor_ = functor;
         this.resolver_ = resolver;
+        this.scope_ = scope;
     }
 
     /**
@@ -35,6 +36,7 @@ class BuiltIn {
             callArgs.push(nameToArgument.get(key));
         }
         callArgs.push(this.resolver_);
+        callArgs.push(this.scope_);
         return this.functor_(...callArgs);
     }
 

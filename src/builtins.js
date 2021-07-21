@@ -218,12 +218,12 @@ function BUILTIN_UNQUOTE_(Z99) {
 }
 
 function BUILTIN_EMPTY_VALIDATOR_(Z1) {
-    return {
+    return makePair({
         Z1K1: {
             Z1K1: 'Z9',
             Z9K1: 'Z10'
         }
-    };
+    }, null);
 }
 
 /**
@@ -266,11 +266,12 @@ function arrayValidator(Z10, key, identity) {
         previous = Number(utils.kid_from_global_key(key).replace('K', ''));
     }
 
-    return utils.arrayToZ10(
-        messages.map((message) =>
-            normalError([error.array_element_not_well_formed], [message])
-        )
-    );
+    return makePair(
+        utils.arrayToZ10(
+            messages.map((message) =>
+                normalError([error.array_element_not_well_formed], [message])
+            )
+        ), null);
 }
 
 function BUILTIN_FUNCTION_VALIDATOR_(Z1) {
@@ -299,7 +300,7 @@ function BUILTIN_Z4_TYPE_VALIDATOR_(Z1) {
         );
     }
 
-    return utils.arrayToZ10(errors);
+    return makePair(utils.arrayToZ10(errors), null);
 }
 
 async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, resolver) {
@@ -337,7 +338,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, resolver) {
         }
     }
 
-    return utils.arrayToZ10(errors);
+    return makePair(utils.arrayToZ10(errors), null);
 }
 
 function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1) {
@@ -359,7 +360,7 @@ function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1) {
         seen.add(languages[i]);
     }
 
-    return utils.arrayToZ10(errors);
+    return makePair(utils.arrayToZ10(errors), null);
 }
 
 function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_(Z1) {
@@ -381,7 +382,7 @@ function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_(Z1) {
         seen.add(languages[i]);
     }
 
-    return utils.arrayToZ10(errors);
+    return makePair(utils.arrayToZ10(errors), null);
 }
 
 function BUILTIN_ERROR_TYPE_VALIDATOR_(Z1) {

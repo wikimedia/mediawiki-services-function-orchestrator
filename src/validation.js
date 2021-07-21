@@ -55,7 +55,7 @@ async function runTypeValidator(Z1, typeZObject, resolver) {
         const validatorZ8 = dereferenced[ validatorZid.Z9K1 ].Z2K2;
         const validatorZ7 = createValidatorZ7(validatorZ8, Z1);
         const result = await execute(validatorZ7, null, resolver, null, false);
-        return Z10ToArray(result);
+        return Z10ToArray(result.Z22K1);
     } catch (err) {
         return [
             normalError(
@@ -121,8 +121,10 @@ async function validate(zobject, resolver) {
         }
     });
 
-    const validatorsErrors = await Promise.all(validatorPromises);
-    validatorsErrors.forEach((typeErrors) => errors.push.apply(errors, typeErrors));
+    const validatorErrors = await Promise.all(validatorPromises);
+    validatorErrors.forEach((typeErrors) =>
+        errors.push.apply(errors, typeErrors)
+    );
 
     return errors;
 }
