@@ -11,9 +11,9 @@
 		"Z5K1": {
 			"Z1K1": {
 				"Z1K1": "Z9",
-				"Z9K1": "Z406"
+				"Z9K1": "Z506"
 			},
-			"Z406K1": {
+			"Z506K1": {
 				"Z1K1": "Z6",
 				"Z6K1": "Invalid argument type: expected Z40, got Z6"
 			}

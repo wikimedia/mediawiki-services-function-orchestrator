@@ -11,9 +11,9 @@
 		"Z5K1": {
 			"Z1K1": {
 				"Z1K1": "Z9",
-				"Z9K1": "Z422"
+				"Z9K1": "Z522"
 			},
-			"Z422K1": {
+			"Z522K1": {
 				"Z1K1": "Z6",
 				"Z6K1": "Duplicated key at index 1: Z803K1"
 			}
@@ -27,8 +27,8 @@
 		"Z10K1": {
 			"Z1K1": "Z5",
 			"Z5K1": {
-				"Z1K1": "Z422",
-				"Z422K1": "Non-sequential key at index 1: Z803K1"
+				"Z1K1": "Z522",
+				"Z522K1": "Non-sequential key at index 1: Z803K1"
 			}
 		},
 		"Z10K2": {

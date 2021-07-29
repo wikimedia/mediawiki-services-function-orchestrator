@@ -330,7 +330,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, resolver) {
         } else if (argumentTypes[key] !== type && argumentTypes[key] !== 'Z1') {
             errors.push(
                 normalError(
-                    [error.argument_type_error],
+                    [error.argument_type_mismatch],
                     [`Invalid argument type: expected ${argumentTypes[key]}, got ${type}`]
                 )
             );

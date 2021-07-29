@@ -5,7 +5,7 @@
 	"main": "./app.js",
 	"scripts": {
 		"start": "service-runner",
-		"test": "npm run lint && PREQ_CONNECT_TIMEOUT=15 mocha -g 'orchestration endpoint' && mocha -g 'orchestrate msw'",
+		"test": "npm run lint && PREQ_CONNECT_TIMEOUT=15 mocha -g 'orchestration endpoint' && PREQ_CONNECT_TIMEOUT=15 mocha -g 'orchestrate msw'",
 		"lint": "eslint --max-warnings 0 --ext .js --ext .json .",
 		"lint:fix": "eslint --fix .",
 		"docker-start": "service-runner docker-start",

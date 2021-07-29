@@ -11,9 +11,9 @@
 		"Z5K1": {
 			"Z1K1": {
 				"Z1K1": "Z9",
-				"Z9K1": "Z425"
+				"Z9K1": "Z525"
 			},
-			"Z425K1": {
+			"Z525K1": {
 				"Z1K1": "Z6",
 				"Z6K1": "Invalid key for function call: Z802K4"
 			}
