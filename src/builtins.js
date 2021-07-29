@@ -131,7 +131,7 @@ function BUILTIN_HEAD_(Z10) {
         return makePair(
             null,
             normalError(
-                [ error.argument_type_error ],
+                [ error.argument_type_mismatch ],
                 [ 'An empty list has no head.' ]));
     }
 
@@ -143,7 +143,7 @@ function BUILTIN_TAIL_(Z10) {
         return makePair(
             null,
             normalError(
-                [ error.argument_type_error ],
+                [ error.argument_type_mismatch ],
                 [ 'An empty list has no tail.' ]));
     }
 
