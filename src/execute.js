@@ -167,7 +167,10 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
     // can be a Z1"), we could perform validation before executing the
     // function and exit early.
     let argument = argumentDict.argument;
-    if (Z7Schema.validate(argument)) {
+    if (Z18Schema.validate(argument)) {
+        // TODO: reject with error if could not retrieve argument ( argument === null ).
+        argument = scope.retrieveArgument(argument.Z18K1.Z6K1);
+    } else if (Z7Schema.validate(argument)) {
         const evaluationResult = await execute(argument, evaluatorUri, resolver, scope);
 
         const errorKey = evaluationResult.Z22K2.Z1K1.Z9K1 ?
@@ -178,9 +181,6 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
             return evaluationResult;
         }
         argument = evaluationResult.Z22K1;
-    } else if (Z18Schema.validate(argument)) {
-        // TODO: reject with error if could not retrieve argument ( argument === null ).
-        argument = scope.retrieveArgument(argument.Z18K1.Z6K1);
     }
 
     let argumentType;
