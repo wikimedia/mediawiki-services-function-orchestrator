@@ -59,7 +59,10 @@ describe('orchestrate', function () {
         rest.post('http://theevaluator', (req, res, ctx) => {
             const ZID = req.body.Z7K1.Z8K5.Z9K1;
             return res(ctx.status(200), ctx.json(cannedResponses.getEvaluator(ZID)));
-        })
+        }),
+
+        // Silently forward GET requests to the API running at :6254.
+        rest.get('http://localhost:6254/*', (req, res, ctx) => {})
     ];
     const mockServiceWorker = setupServer(...restHandlers);
 
@@ -95,9 +98,6 @@ describe('orchestrate', function () {
                     utils.makePair(output, error, /* canonical= */ true),
                     name
                 );
-                done();
-            }).catch((problem) => {
-                assert.deepEqual(0, problem, 'nope');
                 done();
             });
         });
