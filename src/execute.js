@@ -60,7 +60,7 @@ async function validateReturnType(result, zobject, resolver) {
             return makePair(
                 null,
                 canonicalError(
-                    [error.argument_type_error],
+                    [error.argument_type_mismatch],
                     ['Could not validate return value as type ' + returnType]));
         }
     }
@@ -201,12 +201,12 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
     const actualSchema = normalFactory.create(argumentType);
     if (!doSkip && !declarationSchema.validate(argument)) {
         return makePair(null, canonicalError(
-                [error.argument_type_error],
+                [error.argument_type_mismatch],
                 ['Could not validate argument as type ' + argumentDict.declaredType]));
     }
     if (!doSkip && !actualSchema.validate(argument)) {
         return makePair(null, canonicalError(
-                [error.argument_type_error],
+                [error.argument_type_mismatch],
                 ['Could not validate argument as type ' + argumentType]));
     }
     return { name: argumentDict.name, argument: argument };
