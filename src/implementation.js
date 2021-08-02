@@ -35,7 +35,7 @@ class BuiltIn {
             callArgs.push(nameToArgument.get(key));
         }
         callArgs.push(this.resolver_);
-        return this.functor_.apply(null, callArgs);
+        return this.functor_(...callArgs);
     }
 
 }

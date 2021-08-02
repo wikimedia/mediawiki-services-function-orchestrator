@@ -2,7 +2,7 @@
 
 const Bluebird = require('bluebird');
 const fetch = require('node-fetch');
-const { normalizePromise } = require('./utils.js');
+const { containsError, maybeNormalize } = require('./utils.js');
 
 fetch.Promise = Bluebird;
 
@@ -45,9 +45,12 @@ class ReferenceResolver {
 
             await Promise.all([ ...unresolved ].map(async (ZID) => {
                 const zobject = JSON.parse(result[ ZID ].wikilambda_fetch);
-                // TODO: Catch errors when this promise rejects.
-                const normalized = await normalizePromise(zobject);
-                dereferenced[ZID] = normalized;
+                const normalized = await maybeNormalize(zobject);
+                if (containsError(normalized)) {
+                    dereferenced[ZID] = normalized.Z22K2;
+                } else {
+                    dereferenced[ZID] = normalized.Z22K1;
+                }
             }));
         }
 
