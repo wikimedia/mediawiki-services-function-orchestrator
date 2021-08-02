@@ -5,9 +5,9 @@ const parse = require('./parse.js');
 const canonicalize = require('../function-schemata/javascript/src/canonicalize.js');
 const { arrayToZ10 } = require('../function-schemata/javascript/src/utils.js');
 const { canonicalError, error, normalError } = require('../function-schemata/javascript/src/error');
-const { isError, isFunctionCall, validate } = require('./validation.js');
+const { validate } = require('./validation.js');
 const { execute } = require('./execute.js');
-const { containsError, makePair, maybeNormalize } = require('./utils');
+const { containsError, isError, isFunctionCall, makePair, maybeNormalize } = require('./utils');
 const { ReferenceResolver } = require('./db.js');
 
 /**

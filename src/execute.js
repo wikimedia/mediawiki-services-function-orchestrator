@@ -3,7 +3,7 @@
 const { canonicalError, error } = require('../function-schemata/javascript/src/error');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils');
 const { createImplementation } = require('./implementation.js');
-const { makePair } = require('./utils.js');
+const { containsError, isRefOrString, makePair, normalFactory } = require('./utils.js');
 const { mutate } = require('./zobject.js');
 
 /**
@@ -53,8 +53,6 @@ async function validateReturnType(result, zobject, resolver) {
 
         await mutate(zobject, [ 'Z7K1' ], resolver);
         const returnType = zobject.Z7K1.Z8K2;
-        // TODO: Why is the top-level normalFactory not recognized?
-        const { normalFactory } = require('./validation.js');
         const returnValidator = normalFactory.create(returnType.Z9K1);
         if (!returnValidator.validate(result.Z22K1)) {
             return makePair(
@@ -159,7 +157,6 @@ let execute = null;
 
 async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
     // TODO: Why is the top-level normalFactory not recognized?
-    const { isRefOrString, normalFactory } = require('./validation.js');
     const Z7Schema = normalFactory.create('Z7');
     const Z18Schema = normalFactory.create('Z18');
 
@@ -172,39 +169,27 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
         argument = scope.retrieveArgument(argument.Z18K1.Z6K1);
     } else if (Z7Schema.validate(argument)) {
         const evaluationResult = await execute(argument, evaluatorUri, resolver, scope);
-
-        const errorKey = evaluationResult.Z22K2.Z1K1.Z9K1 ?
-            evaluationResult.Z22K2.Z1K1.Z9K1 :
-            evaluationResult.Z22K2.Z9K1;
-
-        if (errorKey !== 'Z23') {
+        if (containsError(evaluationResult)) {
             return evaluationResult;
         }
         argument = evaluationResult.Z22K1;
     }
 
     let argumentType;
-
-    // TODO: This is a hack to allow Boolean references through. Remove
-    // this once Z41/Z42 references can validate as Z40.
-    let doSkip = false;
     if (isRefOrString(argument)) {
         argumentType = argument.Z1K1;
     } else {
         argumentType = argument.Z1K1.Z9K1;
-        if (argument.Z1K1.Z9K1 === 'Z40') {
-            doSkip = true;
-        }
     }
 
     const declarationSchema = normalFactory.create(argumentDict.declaredType);
     const actualSchema = normalFactory.create(argumentType);
-    if (!doSkip && !declarationSchema.validate(argument)) {
+    if (!declarationSchema.validate(argument)) {
         return makePair(null, canonicalError(
                 [error.argument_type_mismatch],
                 ['Could not validate argument as type ' + argumentDict.declaredType]));
     }
-    if (!doSkip && !actualSchema.validate(argument)) {
+    if (!actualSchema.validate(argument)) {
         return makePair(null, canonicalError(
                 [error.argument_type_mismatch],
                 ['Could not validate argument as type ' + argumentType]));

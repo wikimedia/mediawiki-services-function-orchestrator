@@ -1,7 +1,8 @@
 'use strict';
 
+const { isReference } = require('./utils.js');
+
 async function mutate(zobject, keys, resolver) {
-    const { isReference } = require('./validation.js');
     if (keys.length <= 0) {
         return;
     }

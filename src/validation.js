@@ -3,63 +3,8 @@
 const traverse = require('json-schema-traverse');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error.js');
-const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
 const { execute } = require('./execute.js');
-
-const normalFactory = SchemaFactory.NORMAL();
-const Z5Validator = normalFactory.create('Z5');
-const Z6Validator = normalFactory.create('Z6');
-const Z7Validator = normalFactory.create('Z7');
-const Z9Validator = normalFactory.create('Z9');
-const Z18Validator = normalFactory.create('Z18');
-
-/**
- * Validates a ZObject against the Function Call schema.
- *
-  @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validated as a Function Call
- */
-function isFunctionCall(Z1) {
-    return (
-        Z7Validator.validate(Z1) &&
-        !(Z9Validator.validate(Z1)) &&
-        !(Z18Validator.validate(Z1)));
-}
-
-/**
- * Validates a ZObject against the Error schema.
- *
-  @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validate as an Error
- */
-function isError(Z1) {
-    return (
-        Z5Validator.validate(Z1) &&
-        !(Z9Validator.validate(Z1)) &&
-        !(Z18Validator.validate(Z1)));
-}
-
-/**
- * Determines whether argument is a Z6 or Z9. These two types' Z1K1s are
- * strings instead of Z9s, so some checks below need to special-case their
- * logic.
- *
- * @param {Object} Z1 a ZObject
- * @return {bool} true if Z1 validates as either Z6 or Z7
- */
-function isRefOrString(Z1) {
-    return Z6Validator.validate(Z1) || Z9Validator.validate(Z1);
-}
-
-/**
- * Determines whether argument is a Z9.
- *
- * @param {Object} Z1 a ZObject
- * @return {bool} true if Z1 validates as Z9
- */
-function isReference(Z1) {
-    return Z9Validator.validate(Z1);
-}
+const { isRefOrString, normalFactory } = require('./utils.js');
 
 const validators = {};
 
@@ -182,4 +127,4 @@ async function validate(zobject, resolver) {
     return errors;
 }
 
-module.exports = { isError, isFunctionCall, isRefOrString, isReference, normalFactory, validate };
+module.exports = { validate };
