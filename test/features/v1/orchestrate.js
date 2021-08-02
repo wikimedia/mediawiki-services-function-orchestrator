@@ -123,45 +123,47 @@ describe('orchestration endpoint', function () {
       readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
+    // TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
     test(
       'record with list and invalid sub-record',
       { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { K2: 'Test' } },
       null,
       canonicalError(
         [error.not_wellformed],
-        [
-          { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { K2: 'Test' } }
-        ]
+        ['{"Z1K1":"Z8","K2":["Test","Second test"],"Z2K1":{"K2":"Test"}}']
       )
     );
 
+    // TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
     test(
       'invalid zobject (int not string/list/record)',
       { Z1K1: 'Z2', Z2K1: 2 },
       null,
       canonicalError(
         [error.not_wellformed],
-        [ { Z1K1: 'Z2', Z2K1: 2.0 } ]
+        ['{"Z1K1":"Z2","Z2K1":2}']
       )
     );
 
+    // TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
     test(
       'invalid zobject (float not string/list/record)',
       { Z1K1: 'Z2', Z2K1: 2.0 },
       null,
       canonicalError(
         [error.not_wellformed],
-        [ { Z1K1: 'Z2', Z2K1: 2.0 } ]
+        ['{"Z1K1":"Z2","Z2K1":2}']
       )
     );
 
+    // TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
     test(
       'number in array',
       [ 2 ],
       null,
       canonicalError(
         [error.not_wellformed],
-        [ [ 2 ] ]
+        ['[2]']
       )
     );
 

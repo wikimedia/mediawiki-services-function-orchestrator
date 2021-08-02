@@ -1,26 +1,63 @@
 'use strict';
 
+// TODO: Replace this function. Delete parse.js. Delete utils.js:generateError.
 const parse = require('./parse.js');
 const canonicalize = require('../function-schemata/javascript/src/canonicalize.js');
 const { arrayToZ10 } = require('../function-schemata/javascript/src/utils.js');
-const { validate, isFunctionCall } = require('./validation.js');
+const { canonicalError, error, normalError } = require('../function-schemata/javascript/src/error');
+const { isError, isFunctionCall, validate } = require('./validation.js');
 const { execute } = require('./execute.js');
-const { makePair } = require('./utils');
-const { normalizePromise } = require('./utils.js');
+const { containsError, makePair, maybeNormalize } = require('./utils');
 const { ReferenceResolver } = require('./db.js');
 
-function canonicalizeZObject(zobject) {
-    return new Promise((resolve, reject) => {
-        try {
-            const result = canonicalize(zobject);
-            resolve(result);
-        } catch (err) {
-            resolve(zobject);
+/**
+ * Decides whether to validate a function. Returns the pair
+ * <original ZObject, Unit> if validation succeeds; otherwise returns the pair
+ * <Unit, Z5>.
+ *
+ * @param {Object} zobject
+ * @param {boolean} doValidate whether to run validation; succeeds trivially if false
+ * @param {ReferenceResolver} resolver for resolving Z9s
+ * @return {Object} a Z22
+ */
+async function maybeValidate(zobject, doValidate, resolver) {
+    if (doValidate) {
+        const errors = await validate(zobject, resolver);
+        if (errors.length > 0) {
+            return makePair(null, arrayToZ10(errors));
         }
-    });
+    }
+    return makePair(zobject, null);
 }
 
-function orchestrate(str) {
+/**
+ * Returns the pair <original ZObject, Unit> if the input object is a Z7;
+ * otherwise returns the pair <Unit, Z5>.
+ *
+ * @param {Object} zobject
+ * @return {Object} a Z22 as described above
+ */
+async function Z7OrError(zobject) {
+    if (isFunctionCall(zobject)) {
+        return makePair(zobject, null);
+    }
+    return makePair(
+        null,
+        normalError(
+            [ error.wrong_content_type ],
+            [ 'The provided object is not a function call' ]
+        )
+    );
+}
+
+/**
+ * Main orchestration workflow. Executes an input Z7 and returns either the
+ * results of function evaluation or the relevant error(s).
+ *
+ * @param {string} str a string containing the JSON-serialized ZObject and other parameters
+ * @return {Object} a Z22 containing the result of function evaluation or a Z5
+ */
+async function orchestrate(str) {
 
     const orchestrationRequest = parse(str);
     let zobject = orchestrationRequest.zobject;
@@ -28,8 +65,12 @@ function orchestrate(str) {
        zobject = orchestrationRequest;
     }
 
-    if (zobject.Z1K1 && zobject.Z1K1.Z9K1 && zobject.Z1K1.Z9K1 === 'Z5') {
-        return makePair(null, zobject, true);
+    let currentPair;
+
+    if (isError(zobject)) {
+        currentPair = makePair(null, zobject, /* canonicalize= */true);
+    } else {
+        currentPair = makePair(zobject, null, /* canonicalize= */true);
     }
 
     /*
@@ -42,64 +83,38 @@ function orchestrate(str) {
     // TODO: Default to true; add switch in tests to override default in CI.
     const doValidate = orchestrationRequest.doValidate || false;
 
-    function validateBound(zObj) {
-        return new Promise((resolve, reject) => {
-            let errorPromise;
-            if (doValidate) {
-                errorPromise = validate(zObj, resolver);
-            } else {
-                errorPromise = Promise.resolve([]);
-            }
-            errorPromise.then((errors) => {
-                if (errors.length > 0) {
-                    reject(makePair(null, arrayToZ10(errors)));
-                } else {
-                    resolve(zObj);
-                }
-            });
-        });
+    const callTuples = [
+        [maybeNormalize, [], 'maybeNormalize'],
+        // TODO: Dereference top-level object if it is a Z9?
+        [Z7OrError, [], 'Z7OrError'],
+        [maybeValidate, [doValidate, resolver], 'maybeValidate'],
+        [execute, [evaluatorUri, resolver], 'execute']
+    ];
+
+    for (const callTuple of callTuples) {
+        console.log('calling function', callTuple[2], 'on currentPair:', currentPair);
+        if (containsError(currentPair)) {
+            break;
+        }
+        const callable = callTuple[0];
+        const args = callTuple[1];
+        const zobject = currentPair.Z22K1;
+        currentPair = await callable(...[zobject, ...args]);
     }
 
-    // In this promise chain, any function that rejects must reject with a
-    // pair (Z22); any function that resolves (except execute) must resolve the
-    // "good" ZObject that will be processed by the subsequent function. execute
-    // also resolves with a Z22. This ensures that the orchestrator always
-    // returns a pair containing either
-    //
-    // Z22K1: the original ZObject OR
-    // Z22K1: the result of calling the original ZObject (if a Z7) OR
-    // Z22K2: an error.
-    const result = normalizePromise(zobject)
-        .then((normalized) => {
-            return validateBound(normalized);
-        })
-        .then((dereferenced) => {
-            // TODO: Run embedded function calls, not just top-level.
-            return isFunctionCall(dereferenced);
-        })
-        .then((Z7) => {
-            return execute(Z7, evaluatorUri, resolver);
-        })
-        .catch((problem) => {
-            // TODO: Why is the problem already a pair some of the time?
-            if (problem.Z1K1 === 'Z22' || problem.Z1K1.Z9K1 === 'Z22') {
-                return problem;
-            }
-            return makePair(null, problem, true);
-        });
-
-    // Attempt to canonicalize if possible.
-    // TODO: Fix canonicalization code in function-schemata to handle mixed forms.
-    return result.then((executed) => {
-            return new Promise((resolve, reject) => {
-                try {
-                    const canonicalized = canonicalizeZObject(executed);
-                    resolve(canonicalized);
-                } catch (error) {
-                    resolve(executed);
-                }
-            });
-        });
+    try {
+        return await canonicalize(currentPair);
+    } catch (err) {
+        // TODO(T287886): failing to canonicalize() should return Z5s instead of throwing errors.
+        return makePair(
+            null,
+            canonicalError(
+                [ error.not_wellformed ],
+                [ currentPair ]
+            ),
+            true
+        );
+    }
 }
 
 module.exports = orchestrate;
