@@ -3,6 +3,7 @@
 const sUtil = require('../lib/util');
 
 const orchestrate = require('../src/orchestrate.js');
+const getTestResults = require('../src/performTest.js');
 
 /**
  * The main router object
@@ -13,6 +14,11 @@ const router = sUtil.router();
 router.get('/:data', async function (req, res) {
 	const input = await orchestrate(req.params.data);
 	res.json(input);
+});
+
+router.get('/test/:data', async function (req, res) {
+    const result = await getTestResults(req.params.data);
+    res.json(result);
 });
 
 router.get('/', function (req, res) {
