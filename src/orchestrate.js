@@ -4,7 +4,7 @@
 const parse = require('./parse.js');
 const canonicalize = require('../function-schemata/javascript/src/canonicalize.js');
 const { arrayToZ10 } = require('../function-schemata/javascript/src/utils.js');
-const { canonicalError, error, normalError } = require('../function-schemata/javascript/src/error');
+const { error, normalError } = require('../function-schemata/javascript/src/error');
 const { validate } = require('./validation.js');
 const { execute } = require('./execute.js');
 const { containsError, isError, isFunctionCall, makePair, maybeNormalize } = require('./utils');
@@ -105,15 +105,8 @@ async function orchestrate(str) {
     try {
         return await canonicalize(currentPair);
     } catch (err) {
-        // TODO(T287886): failing to canonicalize() should return Z5s instead of throwing errors.
-        return makePair(
-            null,
-            canonicalError(
-                [ error.not_wellformed ],
-                [ currentPair ]
-            ),
-            true
-        );
+        // If canonicalization fails, return normalized form instead.
+        return currentPair;
     }
 }
 
