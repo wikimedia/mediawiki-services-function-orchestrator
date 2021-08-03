@@ -105,12 +105,16 @@ async function getTestResults(data) {
     test.Z7K1 = zFunction.Z2K2;
     test.Z7K1.Z8K4 = [implementation];
 
-    const testResponse = await orchestrate(JSON.stringify({
-      zobject: test,
-      evaluatorUri,
-      wikiUri,
-      doValidate
-    }));
+    const testResponse = normalize(
+      await orchestrate(
+        JSON.stringify({
+          zobject: test,
+          evaluatorUri,
+          wikiUri,
+          doValidate
+        })
+      )
+    );
     const testResult = testResponse.Z22K1;
 
     if (testResult === 'Z23' || testResult.Z9K1 === 'Z23') {
