@@ -42,6 +42,10 @@ function isTrue(Z40) {
  * BUILTINS
  */
 
+function BUILTIN_ECHO_(input) {
+    return input;
+}
+
 function BUILTIN_IF_(antecedent, trueConsequent, falseConsequent) {
     let result;
     if (isTrue(antecedent)) {
@@ -395,6 +399,7 @@ function BUILTIN_ERROR_TYPE_VALIDATOR_(Z1) {
 
 const builtinFunctions = new Map();
 
+builtinFunctions.set('Z901', BUILTIN_ECHO_);
 builtinFunctions.set('Z902', BUILTIN_IF_);
 builtinFunctions.set('Z903', BUILTIN_VALUE_BY_KEY_);
 builtinFunctions.set('Z905', BUILTIN_REIFY_);
