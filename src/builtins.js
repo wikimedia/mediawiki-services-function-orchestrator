@@ -172,6 +172,14 @@ function BUILTIN_SECOND_(Z22) {
     return makePair(Z22.Z22K2, null);
 }
 
+function BUILTIN_EQUALS_BOOLEAN_(Z40_1, Z40_2) {
+    return (Z40_1.Z40K1.Z9K1 === Z40_2.Z40K1.Z9K1);
+}
+
+function BUILTIN_EQUALS_STRING_(Z6_1, Z6_2) {
+    return (Z6_1.Z6K1 === Z6_2.Z6K1);
+}
+
 function stringToCharsInternal(characterArray) {
     const Z86Array = [];
     for (const character of characterArray) {
@@ -410,6 +418,8 @@ builtinFunctions.set('Z912', BUILTIN_TAIL_);
 builtinFunctions.set('Z913', BUILTIN_EMPTY_);
 builtinFunctions.set('Z921', BUILTIN_FIRST_);
 builtinFunctions.set('Z922', BUILTIN_SECOND_);
+builtinFunctions.set('Z944', BUILTIN_EQUALS_BOOLEAN_);
+builtinFunctions.set('Z966', BUILTIN_EQUALS_STRING_);
 builtinFunctions.set('Z968', BUILTIN_STRING_TO_CHARS_);
 builtinFunctions.set('Z986', BUILTIN_CHARS_TO_STRING_);
 builtinFunctions.set('Z988', BUILTIN_SAME_);
