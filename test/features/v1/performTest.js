@@ -87,26 +87,12 @@ describe('performTest', function () {
               zImplementationId: 'Z10008',
               zTesterId: 'Z10011',
               validationResponse: {
-                Z1K1: {
-                  Z1K1: 'Z9',
-                  Z9K1: 'Z22'
-                },
+                Z1K1: 'Z22',
                 Z22K1: {
-                  Z1K1: {
-                    Z1K1: 'Z9',
-                    Z9K1: 'Z40'
-                  },
-                  Z40K1: {
-                    Z1K1: 'Z9',
-                    Z9K1: 'Z41'
-                  }
+                  Z1K1: 'Z40',
+                  Z40K1: 'Z41'
                 },
-                Z22K2: {
-                  Z1K1: {
-                    Z1K1: 'Z9',
-                    Z9K1: 'Z23'
-                  }
-                }
+                Z22K2: 'Z23'
               }
             }
           ]);

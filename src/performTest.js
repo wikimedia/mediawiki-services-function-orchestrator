@@ -80,9 +80,6 @@ async function getTestResults(data) {
         (zTesterId) => resolver.dereference([zTesterId])
         .then((res) => res[zTesterId])
       ));
-  const validators = await resolver.dereference(
-    testers.map((tester) => tester.Z2K2.Z20K2.Z9K1)
-  );
 
   async function performTest(
     zFunction,
@@ -96,11 +93,9 @@ async function getTestResults(data) {
       validationResponse: null
     };
 
-    const test = JSON.parse(JSON.stringify(zTester.Z2K2.Z20K1));
+    const test = JSON.parse(JSON.stringify(zTester.Z2K2.Z20K2));
     const implementation = JSON.parse(JSON.stringify(zImplementation.Z2K2));
-    const validator = JSON.parse(JSON.stringify(validators[
-      zTester.Z2K2.Z20K2.Z9K1
-    ].Z2K2));
+    const validator = JSON.parse(JSON.stringify(zTester.Z2K2.Z20K3));
 
     test.Z7K1 = zFunction.Z2K2;
     test.Z7K1.Z8K4 = [implementation];
@@ -120,15 +115,11 @@ async function getTestResults(data) {
     if (testResult === 'Z23' || testResult.Z9K1 === 'Z23') {
       payload.validationResponse = testResponse;
     } else {
-      const validationArgument = validator.Z8K1.Z10K1;
-      const validationPayload = {
-        Z1K1: 'Z7',
-        Z7K1: validator
-      };
-      validationPayload[validationArgument.Z17K2.Z6K1] = testResult[validationArgument.Z17K1.Z9K1 + 'K1'];
+      const validatorFn = validator.Z7K1.Z9K1;
+      validator[ validatorFn + 'K1' ] = testResult;
 
       const validationResponse = await orchestrate(JSON.stringify({
-        zobject: validationPayload,
+        zobject: validator,
         evaluatorUri,
         wikiUri,
         doValidate
