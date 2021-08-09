@@ -3,7 +3,7 @@
 const utils = require('../function-schemata/javascript/src/utils');
 const normalize = require('../function-schemata/javascript/src/normalize');
 const { mutate } = require('./zobject.js');
-const { makePair } = require('./utils.js');
+const { makePair, makeBoolean } = require('./utils.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 
 /**
@@ -43,7 +43,7 @@ function isTrue(Z40) {
  */
 
 function BUILTIN_ECHO_(input) {
-    return input;
+    return makePair(input, null);
 }
 
 function BUILTIN_IF_(antecedent, trueConsequent, falseConsequent) {
@@ -173,11 +173,17 @@ function BUILTIN_SECOND_(Z22) {
 }
 
 function BUILTIN_EQUALS_BOOLEAN_(Z40_1, Z40_2) {
-    return (Z40_1.Z40K1.Z9K1 === Z40_2.Z40K1.Z9K1);
+    return makePair(
+        makeBoolean((Z40_1.Z40K1.Z9K1 === Z40_2.Z40K1.Z9K1)),
+        null
+    );
 }
 
 function BUILTIN_EQUALS_STRING_(Z6_1, Z6_2) {
-    return (Z6_1.Z6K1 === Z6_2.Z6K1);
+    return makePair(
+        makeBoolean((Z6_1.Z6K1 === Z6_2.Z6K1)),
+        null
+    );
 }
 
 function stringToCharsInternal(characterArray) {
@@ -527,6 +533,12 @@ function createZ8(identity, argumentList, returnType, builtinName) {
 }
 
 const builtinReferences = new Map();
+builtinReferences.set('Z801', createZ8(
+    'Z801',
+    [
+        createArgument('Z1', 'Z801K1')
+    ], 'Z1', 'Z901'));
+
 builtinReferences.set('Z802', createZ8(
     'Z802',
     [
@@ -590,6 +602,20 @@ builtinReferences.set('Z822', createZ8(
     [
         createArgument('Z22', 'Z822K1')
     ], 'Z1', 'Z922'
+));
+builtinReferences.set('Z844', createZ8(
+    'Z844',
+    [
+        createArgument('Z1', 'Z844K1'),
+        createArgument('Z1', 'Z844K2')
+    ], 'Z1', 'Z944'
+));
+builtinReferences.set('Z866', createZ8(
+    'Z866',
+    [
+        createArgument('Z1', 'Z866K1'),
+        createArgument('Z1', 'Z866K2')
+    ], 'Z1', 'Z966'
 ));
 builtinReferences.set('Z868', createZ8(
     'Z868',

@@ -142,6 +142,40 @@ function makePair(goodResult = null, badResult = null, canonical = false) {
     };
 }
 
+function makeBoolean(truthy = false, canonical = false) {
+    const zobject = {};
+    if (canonical) {
+        zobject.Z1K1 = 'Z40';
+    } else {
+        zobject.Z1K1 = {
+            Z1K1: 'Z9',
+            Z9K1: 'Z40'
+        };
+    }
+
+    if (truthy) {
+        if (canonical) {
+            zobject.Z40K1 = 'Z41';
+        } else {
+            zobject.Z40K1 = {
+                Z1K1: 'Z9',
+                Z9K1: 'Z41'
+            };
+        }
+    } else {
+        if (canonical) {
+            zobject.Z40K1 = 'Z42';
+        } else {
+            zobject.Z40K1 = {
+                Z1K1: 'Z9',
+                Z9K1: 'Z42'
+            };
+        }
+    }
+
+    return zobject;
+}
+
 // TODO: This needs to generate an actual error instead of Z6s.
 function generateError(errorString = 'An unknown error occurred') {
     return {
@@ -195,5 +229,18 @@ async function maybeNormalize(zobject) {
 }
 
 module.exports = {
-    containsError, containsValue, generateError, isArgumentReference, isError, isFunctionCall,
-    isNothing, isRefOrString, isReference, makePair, maybeNormalize, normalFactory, Z23 };
+    containsError,
+    containsValue,
+    generateError,
+    isArgumentReference,
+    isError,
+    isFunctionCall,
+    isNothing,
+    isRefOrString,
+    isReference,
+    makeBoolean,
+    makePair,
+    maybeNormalize,
+    normalFactory,
+    Z23
+};
