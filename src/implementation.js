@@ -6,12 +6,72 @@ const fetch = require('node-fetch');
 
 fetch.Promise = Bluebird;
 
-class BuiltIn {
+class Implementation {
 
-    constructor(functor, resolver, scope) {
-        this.functor_ = functor;
-        this.resolver_ = resolver;
+    constructor() {
+        this.resolver_ = null;
+        this.scope_ = null;
+        this.evaluatorUri_ = null;
+        this.lazyVariables_ = new Set();
+        this.lazyReturn_ = false;
+    }
+
+    hasLazyVariable(variableName) {
+        return this.lazyVariables_.has(variableName);
+    }
+
+    returnsLazy() {
+        return this.lazyReturn_;
+    }
+
+    setScope(scope) {
         this.scope_ = scope;
+    }
+
+    setResolver(resolver) {
+        this.resolver_ = resolver;
+    }
+
+    setEvaluatorUri(evaluatorUri) {
+        this.evaluatorUri_ = evaluatorUri;
+    }
+
+    /**
+     * Retrieves a function implementation (or an in-memory JS function if a
+     * built-in). Function implementation may be a function, a serializer for
+     * ZObjects, or a deserializer for ZObject.
+     *
+     * @param {Object} Z14 the implementation
+     * @return {Implementation} the implementation
+     */
+    static create(Z14) {
+        if (Z14.Z14K4 !== undefined) {
+            const ZID = Z14.Z14K4.Z6K1;
+            const builtin = builtins.getFunction(ZID);
+            const lazyVariables = builtins.getLazyVariables(ZID);
+            const lazyReturn = builtins.getLazyReturn(ZID);
+            // eslint-disable-next-line no-use-before-define
+            return new BuiltIn(builtin, lazyVariables, lazyReturn);
+        }
+        if (Z14.Z14K2 !== undefined) {
+            // eslint-disable-next-line no-use-before-define
+            return new Composition(Z14);
+        }
+        // eslint-disable-next-line no-use-before-define
+        return new Evaluated();
+    }
+
+}
+
+class BuiltIn extends Implementation {
+
+    constructor(functor, lazyVariables, lazyReturn) {
+        super();
+        for (const variable of lazyVariables) {
+            this.lazyVariables_.add(variable);
+        }
+        this.lazyReturn_ = lazyReturn;
+        this.functor_ = functor;
     }
 
     /**
@@ -42,11 +102,7 @@ class BuiltIn {
 
 }
 
-class Evaluated {
-
-    constructor(evaluatorUri) {
-        this.uri_ = evaluatorUri;
-    }
+class Evaluated extends Implementation {
 
     /**
      * Calls this implementation's functor with the provided arguments.
@@ -61,7 +117,7 @@ class Evaluated {
             Z7[ argumentDict.name ] = argumentDict.argument;
         }
         return fetch(
-            this.uri_,
+            this.evaluatorUri_,
             {
                 method: 'POST',
                 body: JSON.stringify(Z7),
@@ -78,40 +134,20 @@ class Evaluated {
 
 }
 
-const implementationTypes = new Map();
-implementationTypes.set('FUNCTION', builtins.getFunction);
+class Composition extends Implementation {
 
-/**
- * Retrieves a function implementation (or an in-memory JS function if a
- * built-in). Function implementation may be a function, a serializer for
- * ZObjects, or a deserializer for ZObject.
- *
- * Currently does not retrieve contributor-provided function
- * implementations in native code; can only handle built-ins.
- *
- * @param {string} ZID the function to retrieve an implementation for
- * @param {string} implementationType the kind of function to retrieve
- * @param {string} evaluatorUri
- * @param {ReferenceResolver} referenceResolver
- * @return {Function} the function or implementation
- */
-function createImplementation(ZID, implementationType, evaluatorUri, referenceResolver = null) {
-    const getter = implementationTypes.get(implementationType);
-    if (getter === undefined) {
-        // TODO: Error.
-        return null;
+    constructor(composition) {
+        super();
+        this.composition_ = composition;
     }
 
-    const builtin = getter(ZID);
-    if (builtin !== null) {
-        return new BuiltIn(builtin, referenceResolver);
+    async execute() {
+        const { execute } = require('./execute.js');
+        return await execute(
+            this.composition_.Z14K2, this.evaluatorUri_, this.resolver_,
+            this.scope_);
     }
 
-    if (evaluatorUri !== null) {
-        return new Evaluated(evaluatorUri);
-    }
-
-    return null;
 }
 
-module.exports = { createImplementation };
+module.exports = { Implementation, Evaluated };

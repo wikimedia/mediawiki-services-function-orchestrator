@@ -154,4 +154,61 @@ describe('orchestrate', function () {
           null
         );
     }
+
+    {
+        cannedResponses.setWiki('Z10037', readJSON('./test/features/v1/test_data/all_Z10037.json'));
+        test(
+          'composiion of all empty',
+          readJSON('./test/features/v1/test_data/all_empty.json'),
+          {
+              Z1K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z40'
+              },
+              Z40K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z41'
+              }
+          },
+          null
+        );
+    }
+
+    {
+        cannedResponses.setWiki('Z10037', readJSON('./test/features/v1/test_data/all_Z10037.json'));
+        test(
+          'composiion of all: [true, true]',
+          readJSON('./test/features/v1/test_data/all_true_true.json'),
+          {
+              Z1K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z40'
+              },
+              Z40K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z41'
+              }
+          },
+          null
+        );
+    }
+
+    {
+        cannedResponses.setWiki('Z10037', readJSON('./test/features/v1/test_data/all_Z10037.json'));
+        test(
+          'composiion of all: [true, false]',
+          readJSON('./test/features/v1/test_data/all_true_false.json'),
+          {
+              Z1K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z40'
+              },
+              Z40K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z42'
+              }
+          },
+          null
+        );
+    }
 });

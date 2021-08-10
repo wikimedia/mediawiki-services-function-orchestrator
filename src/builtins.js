@@ -481,6 +481,38 @@ function getFunction(ZID) {
     return result;
 }
 
+const lazyFunctions = new Map();
+lazyFunctions.set('Z902', [ 'Z802K2', 'Z802K3' ]);
+
+/**
+ * Retrieves lazy variables for the given function.
+ *
+ * @param {string} ZID the function
+ * @return {Array} an array of variables which are lazy for the given function
+ */
+function getLazyVariables(ZID) {
+    // TODO: Unify this representation in builtinFunctions.
+    let lazy = lazyFunctions.get(ZID);
+    if (lazy === undefined) {
+        lazy = [];
+    }
+    return lazy;
+}
+
+const lazyReturns = new Set();
+lazyReturns.add('Z902');
+
+/**
+ * For a given ZID, determine whether return value should be evaluated after execution.
+ *
+ * @param {string} ZID the function
+ * @return {boolean} whether the function is lazy
+ */
+function getLazyReturn(ZID) {
+    // TODO: Unify this representation in builtinFunctions.
+    return lazyReturns.has(ZID);
+}
+
 /**
  * Creates a Z17.
  *
@@ -676,4 +708,4 @@ function resolveBuiltinReference(ZID) {
     return result;
 }
 
-module.exports = { getFunction, resolveBuiltinReference };
+module.exports = { getFunction, getLazyVariables, getLazyReturn, resolveBuiltinReference };

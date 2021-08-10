@@ -2,7 +2,7 @@
 
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils');
-const { createImplementation } = require('./implementation.js');
+const { Evaluated, Implementation } = require('./implementation.js');
 const { containsError, containsValue, isArgumentReference, isFunctionCall, isRefOrString, makePair, normalFactory } = require('./utils.js');
 const { mutate } = require('./zobject.js');
 
@@ -109,7 +109,7 @@ class Frame {
      */
     clone() {
         const result = new Frame();
-        result.names_ = new Map(this.frames_);
+        result.names_ = new Map(this.names_);
         return result;
     }
 
@@ -165,6 +165,22 @@ class Scope {
 }
 
 let execute = null;
+
+function selectImplementation(implementations) {
+    // TODO: Implement heuristics to decide which implement to use. Implicitly,
+    // current heuristic is to use a builtin if available; otherwise, use a
+    // composition if available; otherwise, use the first available native
+    // code implementation.
+    const builtin = implementations.find((impl) => Boolean(impl.Z14K4));
+    if (builtin !== undefined) {
+        return builtin;
+    }
+    const composition = implementations.find((impl) => Boolean(impl.Z14K2));
+    if (composition !== undefined) {
+        return composition;
+    }
+    return implementations[0];
+}
 
 async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
     // TODO: If we could statically analyze type compatibility (i.e., "Z6
@@ -226,10 +242,6 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
  * @return {Object} result of executing function call
  */
 execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecurse = true) {
-
-    // TODO(T287102): Address the more general case that Z18s can crop up in a
-    // lot of places. Guard all ZObject member access with a function that
-    // transparently resolves Z18s.
     if (isArgumentReference(zobject)) {
         return makePair(scope.retrieveArgument(zobject.Z18K1.Z6K1), null);
     }
@@ -241,28 +253,36 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecur
     if (Z8K4 !== undefined) {
         let root = Z8K4;
         while (root.Z10K1 !== undefined) {
+            // TODO: Write test making sure that Z14s are resolved.
             const Z10K1 = await mutate(root, [ 'Z10K1' ], resolver, scope);
             implementations.push(Z10K1);
             root = root.Z10K2;
         }
     }
 
+    const implementationZObject = selectImplementation(implementations);
+    const implementation = Implementation.create(implementationZObject);
+
     // Retrieve argument declarations and instantiations.
     const argumentDicts = await getArgumentDicts(zobject, resolver, scope);
 
     // Validate arguments; make recursive function calls if necessary.
-    let values;
-    if (doRecurse) {
-        const argumentPromises = [];
-        for (const argumentDict of argumentDicts) {
+    const values = [];
+    const argumentPromises = [];
+    for (const argumentDict of argumentDicts) {
+        if (implementation.hasLazyVariable(argumentDict.name) || !doRecurse) {
+            values.push({ name: argumentDict.name, argument: argumentDict.argument });
+        } else {
             argumentPromises.push(processArgument(argumentDict, evaluatorUri, resolver, scope));
         }
-        values = await Promise.all(argumentPromises);
-    } else {
-        values = [];
-        for (const argumentDict of argumentDicts) {
-            values.push({ name: argumentDict.name, argument: argumentDict.argument });
+    }
+    for (const argumentDict of await Promise.all(argumentPromises)) {
+        // TODO: Better error handling here--check containsError once all errors
+        // are truly Z5s.
+        if (argumentDict.Z22K2 !== undefined) {
+            return argumentDict;
         }
+        values.push(argumentDict);
     }
 
     // Populate new frame with newly-declared arguments.
@@ -276,50 +296,41 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecur
         frame.setArgument(value.name, value.argument);
     }
 
-    // TODO: Implement heuristics to decide which implement to use. Implicitly,
-    // current heuristic is to use a builtin if available; otherwise, use a
-    // composition if available; otherwise, use the first available native
-    // code implementation.
-    const builtin = implementations.find((impl) => Boolean(impl.Z14K4));
-    const composition = implementations.find((impl) => Boolean(impl.Z14K2));
-
-    let ZID;
-    if (builtin !== undefined) {
-        // If builtin, retrieve the function by its ZID.
-        ZID = builtin.Z14K4.Z6K1;
-    } else if (composition !== undefined) {
-        // If composition, run the composed Z7.
-        return execute(composition.Z14K2, evaluatorUri, resolver, scope);
-    } else {
-        // Otherwise, retrieve the function by Z8K5 reference.
-        ZID = zobject.Z7K1.Z8K5.Z9K1;
-        // Ensure that required references are resolved before sending to evaluator.
+    // Check corner case where evaluated function must be dereferenced.
+    // TODO: Clone ZObject; add only one implementation and dereference only that.
+    if (implementation instanceof Evaluated) {
         if (Z8K4 !== undefined) {
             let root = Z8K4;
             while (root.Z10K1 !== undefined) {
-                await mutate(root, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], resolver, scope);
+                if (root.Z10K1.Z14K3 !== undefined) {
+                    await mutate(root, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], resolver, scope);
+                }
                 root = root.Z10K2;
             }
         }
     }
 
-    const implementation = createImplementation(ZID, 'FUNCTION', evaluatorUri, resolver);
-    if (implementation === null) {
-        return makePair(
-            null,
-            normalError(
-                [error.not_wellformed],
-                ['Could not execute non-builtin function ' + ZID]));
-    }
-
-    // Populate arguments.
+    // Populate arguments from scope.
     const argumentInstantiations = [];
     for (const argumentDict of argumentDicts) {
         const name = argumentDict.name;
         const argument = scope.retrieveArgument(argumentDict.name);
         argumentInstantiations.push({ name: name, argument: argument  });
     }
-    const result = await implementation.execute(zobject, argumentInstantiations);
+
+    // Equip the implementation for its journey and execute.
+    implementation.setScope(scope);
+    implementation.setResolver(resolver);
+    implementation.setEvaluatorUri(evaluatorUri);
+    let result = await implementation.execute(zobject, argumentInstantiations);
+
+    // Execute result if implementation is lazily evaluated.
+    if (implementation.returnsLazy()) {
+        const goodResult = await mutate(result, [ 'Z22K1' ], resolver, scope);
+        if (isFunctionCall(goodResult) || isArgumentReference(goodResult)) {
+            result = await execute(goodResult, evaluatorUri, resolver, scope);
+        }
+    }
 
     return await validateReturnType(result, zobject, resolver, scope);
 };
