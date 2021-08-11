@@ -158,7 +158,7 @@ describe('orchestrate', function () {
     {
         cannedResponses.setWiki('Z10037', readJSON('./test/features/v1/test_data/all_Z10037.json'));
         test(
-          'composiion of all empty',
+          'composition of all empty',
           readJSON('./test/features/v1/test_data/all_empty.json'),
           {
               Z1K1: {
@@ -177,7 +177,7 @@ describe('orchestrate', function () {
     {
         cannedResponses.setWiki('Z10037', readJSON('./test/features/v1/test_data/all_Z10037.json'));
         test(
-          'composiion of all: [true, true]',
+          'composition of all: [true, true]',
           readJSON('./test/features/v1/test_data/all_true_true.json'),
           {
               Z1K1: {
@@ -196,8 +196,80 @@ describe('orchestrate', function () {
     {
         cannedResponses.setWiki('Z10037', readJSON('./test/features/v1/test_data/all_Z10037.json'));
         test(
-          'composiion of all: [true, false]',
+          'composition of all: [true, false]',
           readJSON('./test/features/v1/test_data/all_true_false.json'),
+          {
+              Z1K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z40'
+              },
+              Z40K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z42'
+              }
+          },
+          null
+        );
+    }
+
+    {
+        cannedResponses.setWiki('Z10029', readJSON('./test/features/v1/test_data/empty_string_Z10029.json'));
+        cannedResponses.setWiki('Z10031', readJSON('./test/features/v1/test_data/one_character_Z10031.json'));
+        test(
+          'one character("ab")',
+          {
+              Z1K1: 'Z7',
+              Z7K1: 'Z10031',
+              Z10031K1: 'ab'
+          },
+          {
+              Z1K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z40'
+              },
+              Z40K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z42'
+              }
+          },
+          null
+        );
+    }
+
+    {
+        cannedResponses.setWiki('Z10029', readJSON('./test/features/v1/test_data/empty_string_Z10029.json'));
+        cannedResponses.setWiki('Z10031', readJSON('./test/features/v1/test_data/one_character_Z10031.json'));
+        test(
+          'one character("a")',
+          {
+              Z1K1: 'Z7',
+              Z7K1: 'Z10031',
+              Z10031K1: 'a'
+          },
+          {
+              Z1K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z40'
+              },
+              Z40K1: {
+                  Z1K1: 'Z9',
+                  Z9K1: 'Z41'
+              }
+          },
+          null
+        );
+    }
+
+    {
+        cannedResponses.setWiki('Z10029', readJSON('./test/features/v1/test_data/empty_string_Z10029.json'));
+        cannedResponses.setWiki('Z10031', readJSON('./test/features/v1/test_data/one_character_Z10031.json'));
+        test(
+          'one character(<empty>)',
+          {
+              Z1K1: 'Z7',
+              Z7K1: 'Z10031',
+              Z10031K1: ''
+          },
           {
               Z1K1: {
                   Z1K1: 'Z9',
