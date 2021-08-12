@@ -198,7 +198,7 @@ function stringToCharsInternal(characterArray) {
 }
 
 function BUILTIN_STRING_TO_CHARS_(Z6) {
-    return makePair(stringToCharsInternal(Z6.Z6K1.split('')), null);
+    return makePair(stringToCharsInternal(Array.from(Z6.Z6K1)), null);
 }
 
 function charsToStringInternal(Z10) {

@@ -370,9 +370,15 @@ describe('orchestration endpoint', function () {
     );
 
     testFunctionCall(
-        'function call for Z968 (string to characters)',
+        'function call for Z968 (string to code points)',
         { zobject: readJSON('./test/features/v1/test_data/Z968.json') },
         readJSON('./test/features/v1/test_data/Z968_expected.json')
+    );
+
+    testFunctionCall(
+        'function call for Z968 (string to code points) with combined Emoji',
+        { zobject: readJSON('./test/features/v1/test_data/Z968_emoji.json') },
+        readJSON('./test/features/v1/test_data/Z968_emoji_expected.json')
     );
 
     testFunctionCall(
@@ -382,9 +388,15 @@ describe('orchestration endpoint', function () {
     );
 
     testFunctionCall(
-        'function call for Z986 (characters to string)',
+        'function call for Z986 (code points to string)',
         { zobject: readJSON('./test/features/v1/test_data/Z986.json') },
         { Z1K1: 'Z6', Z6K1: 'mus' }
+    );
+
+    testFunctionCall(
+        'function call for Z986 (code points to string) with combining characters',
+        { zobject: readJSON('./test/features/v1/test_data/Z986_emoji.json') },
+        readJSON('./test/features/v1/test_data/Z986_emoji_expected.json')
     );
 
     testFunctionCall(

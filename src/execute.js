@@ -219,12 +219,12 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
     if (!declarationSchema.validate(argument)) {
         return makePair(null, normalError(
                 [error.argument_type_mismatch],
-                ['Could not validate argument as type ' + argumentDict.declaredType]));
+                ['Could not validate argument ' + JSON.stringify(argument) + ' as declared type ' + argumentDict.declaredType]));
     }
     if (!actualSchema.validate(argument)) {
         return makePair(null, normalError(
                 [error.argument_type_mismatch],
-                ['Could not validate argument as type ' + argumentType]));
+                ['Could not validate argument ' + JSON.stringify(argument) + ' as apparent type ' + argumentDict.argumentType]));
     }
     return { name: argumentDict.name, argument: argument };
 }
