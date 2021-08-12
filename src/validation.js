@@ -4,7 +4,7 @@ const traverse = require('json-schema-traverse');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error.js');
 const { execute } = require('./execute.js');
-const { isRefOrString, normalFactory } = require('./utils.js');
+const { createSchema, isFunctionCall, isRefOrString, Z42 } = require('./utils.js');
 
 const validators = {};
 
@@ -18,7 +18,7 @@ function getSchemaValidator(zid) {
     if (validators[zid]) {
         return validators[zid];
     } else {
-        const validator = normalFactory.create(zid);
+        const validator = createSchema(zid);
         validators[zid] = validator;
         return validator;
     }
@@ -28,13 +28,18 @@ function createValidatorZ7(Z8, Z1) {
     // since this is a validator, we always expect a SINGLE argument (the object itself).
     const argument = Z10ToArray(Z8.Z8K1)[0];
 
+    const argumentValue = { ...Z1 };
+    if (isFunctionCall(Z1)) {
+        argumentValue.Z7K2 = Z42();
+    }
+
     return {
         Z1K1: {
             Z1K1: 'Z9',
             Z9K1: 'Z7'
         },
         Z7K1: Z8,
-        [argument.Z17K2.Z6K1]: Z1
+        [argument.Z17K2.Z6K1]: argumentValue
     };
 }
 
@@ -54,7 +59,7 @@ async function runTypeValidator(Z1, typeZObject, resolver) {
         const dereferenced = await resolver.dereference([ validatorZid.Z9K1 ]);
         const validatorZ8 = dereferenced[ validatorZid.Z9K1 ].Z2K2;
         const validatorZ7 = createValidatorZ7(validatorZ8, Z1);
-        const result = await execute(validatorZ7, null, resolver, null, false);
+        const result = await execute(validatorZ7, null, resolver, null);
         return Z10ToArray(result.Z22K1);
     } catch (err) {
         return [

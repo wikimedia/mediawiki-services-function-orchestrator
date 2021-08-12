@@ -3,6 +3,7 @@
 const Bluebird = require('bluebird');
 const builtins = require('./builtins.js');
 const fetch = require('node-fetch');
+const { isArgumentReference, makePair } = require('./utils.js');
 
 fetch.Promise = Bluebird;
 
@@ -55,7 +56,7 @@ class Implementation {
         }
         if (Z14.Z14K2 !== undefined) {
             // eslint-disable-next-line no-use-before-define
-            return new Composition(Z14);
+            return new Composition(Z14.Z14K2);
         }
         // eslint-disable-next-line no-use-before-define
         return new Evaluated();
@@ -95,6 +96,7 @@ class BuiltIn extends Implementation {
         for (const key of keys) {
             callArgs.push(nameToArgument.get(key));
         }
+        callArgs.push(this.evaluatorUri_);
         callArgs.push(this.resolver_);
         callArgs.push(this.scope_);
         return this.functor_(...callArgs);
@@ -142,12 +144,21 @@ class Composition extends Implementation {
     }
 
     async execute() {
+        if (isArgumentReference(this.composition_)) {
+            const retrievedArgument = await this.scope_.retrieveArgument(
+                this.composition_.Z18K1.Z6K1,
+                this.evaluatorUri_,
+                this.resolver_);
+            if (retrievedArgument.state === 'ERROR') {
+                return makePair(null, retrievedArgument.error);
+            }
+            return makePair(retrievedArgument.argumentDict.argument, null);
+        }
         const { execute } = require('./execute.js');
         return await execute(
-            this.composition_.Z14K2, this.evaluatorUri_, this.resolver_,
-            this.scope_);
+            this.composition_, this.evaluatorUri_, this.resolver_, this.scope_);
     }
 
 }
 
-module.exports = { Implementation, Evaluated };
+module.exports = { Composition, Evaluated, Implementation };

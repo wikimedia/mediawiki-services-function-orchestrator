@@ -7,10 +7,17 @@ const { normalError, error } = require('../function-schemata/javascript/src/erro
 const normalFactory = SchemaFactory.NORMAL();
 const Z1Validator = normalFactory.create('Z1');
 const Z6Validator = normalFactory.create('Z6');
-const Z7Validator = normalFactory.create('Z7');
+const Z7BackendValidator = normalFactory.create('Z7_backend');
 const Z9Validator = normalFactory.create('Z9');
 const Z18Validator = normalFactory.create('Z18');
 const Z23Validator = normalFactory.create('Z23');
+
+function createSchema(ZID) {
+    if (ZID === 'Z7') {
+        ZID = 'Z7_backend';
+    }
+    return normalFactory.create(ZID);
+}
 
 /**
  * Validates a ZObject.
@@ -57,8 +64,7 @@ function isRefOrString(Z1) {
  * @return {bool} whether Z1 can validated as a Function Call
  */
 function isFunctionCall(Z1) {
-    return (
-        Z7Validator.validate(Z1) &&
+    return (Z7BackendValidator.validate(Z1) &&
         !(Z9Validator.validate(Z1)) &&
         !(Z18Validator.validate(Z1)));
 }
@@ -122,6 +128,38 @@ function Z23(canonical = false) {
         return 'Z23';
     }
 	return { Z1K1: 'Z9', Z9K1: 'Z23' };
+}
+
+/**
+ * Z9 Reference to Z41 (true).
+ * TODO: T282891
+ *
+ * @return {Object} a reference to Z41 (true)
+ */
+function Z41() {
+    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } };
+}
+
+/**
+ * Z9 Reference to Z42 (false).
+ * TODO: T282891
+ *
+ * @return {Object} a reference to Z42 (false)
+ */
+function Z42() {
+    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } };
+}
+
+/**
+ * Validates a ZObject against the Function Call schema.
+ *
+  @param {Object} Z1 object to be validated
+ * @return {bool} whether Z1 can validated as a Function Call
+ */
+function isEvaluableFunctionCall(Z1) {
+    return (
+        isFunctionCall(Z1) &&
+        Z1.Z7K2.Z40K1.Z9K1 === Z41().Z40K1.Z9K1);
 }
 
 // TODO: T282891
@@ -231,9 +269,11 @@ async function maybeNormalize(zobject) {
 module.exports = {
     containsError,
     containsValue,
+    createSchema,
     generateError,
     isArgumentReference,
     isError,
+    isEvaluableFunctionCall,
     isFunctionCall,
     isNothing,
     isRefOrString,
@@ -241,6 +281,7 @@ module.exports = {
     makeBoolean,
     makePair,
     maybeNormalize,
-    normalFactory,
-    Z23
+    Z23,
+    Z41,
+    Z42
 };

@@ -3,30 +3,12 @@
 const utils = require('../function-schemata/javascript/src/utils');
 const normalize = require('../function-schemata/javascript/src/normalize');
 const { mutate } = require('./zobject.js');
-const { makePair, makeBoolean } = require('./utils.js');
+const { makePair, makeBoolean, Z41, Z42 } = require('./utils.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 
 /**
  * HELPER FUNCTIONS
  */
-
-/**
- * Z9 Reference to Z41 (true).
- *
- * @return {Object} a reference to Z41 (true)
- */
-function BUILTIN_TRUE_() {
-    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } };
-}
-
-/**
- * Z9 Reference to Z42 (false).
- *
- * @return {Object} a reference to Z42 (false)
- */
-function BUILTIN_FALSE_() {
-    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } };
-}
 
 /**
  * Returns true iff the input is equivalent to the builtin true value.
@@ -35,7 +17,7 @@ function BUILTIN_FALSE_() {
  * @return {bool} whether Z40 corresponds to Z41 (true) or not
  */
 function isTrue(Z40) {
-    return Z40.Z40K1.Z9K1 === BUILTIN_TRUE_().Z40K1.Z9K1;
+    return Z40.Z40K1.Z9K1 === Z41().Z40K1.Z9K1;
 }
 
 /**
@@ -157,9 +139,9 @@ function BUILTIN_TAIL_(Z10) {
 function BUILTIN_EMPTY_(Z10) {
     let result;
     if (utils.isEmpty(Z10)) {
-        result = BUILTIN_TRUE_();
+        result = Z41();
     } else {
-        result = BUILTIN_FALSE_();
+        result = Z42();
     }
     return makePair(result, null);
 }
@@ -224,9 +206,9 @@ function BUILTIN_CHARS_TO_STRING_(Z10) {
 function BUILTIN_SAME_(Z86_1, Z86_2) {
     let result;
     if (Z86_1.Z86K1.Z6K1 === Z86_2.Z86K1.Z6K1) {
-        result = BUILTIN_TRUE_();
+        result = Z41();
     } else {
-        result = BUILTIN_FALSE_();
+        result = Z42();
     }
     return makePair(result, null);
 }
@@ -321,18 +303,17 @@ function BUILTIN_Z4_TYPE_VALIDATOR_(Z1) {
     return makePair(utils.arrayToZ10(errors), null);
 }
 
-async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, resolver) {
+async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, evaluatorUri, resolver, scope) {
     const argumentTypes = {};
     const errors = [];
 
-    await mutate(Z1, [ 'Z7K1', 'Z8K1' ], resolver);
-    const Z8K1 = Z1.Z7K1.Z8K1;
+    const Z8K1 = await mutate(Z1, [ 'Z7K1', 'Z8K1' ], evaluatorUri, resolver, scope);
     for (const arg of utils.Z10ToArray(Z8K1)) {
         argumentTypes[arg.Z17K2.Z6K1] = arg.Z17K1.Z9K1;
     }
 
     for (const key of Object.keys(Z1)) {
-        if (key === 'Z1K1' || key === 'Z7K1') {
+        if (key === 'Z1K1' || key === 'Z7K1' || key === 'Z7K2') {
             continue;
         }
 

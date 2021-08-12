@@ -7,7 +7,7 @@ const { arrayToZ10 } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error');
 const { validate } = require('./validation.js');
 const { execute } = require('./execute.js');
-const { containsError, isError, isFunctionCall, isNothing, makePair, maybeNormalize } = require('./utils');
+const { containsError, isError, isFunctionCall, isNothing, makePair, maybeNormalize, Z41 } = require('./utils.js');
 const { ReferenceResolver } = require('./db.js');
 
 /**
@@ -40,6 +40,7 @@ async function maybeValidate(zobject, doValidate, resolver) {
  */
 async function Z7OrError(zobject) {
     if (isFunctionCall(zobject)) {
+        zobject.Z7K2 = Z41();
         return makePair(zobject, null);
     }
     return makePair(
@@ -93,12 +94,12 @@ async function orchestrate(str) {
     ];
 
     for (const callTuple of callTuples) {
-        console.log('calling function', callTuple[2], 'on currentPair:', currentPair);
         // TODO(T287986): isNothing check is redundant once validation returns
         // correct type.
         if (containsError(currentPair) || isNothing(currentPair.Z22K1)) {
             break;
         }
+        console.log('calling function', callTuple[2], 'on currentPair:', currentPair);
         const callable = callTuple[0];
         const args = callTuple[1];
         const zobject = currentPair.Z22K1;

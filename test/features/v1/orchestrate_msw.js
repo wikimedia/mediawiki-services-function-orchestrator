@@ -89,17 +89,21 @@ describe('orchestrate', function () {
                 error = canonicalize(error);
             } catch (err) { }
         }
-        it('orchestrate msw: ' + name, (done) => {
+        it('orchestrate msw: ' + name, async () => {
             const inputEncoded = JSON.stringify(input);
-            orchestrate(inputEncoded)
-            .then((result) => {
-                assert.deepEqual(
-                    result,
-                    utils.makePair(output, error, /* canonical= */ true),
-                    name
-                );
-                done();
-            });
+            let result = {};
+            let thrownError = null;
+            try {
+                result = await orchestrate(inputEncoded);
+            } catch (err) {
+                thrownError = err;
+            }
+            assert.deepEqual(thrownError, null);
+            assert.deepEqual(
+                result,
+                utils.makePair(output, error, /* canonical= */ true),
+                name
+            );
         });
     };
 

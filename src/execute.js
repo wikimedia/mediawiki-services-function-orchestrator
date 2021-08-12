@@ -2,30 +2,203 @@
 
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils');
-const { Evaluated, Implementation } = require('./implementation.js');
-const { containsError, containsValue, isArgumentReference, isFunctionCall, isRefOrString, makePair, normalFactory } = require('./utils.js');
+const { Composition, Evaluated, Implementation } = require('./implementation.js');
+const { containsError, containsValue, createSchema, isArgumentReference, isEvaluableFunctionCall, isFunctionCall, isRefOrString, makePair, Z41 } = require('./utils.js');
 const { mutate } = require('./zobject.js');
+
+let execute = null;
+
+class ArgumentState {
+
+    constructor() {
+        this.state = null;
+        this.argumentDict = null;
+        this.error = null;
+    }
+
+    static UNEVALUATED(argumentDict) {
+        const result = new ArgumentState();
+        result.argumentDict = argumentDict;
+        result.state = 'UNEVALUATED';
+        return result;
+    }
+
+    static EVALUATED(argument) {
+        const result = new ArgumentState();
+        result.argumentDict = argument;
+        result.state = 'EVALUATED';
+        return result;
+    }
+
+    static ERROR(error) {
+        const result = new ArgumentState();
+        result.error = error;
+        result.state = 'ERROR';
+        return result;
+    }
+
+}
+
+class BaseFrame {
+
+    constructor(lastFrame = null) {
+        this.lastFrame_ = lastFrame;
+        this.names_ = new Map();
+    }
+
+}
+
+class EmptyFrame extends BaseFrame {
+    constructor() {
+        super();
+    }
+
+    async retrieveArgument(argumentName) {
+        return ArgumentState.ERROR(
+            normalError(
+                // TODO(T287919): Reconsider error type.
+                [error.invalid_key],
+                ['No argument called ' + argumentName + ' in scope.']));
+    }
+}
+
+class Frame extends BaseFrame {
+
+    constructor(lastFrame = null) {
+        if (lastFrame === null) {
+            lastFrame = new EmptyFrame();
+        }
+        super(lastFrame);
+    }
+
+    /**
+     * Add new name and argument to this frame.
+     *
+     * @param {string} name
+     * @param {Object} argumentDict
+     */
+    setArgument(name, argumentDict) {
+        const argument = argumentDict.argument;
+        if (isFunctionCall(argument) && argument.Z7K2 === undefined) {
+            argumentDict.argument.Z7K2 = Z41();
+        }
+        this.names_.set(name, ArgumentState.UNEVALUATED(argumentDict));
+    }
+
+    async processArgument(argumentDict, evaluatorUri, resolver) {
+        // TODO: If we could statically analyze type compatibility (i.e., "Z6
+        // can be a Z1"), we could perform validation before executing the
+        // function and exit early.
+        let argument = argumentDict.argument;
+        while (true) {
+            if (isArgumentReference(argument)) {
+                const argumentName = argument.Z18K1.Z6K1;
+                // TODO(T289018): What if a Z18 refers to the same argument, e.g.
+                // Z802K1 => { Z1K1: 'Z18', Z18K1: 'Z802K1' } ?
+                const argumentState = await this.lastFrame_.retrieveArgument(
+                    argumentName, evaluatorUri, resolver);
+                if (argumentState.state === 'ERROR') {
+                    return argumentState;
+                }
+                argument = argumentState.argumentDict.argument;
+                continue;
+            }
+            if (isEvaluableFunctionCall(argument)) {
+                // TODO(T289018): What if a Z7 needs to refer to an argument
+                // in the same frame? Does that even make sense to do?
+                const evaluationResult = await execute(
+                    argument, evaluatorUri, resolver, this.lastFrame_);
+                if (containsError(evaluationResult)) {
+                    return ArgumentState.ERROR(evaluationResult.Z22K2);
+                }
+                argument = evaluationResult.Z22K1;
+                continue;
+            }
+            break;
+        }
+
+        let argumentType;
+        if (isRefOrString(argument)) {
+            argumentType = argument.Z1K1;
+        } else {
+            argumentType = argument.Z1K1.Z9K1;
+        }
+
+        const declarationSchema = createSchema(argumentDict.declaredType);
+        const actualSchema = createSchema(argumentType);
+        if (!declarationSchema.validate(argument)) {
+            return ArgumentState.ERROR(
+                normalError(
+                    [error.argument_type_mismatch],
+                    ['Could not validate argument ' + JSON.stringify(argument) + ' as declared type ' + argumentDict.declaredType]));
+        }
+        if (!actualSchema.validate(argument)) {
+            return ArgumentState.ERROR(
+                normalError(
+                    [error.argument_type_mismatch],
+                    ['Could not validate argument ' + JSON.stringify(argument) + ' as apparent type ' + argumentDict.argumentType]));
+        }
+        return ArgumentState.EVALUATED({ name: argumentDict.name, argument: argument });
+    }
+
+    /**
+     * Ascend enclosing scopes to find instantiation of argument with provided name.
+     *
+     * @param {string} argumentName
+     * @param {string} evaluatorUri
+     * @param {ReferenceResolver} resolver
+     * @param {boolean} lazily
+     * @return {Object} argument instantiated with given name in lowest enclosing scope
+     * along with enclosing scope
+     */
+    async retrieveArgument(argumentName, evaluatorUri, resolver, lazily = false) {
+        let boundValue = this.names_.get(argumentName);
+
+        // Name does not exist in this scope; look in the previous one
+        // (or return null if no previous scope).
+        if (boundValue === undefined) {
+            return this.lastFrame_.retrieveArgument(argumentName, evaluatorUri, resolver, lazily);
+        }
+
+        // If bound value is in the ERROR or EVALUATED state, it has already
+        // been evaluated and can be returned directly.
+        if (boundValue.state === 'UNEVALUATED' && !lazily) {
+            // If state is UNEVALUATED, evaluation is not lazy, and the argument
+            // is a Z7 with Z7K2 === Z41, the value must be evaluted before
+            // returning.
+            // Otherwise, it is necessary to evaluate the argument.
+            const argumentDict = boundValue.argumentDict;
+            const evaluatedArgument = await this.processArgument(
+                argumentDict, evaluatorUri, resolver);
+            this.names_.set(argumentName, evaluatedArgument);
+            boundValue = evaluatedArgument;
+        }
+        return boundValue;
+    }
+
+}
 
 /**
  * Retrieve argument declarations and instantiations from a Z7.
  *
  * @param {Object} zobject
+ * @param {string} evaluatorUri
  * @param {ReferenceResolver} resolver
  * @param {Scope} scope
  * @return {Array} list of objects containing argument names
  */
-async function getArgumentDicts(zobject, resolver, scope) {
+async function getArgumentDicts(zobject, evaluatorUri, resolver, scope) {
     const argumentDicts = [];
-    const Z8K1 = await mutate(zobject, [ 'Z7K1', 'Z8K1' ], resolver, scope);
+    const Z8K1 = await mutate(zobject, [ 'Z7K1', 'Z8K1' ], evaluatorUri, resolver, scope);
 
     for (const Z17 of Z10ToArray(Z8K1)) {
         const argumentDict = {};
-        const argumentName = await mutate(Z17, [ 'Z17K2', 'Z6K1' ], resolver, scope);
+        const argumentName = await mutate(Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope);
         argumentDict.name = argumentName;
         // TODO: This is flaky to rely on; find a better way to determine type.
         const declaredType = Z17.Z17K1.Z9K1;
         argumentDict.declaredType = declaredType;
-        const argument = await mutate(zobject, [argumentName], resolver, scope);
+        const argument = await mutate(zobject, [argumentName], evaluatorUri, resolver, scope);
         argumentDict.argument = argument;
         argumentDicts.push(argumentDict);
     }
@@ -38,11 +211,12 @@ async function getArgumentDicts(zobject, resolver, scope) {
  *
  * @param {Object} result
  * @param {Object} zobject
+ * @param {string} evaluatorUri
  * @param {ReferenceResolver} resolver
  * @param {Scope} scope
  * @return {Object} zobject if validation succeeds; error tuple otherwise
  */
-async function validateReturnType(result, zobject, resolver, scope) {
+async function validateReturnType(result, zobject, evaluatorUri, resolver, scope) {
     // eslint-disable-next-line no-bitwise
     const thebits = (containsValue(result) << 1) | containsError(result);
 
@@ -55,9 +229,9 @@ async function validateReturnType(result, zobject, resolver, scope) {
                 ['Function evaluation returned an empty object.']));
     } else if (thebits === 2) {
         // Value returned; validate its return type..
-        await mutate(zobject, [ 'Z7K1' ], resolver);
-        const returnType = zobject.Z7K1.Z8K2;
-        const returnValidator = normalFactory.create(returnType.Z9K1);
+        const Z7K1 = await mutate(zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope);
+        const returnType = Z7K1.Z8K2;
+        const returnValidator = createSchema(returnType.Z9K1);
         if (!returnValidator.validate(result.Z22K1)) {
             return makePair(
                 null,
@@ -76,96 +250,6 @@ async function validateReturnType(result, zobject, resolver, scope) {
     return result;
 }
 
-class Frame {
-
-    constructor() {
-        this.names_ = new Map();
-    }
-
-    /**
-     * Add new name and argument to this frame.
-     *
-     * @param {string} name
-     * @param {Object} value
-     */
-    setArgument(name, value) {
-        this.names_.set(name, value);
-    }
-
-    /**
-     * Retrieve argument with provided name from this frame.
-     *
-     * @param {string} name
-     * @return {Object} argument instantiated with given name
-     */
-    getArgument(name) {
-        return this.names_.get(name);
-    }
-
-    /**
-     * Clone this object and return the clone.
-     *
-     * @return {Scope} copy of this
-     */
-    clone() {
-        const result = new Frame();
-        result.names_ = new Map(this.names_);
-        return result;
-    }
-
-}
-
-class Scope {
-
-    constructor() {
-        this.frames_ = [];
-    }
-
-    /**
-     * Create new Frame and add it to scope.
-     *
-     * @return {Frame} newly generated frame
-     */
-    addFrame() {
-        const newFrame = new Frame();
-        this.frames_.push(newFrame);
-        return newFrame;
-    }
-
-    /**
-     * Clone this object and return the clone.
-     *
-     * @return {Scope} copy of this
-     */
-    clone() {
-        const result = new Scope();
-        for (const frame of this.frames_) {
-            result.frames_.push(frame.clone());
-        }
-        return result;
-    }
-
-    /**
-     * Ascend enclosing scopes to find instantiation of argument with provided name.
-     *
-     * @param {string} argumentName
-     * @return {Object} argument instantiated with given name in lowest enclosing scope
-     */
-    retrieveArgument(argumentName) {
-        for (let i = this.frames_.length - 1; i >= 0; --i) {
-            const frame = this.frames_[i];
-            const result = frame.getArgument(argumentName);
-            if (result !== undefined) {
-                return result;
-            }
-        }
-        return null;
-    }
-
-}
-
-let execute = null;
-
 function selectImplementation(implementations) {
     // TODO: Implement heuristics to decide which implement to use. Implicitly,
     // current heuristic is to use a builtin if available; otherwise, choose a
@@ -177,53 +261,6 @@ function selectImplementation(implementations) {
     return implementations[ Math.floor(Math.random() * implementations.length) ];
 }
 
-async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
-    // TODO: If we could statically analyze type compatibility (i.e., "Z6
-    // can be a Z1"), we could perform validation before executing the
-    // function and exit early.
-    let argument = argumentDict.argument;
-    if (isArgumentReference(argument)) {
-        const argumentName = argument.Z18K1.Z6K1;
-        argument = scope.retrieveArgument(argumentName);
-        if (argument === null) {
-            return makePair(
-                null,
-                normalError(
-                    // TODO(T287919): Reconsider error type.
-                    [error.invalid_key],
-                    ['No argument called ' + argumentName + ' in scope.'])
-            );
-        }
-    } else if (isFunctionCall(argument)) {
-        const evaluationResult = await execute(argument, evaluatorUri, resolver, scope);
-        if (containsError(evaluationResult)) {
-            return evaluationResult;
-        }
-        argument = evaluationResult.Z22K1;
-    }
-
-    let argumentType;
-    if (isRefOrString(argument)) {
-        argumentType = argument.Z1K1;
-    } else {
-        argumentType = argument.Z1K1.Z9K1;
-    }
-
-    const declarationSchema = normalFactory.create(argumentDict.declaredType);
-    const actualSchema = normalFactory.create(argumentType);
-    if (!declarationSchema.validate(argument)) {
-        return makePair(null, normalError(
-                [error.argument_type_mismatch],
-                ['Could not validate argument ' + JSON.stringify(argument) + ' as declared type ' + argumentDict.declaredType]));
-    }
-    if (!actualSchema.validate(argument)) {
-        return makePair(null, normalError(
-                [error.argument_type_mismatch],
-                ['Could not validate argument ' + JSON.stringify(argument) + ' as apparent type ' + argumentDict.argumentType]));
-    }
-    return { name: argumentDict.name, argument: argument };
-}
-
 /**
  * Accepts a function call, retrieves the appropriate implementation, and tries
  * to execute with supplied arguments.
@@ -231,25 +268,28 @@ async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
  * @param {Object} zobject object describing a function call
  * @param {string} evaluatorUri URI of native code evaluator service
  * @param {ReferenceResolver} resolver handles resolution of Z9s
- * @param {Scope} scope current variable bindings
- * @param {boolean} doRecurse whether to execute embedded function calls;
- * disable for builtin validation
+ * @param {Scope} oldScope current variable bindings
  * @return {Object} result of executing function call
  */
-execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecurse = true) {
-    if (isArgumentReference(zobject)) {
-        return makePair(scope.retrieveArgument(zobject.Z18K1.Z6K1), null);
+execute = async function (zobject, evaluatorUri, resolver, oldScope = null) {
+    const scope = new Frame(oldScope);
+
+    // Retrieve argument declarations and instantiations.
+    const argumentDicts = await getArgumentDicts(zobject, evaluatorUri, resolver, scope);
+    // TODO: Check for Z22 results; these are error states.
+    for (const argumentDict of argumentDicts) {
+        scope.setArgument(argumentDict.name, argumentDict);
     }
 
     // Ensure Z8 (Z7K1) is dereferenced. Also ensure implementations are
     // dereferenced (Z8K4 and all elements thereof).
-    const Z8K4 = await mutate(zobject, ['Z7K1', 'Z8K4'], resolver, scope);
+    const Z8K4 = await mutate(zobject, ['Z7K1', 'Z8K4'], evaluatorUri, resolver, scope);
     const implementations = [];
     if (Z8K4 !== undefined) {
         let root = Z8K4;
         while (root.Z10K1 !== undefined) {
             // TODO: Write test making sure that Z14s are resolved.
-            const Z10K1 = await mutate(root, [ 'Z10K1' ], resolver, scope);
+            const Z10K1 = await mutate(root, [ 'Z10K1' ], evaluatorUri, resolver, scope);
             implementations.push(Z10K1);
             root = root.Z10K2;
         }
@@ -258,39 +298,6 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecur
     const implementationZObject = selectImplementation(implementations);
     const implementation = Implementation.create(implementationZObject);
 
-    // Retrieve argument declarations and instantiations.
-    const argumentDicts = await getArgumentDicts(zobject, resolver, scope);
-
-    // Validate arguments; make recursive function calls if necessary.
-    const values = [];
-    const argumentPromises = [];
-    for (const argumentDict of argumentDicts) {
-        if (implementation.hasLazyVariable(argumentDict.name) || !doRecurse) {
-            values.push({ name: argumentDict.name, argument: argumentDict.argument });
-        } else {
-            argumentPromises.push(processArgument(argumentDict, evaluatorUri, resolver, scope));
-        }
-    }
-    for (const argumentDict of await Promise.all(argumentPromises)) {
-        // TODO: Better error handling here--check containsError once all errors
-        // are truly Z5s.
-        if (argumentDict.Z22K2 !== undefined) {
-            return argumentDict;
-        }
-        values.push(argumentDict);
-    }
-
-    // Populate new frame with newly-declared arguments.
-    if (scope === null) {
-        scope = new Scope();
-    }
-    scope = scope.clone();
-    const frame = scope.addFrame();
-    // TODO: Check for Z22 results; these are error states.
-    for (const value of values) {
-        frame.setArgument(value.name, value.argument);
-    }
-
     // Check corner case where evaluated function must be dereferenced.
     // TODO: Clone ZObject; add only one implementation and dereference only that.
     if (implementation instanceof Evaluated) {
@@ -298,19 +305,31 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecur
             let root = Z8K4;
             while (root.Z10K1 !== undefined) {
                 if (root.Z10K1.Z14K3 !== undefined) {
-                    await mutate(root, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], resolver, scope);
+                    await mutate(root, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], evaluatorUri, resolver, scope);
                 }
                 root = root.Z10K2;
             }
         }
     }
 
-    // Populate arguments from scope.
     const argumentInstantiations = [];
-    for (const argumentDict of argumentDicts) {
-        const name = argumentDict.name;
-        const argument = scope.retrieveArgument(argumentDict.name);
-        argumentInstantiations.push({ name: name, argument: argument  });
+    if (!(implementation instanceof Composition)) {
+        // Populate arguments from scope.
+        // TODO: Check for errors in retrieve arguments and return early.
+        const instantiationPromises = [];
+        for (const argumentDict of argumentDicts) {
+            instantiationPromises.push(
+                scope.retrieveArgument(
+                    argumentDict.name, evaluatorUri, resolver,
+                    implementation.hasLazyVariable(argumentDict.name)
+                ));
+        }
+        for (const instantiation of await Promise.all(instantiationPromises)) {
+            if (instantiation.state === 'ERROR') {
+                return makePair(null, instantiation.error);
+            }
+            argumentInstantiations.push(instantiation.argumentDict);
+        }
     }
 
     // Equip the implementation for its journey and execute.
@@ -321,13 +340,13 @@ execute = async function (zobject, evaluatorUri, resolver, scope = null, doRecur
 
     // Execute result if implementation is lazily evaluated.
     if (implementation.returnsLazy()) {
-        const goodResult = await mutate(result, [ 'Z22K1' ], resolver, scope);
+        const goodResult = await mutate(result, [ 'Z22K1' ], evaluatorUri, resolver, scope);
         if (isFunctionCall(goodResult) || isArgumentReference(goodResult)) {
             result = await execute(goodResult, evaluatorUri, resolver, scope);
         }
     }
 
-    return await validateReturnType(result, zobject, resolver, scope);
+    return await validateReturnType(result, zobject, evaluatorUri, resolver, scope);
 };
 
 module.exports = { execute };
