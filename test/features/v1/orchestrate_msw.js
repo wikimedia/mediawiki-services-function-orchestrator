@@ -2,6 +2,7 @@
 
 const assert = require('../../utils/assert.js');
 const canonicalize = require('../../../function-schemata/javascript/src/canonicalize.js');
+const normalize = require('../../../function-schemata/javascript/src/normalize.js');
 const utils = require('../../../src/utils.js');
 const { rest } = require('msw');
 const { setupServer } = require('msw/node');
@@ -287,4 +288,26 @@ describe('orchestrate', function () {
           null
         );
     }
+
+    {
+        cannedResponses.setWiki('Z10044', readJSON('./test/features/v1/test_data/map_function_Z10044.json'));
+        cannedResponses.setWiki('Z10045', readJSON('./test/features/v1/test_data/map_implementation_Z10045.json'));
+        test(
+          'map (emptiness of lists)',
+          {
+              Z1K1: 'Z7',
+              Z7K1: 'Z10044',
+              Z10044K1: 'Z813',
+              Z10044K2: [
+                [],
+                ['I am here!'],
+                ['I am not :('],
+                []
+              ]
+          },
+          normalize([ utils.Z41(), utils.Z42(), utils.Z42(), utils.Z41() ]),
+          null
+        );
+    }
+
 });

@@ -140,7 +140,7 @@ class Composition extends Implementation {
 
     constructor(composition) {
         super();
-        this.composition_ = composition;
+        this.composition_ = { ...composition };
     }
 
     async execute() {
