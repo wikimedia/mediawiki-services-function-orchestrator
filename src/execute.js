@@ -168,18 +168,13 @@ let execute = null;
 
 function selectImplementation(implementations) {
     // TODO: Implement heuristics to decide which implement to use. Implicitly,
-    // current heuristic is to use a builtin if available; otherwise, use a
-    // composition if available; otherwise, use the first available native
-    // code implementation.
+    // current heuristic is to use a builtin if available; otherwise, choose a
+    // random implementation and return that.
     const builtin = implementations.find((impl) => Boolean(impl.Z14K4));
     if (builtin !== undefined) {
         return builtin;
     }
-    const composition = implementations.find((impl) => Boolean(impl.Z14K2));
-    if (composition !== undefined) {
-        return composition;
-    }
-    return implementations[0];
+    return implementations[ Math.floor(Math.random() * implementations.length) ];
 }
 
 async function processArgument(argumentDict, evaluatorUri, resolver, scope) {
