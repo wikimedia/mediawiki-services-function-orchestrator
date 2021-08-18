@@ -10,6 +10,7 @@ class ReferenceResolver {
 
     constructor(wikiUri) {
         this.wikiUri_ = wikiUri;
+        this.referenceMap = new Map();
     }
 
     /**
@@ -27,9 +28,13 @@ class ReferenceResolver {
         // Resolve references to builtins directly within the orchestrator.
         for (const ZID of unresolved) {
             const builtin = resolveBuiltinReference(ZID);
+            const previouslyDereferenced = this.referenceMap.get(ZID);
             if (builtin !== null) {
                 unresolved.delete(ZID);
                 dereferenced[ ZID ] = { Z2K2: builtin };
+            } else if (previouslyDereferenced !== undefined) {
+                unresolved.delete(ZID);
+                dereferenced[ ZID ] = previouslyDereferenced;
             }
         }
 
@@ -51,6 +56,7 @@ class ReferenceResolver {
                 } else {
                     dereferenced[ZID] = normalized.Z22K1;
                 }
+                this.referenceMap.set(ZID, dereferenced[ZID]);
             }));
         }
 
