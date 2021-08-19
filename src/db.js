@@ -34,7 +34,7 @@ class ReferenceResolver {
                 dereferenced[ ZID ] = { Z2K2: builtin };
             } else if (previouslyDereferenced !== undefined) {
                 unresolved.delete(ZID);
-                dereferenced[ ZID ] = previouslyDereferenced;
+                dereferenced[ ZID ] = JSON.parse(JSON.stringify(previouslyDereferenced));
             }
         }
 
