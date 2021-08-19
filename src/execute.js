@@ -93,9 +93,9 @@ class Frame extends BaseFrame {
         while (true) {
             if (isArgumentReference(argument)) {
                 const argumentName = argument.Z18K1.Z6K1;
-                // TODO(T289018): What if a Z18 refers to the same argument, e.g.
-                // Z802K1 => { Z1K1: 'Z18', Z18K1: 'Z802K1' } ?
-                const argumentState = await this.lastFrame_.retrieveArgument(
+                // TODO(T289018): Add a test for same function nested in different
+                // scopes to test circular references.
+                const argumentState = await this.retrieveArgument(
                     argumentName, evaluatorUri, resolver);
                 if (argumentState.state === 'ERROR') {
                     return argumentState;
@@ -198,7 +198,12 @@ async function getArgumentDicts(zobject, evaluatorUri, resolver, scope) {
         // TODO: This is flaky to rely on; find a better way to determine type.
         const declaredType = Z17.Z17K1.Z9K1;
         argumentDict.declaredType = declaredType;
-        const argument = await mutate(zobject, [argumentName], evaluatorUri, resolver, scope);
+        let key = argumentName;
+        if (zobject[ key ] === undefined) {
+            const localKeyRegex = /K[1-9]\d*$/;
+            key = key.match(localKeyRegex)[0];
+        }
+        const argument = await mutate(zobject, [key], evaluatorUri, resolver, scope);
         argumentDict.argument = argument;
         argumentDicts.push(argumentDict);
     }
@@ -349,4 +354,4 @@ execute = async function (zobject, evaluatorUri, resolver, oldScope = null) {
     return await validateReturnType(result, zobject, evaluatorUri, resolver, scope);
 };
 
-module.exports = { execute };
+module.exports = { execute, getArgumentDicts };

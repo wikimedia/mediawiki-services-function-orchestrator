@@ -2,7 +2,6 @@
 
 const utils = require('../function-schemata/javascript/src/utils');
 const normalize = require('../function-schemata/javascript/src/normalize');
-const { mutate } = require('./zobject.js');
 const { makePair, makeBoolean, Z41, Z42 } = require('./utils.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 
@@ -304,34 +303,40 @@ function BUILTIN_Z4_TYPE_VALIDATOR_(Z1) {
 }
 
 async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, evaluatorUri, resolver, scope) {
-    const argumentTypes = {};
     const errors = [];
 
-    const Z8K1 = await mutate(Z1, [ 'Z7K1', 'Z8K1' ], evaluatorUri, resolver, scope);
-    for (const arg of utils.Z10ToArray(Z8K1)) {
-        argumentTypes[arg.Z17K2.Z6K1] = arg.Z17K1.Z9K1;
+    const { getArgumentDicts } = require('./execute.js');
+    const argumentDicts = await getArgumentDicts(Z1, evaluatorUri, resolver, scope);
+    const dictDict = {};
+    for (const argumentDict of argumentDicts) {
+        dictDict[ argumentDict.name ] = argumentDict;
     }
 
+    const keysToSkip = new Set(['Z1K1', 'Z7K1', 'Z7K2']);
+
+    // TODO: Also check declared arguments that are absent from the Z7.
     for (const key of Object.keys(Z1)) {
-        if (key === 'Z1K1' || key === 'Z7K1' || key === 'Z7K2') {
+        if (keysToSkip.has(key)) {
             continue;
         }
-
-        const type = Z1[key].Z1K1.Z9K1 || Z1[key].Z1K1;
-
-        if (argumentTypes[key] === undefined) {
+        const argumentDict = dictDict[ key ];
+        if (argumentDict === undefined) {
             errors.push(
                 normalError(
                     [error.invalid_key],
                     [`Invalid key for function call: ${key}`]
                 )
             );
+            continue;
+        }
+        const type = Z1[key].Z1K1.Z9K1 || Z1[key].Z1K1;
+        const declaredType = argumentDict.declaredType;
         // if an argument type, it's not validated because every other type is Z1
-        } else if (argumentTypes[key] !== type && argumentTypes[key] !== 'Z1') {
+        if (declaredType !== type && declaredType !== 'Z1') {
             errors.push(
                 normalError(
                     [error.argument_type_mismatch],
-                    [`Invalid argument type: expected ${argumentTypes[key]}, got ${type}`]
+                    [`Invalid argument type: expected ${declaredType}, got ${type}`]
                 )
             );
         }
