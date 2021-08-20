@@ -81,6 +81,8 @@ describe('performTest', function () {
             doValidate: false
         }));
 
+        delete result[0].duration;
+
         assert.deepEqual(result, [
             {
               zFunctionId: 'Z10006',
