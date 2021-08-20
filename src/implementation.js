@@ -4,6 +4,7 @@ const Bluebird = require('bluebird');
 const builtins = require('./builtins.js');
 const fetch = require('node-fetch');
 const { isArgumentReference, makePair } = require('./utils.js');
+const { mutate } = require('./zobject.js');
 
 fetch.Promise = Bluebird;
 
@@ -114,7 +115,12 @@ class Evaluated extends Implementation {
      * @return {Object} the result of calling this.functor_ with provided arguments
      */
     async execute(zobject, argumentList) {
-        const Z7 = { ...zobject };
+        // Arguments should already be fully resolved, but any other attributes
+        // of the Z7 which are Z9s/Z18s must be resolved before dispatching
+        // to the function evaluator.
+        const Z7 = {};
+        Z7.Z1K1 = zobject.Z1K1;
+        Z7.Z7K1 = await mutate(zobject, ['Z7K1'], this.evaluatorUri_, this.resolver_, this.scope_);
         for (const argumentDict of argumentList) {
             Z7[ argumentDict.name ] = argumentDict.argument;
         }
