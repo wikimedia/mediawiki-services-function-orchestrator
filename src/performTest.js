@@ -101,14 +101,12 @@ async function getTestResults(data) {
     test.Z7K1.Z8K4 = [implementation];
 
     const testResponse = normalize(
-      await orchestrate(
-        JSON.stringify({
-          zobject: test,
-          evaluatorUri,
-          wikiUri,
-          doValidate
-        })
-      )
+      await orchestrate({
+        zobject: test,
+        evaluatorUri,
+        wikiUri,
+        doValidate
+      })
     );
     const testResult = testResponse.Z22K1;
 
@@ -120,12 +118,12 @@ async function getTestResults(data) {
 
       const start = Date.now();
 
-      const validationResponse = await orchestrate(JSON.stringify({
+      const validationResponse = await orchestrate({
         zobject: validator,
         evaluatorUri,
         wikiUri,
         doValidate
-      }));
+      });
 
       const end = Date.now();
 

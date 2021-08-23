@@ -65,9 +65,9 @@ describe('performTest', function () {
     ];
     const mockServiceWorker = setupServer(...restHandlers);
 
-    beforeEach(() => mockServiceWorker.listen());
+    before(() => mockServiceWorker.listen());
 
-    afterEach(() => {
+    after(() => {
         return mockServiceWorker.resetHandlers();
     });
 

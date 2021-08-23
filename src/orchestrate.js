@@ -1,7 +1,5 @@
 'use strict';
 
-// TODO: Replace this function. Delete parse.js. Delete utils.js:generateError.
-const parse = require('./parse.js');
 const canonicalize = require('../function-schemata/javascript/src/canonicalize.js');
 const { arrayToZ10 } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error');
@@ -56,15 +54,14 @@ async function Z7OrError(zobject) {
  * Main orchestration workflow. Executes an input Z7 and returns either the
  * results of function evaluation or the relevant error(s).
  *
- * @param {string} str a string containing the JSON-serialized ZObject and other parameters
+ * @param {string} input the input for a function call
  * @return {Object} a Z22 containing the result of function evaluation or a Z5
  */
-async function orchestrate(str) {
+async function orchestrate(input) {
 
-    const orchestrationRequest = parse(str);
-    let zobject = orchestrationRequest.zobject;
+    let zobject = input.zobject;
     if (zobject === undefined) {
-       zobject = orchestrationRequest;
+       zobject = input;
     }
 
     let currentPair;
@@ -79,11 +76,11 @@ async function orchestrate(str) {
      * TODO: Receiving the evaluator and wiki URIs as parameters (especially a
      * GET param!) is no good. Find a way to share config among services.
      */
-    const evaluatorUri = orchestrationRequest.evaluatorUri || null;
-    const wikiUri = orchestrationRequest.wikiUri || null;
+    const evaluatorUri = input.evaluatorUri || null;
+    const wikiUri = input.wikiUri || null;
     const resolver = new ReferenceResolver(wikiUri);
     // TODO: Default to true; add switch in tests to override default in CI.
-    const doValidate = orchestrationRequest.doValidate || false;
+    const doValidate = input.doValidate || false;
 
     const callTuples = [
         [maybeNormalize, [], 'maybeNormalize'],

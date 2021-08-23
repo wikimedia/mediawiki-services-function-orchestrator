@@ -67,9 +67,9 @@ describe('orchestrate', function () {
     ];
     const mockServiceWorker = setupServer(...restHandlers);
 
-    beforeEach(() => mockServiceWorker.listen());
+    before(() => mockServiceWorker.listen());
 
-    afterEach(() => {
+    after(() => {
         return mockServiceWorker.resetHandlers();
     });
 
@@ -91,11 +91,10 @@ describe('orchestrate', function () {
             } catch (err) { }
         }
         it('orchestrate msw: ' + name, async () => {
-            const inputEncoded = JSON.stringify(input);
             let result = {};
             let thrownError = null;
             try {
-                result = await orchestrate(inputEncoded);
+                result = await orchestrate(input);
             } catch (err) {
                 thrownError = err;
             }

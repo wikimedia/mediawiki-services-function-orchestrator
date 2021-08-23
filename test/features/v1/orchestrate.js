@@ -24,7 +24,7 @@ describe('orchestration endpoint', function () {
 
     after(() => server.stop());
 
-    const testString = function (name, input, output = null, error = null) {
+    const testFunctionCall = function (name, input, output = null, error = null) {
         if (output !== null) {
             try {
                 output = canonicalize(output);
@@ -36,9 +36,13 @@ describe('orchestration endpoint', function () {
             } catch (err) { }
         }
         it('orchestration endpoint: ' + name, function () {
-            return preq.get(
-                uri + encodeURIComponent(input)
-            )
+            return preq.post({
+                uri: uri,
+                headers: {
+                    'content-type': 'application/json'
+                },
+                body: typeof input === 'string' ? { zobject: input } : input
+            })
             .then(function (res) {
                 assert.status(res, 200);
                 assert.contentType(res, 'application/json');
@@ -52,11 +56,11 @@ describe('orchestration endpoint', function () {
     };
 
     const test = function (name, input, output = null, error = null) {
-        return testString(name, JSON.stringify(input), output, error);
+        return testFunctionCall(name, input, output, error);
     };
 
-    const testFunctionCall = function (name, input, output = null, error = null) {
-        return testString(name, JSON.stringify(input), output, error);
+    const testString = function (name, input, output = null, error = null) {
+        return testFunctionCall(name, input, output, error);
     };
 
     test(
@@ -96,75 +100,75 @@ describe('orchestration endpoint', function () {
     // TODO: what about quotes in strings, tabulators and new lines?
 
     test(
-      'empty list',
-      [],
-      null,
-      readJSON('./test/features/v1/test_data/error-not-fn.json')
+        'empty list',
+        [],
+        null,
+        readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
-      'string singleton list',
-      [ 'Test' ],
-      null,
-      readJSON('./test/features/v1/test_data/error-not-fn.json')
+        'string singleton list',
+        [ 'Test' ],
+        null,
+        readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
-      'string multiple list',
-      [ 'Test', 'Test2', 'Test3' ],
-      null,
-      readJSON('./test/features/v1/test_data/error-not-fn.json')
+        'string multiple list',
+        [ 'Test', 'Test2', 'Test3' ],
+        null,
+        readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     test(
-      'record singleton list',
-      [ { Z1K1: 'Z60', Z2K1: 'Test' } ],
-      null,
-      readJSON('./test/features/v1/test_data/error-not-fn.json')
-    );
-
-    // TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
-    test(
-      'record with list and invalid sub-record',
-      { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { K2: 'Test' } },
-      null,
-      canonicalError(
-        [error.not_wellformed],
-        ['{"Z1K1":"Z8","K2":["Test","Second test"],"Z2K1":{"K2":"Test"}}']
-      )
+        'record singleton list',
+        [ { Z1K1: 'Z60', Z2K1: 'Test' } ],
+        null,
+        readJSON('./test/features/v1/test_data/error-not-fn.json')
     );
 
     // TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
     test(
-      'invalid zobject (int not string/list/record)',
-      { Z1K1: 'Z2', Z2K1: 2 },
-      null,
-      canonicalError(
-        [error.not_wellformed],
-        ['{"Z1K1":"Z2","Z2K1":2}']
-      )
+        'record with list and invalid sub-record',
+        { Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { K2: 'Test' } },
+        null,
+        canonicalError(
+            [error.not_wellformed],
+            ['{"Z1K1":"Z8","K2":["Test","Second test"],"Z2K1":{"K2":"Test"}}']
+        )
     );
 
     // TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
     test(
-      'invalid zobject (float not string/list/record)',
-      { Z1K1: 'Z2', Z2K1: 2.0 },
-      null,
-      canonicalError(
-        [error.not_wellformed],
-        ['{"Z1K1":"Z2","Z2K1":2}']
-      )
+        'invalid zobject (int not string/list/record)',
+        { Z1K1: 'Z2', Z2K1: 2 },
+        null,
+        canonicalError(
+            [error.not_wellformed],
+            ['{"Z1K1":"Z2","Z2K1":2}']
+        )
     );
 
     // TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
     test(
-      'number in array',
-      [ 2 ],
-      null,
-      canonicalError(
-        [error.not_wellformed],
-        ['[2]']
-      )
+        'invalid zobject (float not string/list/record)',
+        { Z1K1: 'Z2', Z2K1: 2.0 },
+        null,
+        canonicalError(
+            [error.not_wellformed],
+            ['{"Z1K1":"Z2","Z2K1":2}']
+        )
+    );
+
+    // TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
+    test(
+        'number in array',
+        [ 2 ],
+        null,
+        canonicalError(
+            [error.not_wellformed],
+            ['[2]']
+        )
     );
 
     // Parser

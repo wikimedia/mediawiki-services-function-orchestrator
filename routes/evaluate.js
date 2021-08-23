@@ -11,8 +11,8 @@ const getTestResults = require('../src/performTest.js');
 const router = sUtil.router();
 
 /** ROUTE DECLARATIONS GO HERE **/
-router.get('/:data', async function (req, res) {
-	const input = await orchestrate(req.params.data);
+router.post('/', async function (req, res) {
+    const input = await orchestrate(req.body);
 	res.json(input);
 });
 
@@ -22,7 +22,7 @@ router.get('/test/:data', async function (req, res) {
 });
 
 router.get('/', function (req, res) {
-	res.send(200);
+	res.sendStatus(200);
 });
 
 module.exports = function (appObj) {
