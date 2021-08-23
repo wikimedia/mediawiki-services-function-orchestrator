@@ -118,12 +118,44 @@ async function getTestResults(data) {
       const validatorFn = validator.Z7K1.Z9K1;
       validator[ validatorFn + 'K1' ] = testResult;
 
+      const start = Date.now();
+
       const validationResponse = await orchestrate(JSON.stringify({
         zobject: validator,
         evaluatorUri,
         wikiUri,
         doValidate
       }));
+
+      const end = Date.now();
+
+      payload.duration = end - start;
+
+      if (validationResponse.Z22K1.Z40K1 === 'Z42') {
+        const actual = testResult;
+        const expected = validator[ validatorFn + 'K2' ];
+
+        validationResponse.Z22K2 = {
+          Z1K1: {
+            Z1K1: 'Z9',
+            Z9K1: 'Z5'
+          },
+          Z5K2: {
+            Z1K1: {
+              Z1K1: 'Z9',
+              Z9K1: 'Z10'
+            },
+            Z10K1: expected,
+            Z10K2: {
+              Z1K1: {
+                Z1K1: 'Z9',
+                Z9K1: 'Z10'
+              },
+              Z10K1: actual
+            }
+          }
+        };
+      }
 
       payload.validationResponse = validationResponse;
     }
