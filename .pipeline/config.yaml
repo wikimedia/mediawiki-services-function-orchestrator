@@ -1,0 +1,23 @@
+pipelines:
+  test:
+    blubberfile: blubber.yaml
+    stages:
+      - name: built
+        build: npm-run
+      - name: tested
+        run:
+          image: '${built.imageID}'
+          arguments: [test]
+    execution:
+      - [built, tested]
+  publish:
+    stages:
+      - name: production
+        build: production
+        publish:
+          image:
+            id: '${.imageID}'
+            tags:
+              - latest
+              - '${setup.tag}'
+
