@@ -300,6 +300,8 @@ execute = async function (zobject, evaluatorUri, resolver, oldScope = null) {
         }
     }
 
+    // TODO: Throw an error if there are no implementations
+
     const implementationZObject = selectImplementation(implementations);
     const implementation = Implementation.create(implementationZObject);
 

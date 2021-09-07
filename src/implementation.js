@@ -48,7 +48,8 @@ class Implementation {
      */
     static create(Z14) {
         if (Z14.Z14K4 !== undefined) {
-            const ZID = Z14.Z14K4.Z6K1;
+            // TODO: Switch all builtins to use Z9 instead of Z6
+            const ZID = Z14.Z14K4.Z6K1 || Z14.Z14K4.Z9K1;
             const builtin = builtins.getFunction(ZID);
             const lazyVariables = builtins.getLazyVariables(ZID);
             const lazyReturn = builtins.getLazyReturn(ZID);

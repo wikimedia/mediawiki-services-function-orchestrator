@@ -31,7 +31,7 @@ class ReferenceResolver {
             const previouslyDereferenced = this.referenceMap.get(ZID);
             if (builtin !== null) {
                 unresolved.delete(ZID);
-                dereferenced[ ZID ] = { Z2K2: builtin };
+                dereferenced[ ZID ] = JSON.parse(JSON.stringify({ Z2K1: { Z1K1: 'Z9', Z9K1: ZID }, Z2K2: builtin }));
             } else if (previouslyDereferenced !== undefined) {
                 unresolved.delete(ZID);
                 dereferenced[ ZID ] = JSON.parse(JSON.stringify(previouslyDereferenced));
