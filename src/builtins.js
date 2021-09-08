@@ -349,10 +349,10 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, evaluatorUri, resolver, scop
 async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1, evaluatorUri, resolver, scope) {
     const errors = [];
     const Z11s = utils.Z10ToArray(Z1.Z12K1);
-    const languages = Z11s.map(async (Z11) => await mutate(
+    const languages = await Promise.all(Z11s.map(async (Z11) => await mutate(
         Z11,
         ['Z11K1', 'Z60K1', 'Z6K1'],
-        evaluatorUri, resolver, scope));
+        evaluatorUri, resolver, scope)));
 
     const seen = new Set();
     for (let i = 0; i < languages.length; ++i) {
