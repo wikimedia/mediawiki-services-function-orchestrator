@@ -242,7 +242,7 @@ async function validateReturnType(result, zobject, evaluatorUri, resolver, scope
                 null,
                 normalError(
                     [error.argument_type_mismatch],
-                    ['Could not validate return value as type ' + returnType]));
+                    ['Could not validate return value as type ' + returnType.Z9K1]));
         }
     } else if (thebits === 3) {
         // Both value and error.
