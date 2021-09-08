@@ -4,6 +4,7 @@ const utils = require('../function-schemata/javascript/src/utils');
 const normalize = require('../function-schemata/javascript/src/normalize');
 const { makePair, makeBoolean, Z41, Z42 } = require('./utils.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
+const { mutate } = require('./zobject.js');
 
 /**
  * HELPER FUNCTIONS
@@ -345,10 +346,13 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, evaluatorUri, resolver, scop
     return makePair(utils.arrayToZ10(errors), null);
 }
 
-function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1) {
+async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1, evaluatorUri, resolver, scope) {
     const errors = [];
     const Z11s = utils.Z10ToArray(Z1.Z12K1);
-    const languages = Z11s.map((Z11) => Z11.Z11K1.Z60K1.Z6K1);
+    const languages = Z11s.map(async (Z11) => await mutate(
+        Z11,
+        ['Z11K1', 'Z60K1', 'Z6K1'],
+        evaluatorUri, resolver, scope));
 
     const seen = new Set();
     for (let i = 0; i < languages.length; ++i) {
