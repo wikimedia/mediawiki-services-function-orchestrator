@@ -79,8 +79,7 @@ async function orchestrate(input) {
     const evaluatorUri = input.evaluatorUri || null;
     const wikiUri = input.wikiUri || null;
     const resolver = new ReferenceResolver(wikiUri);
-    // TODO: Default to true; add switch in tests to override default in CI.
-    const doValidate = input.doValidate || false;
+    const doValidate = typeof input.doValidate === 'boolean' ? input.doValidate : true;
 
     const callTuples = [
         [maybeNormalize, [], 'maybeNormalize'],
