@@ -62,6 +62,7 @@ async function runTypeValidator(Z1, typeZObject, resolver) {
         const result = await execute(validatorZ7, null, resolver, null);
         return Z10ToArray(result.Z22K1);
     } catch (err) {
+        console.error(err);
         return [
             normalError(
                 [error.zid_not_found],
@@ -107,8 +108,8 @@ async function validate(zobject, resolver) {
         const typeZID = isRefOrString(Z1) ? Z1.Z1K1 : Z1.Z1K1.Z9K1;
 
         // TODO(T286936): Figure out why non-sequential error pops with duplicate keys.
-        // TODO(T286939): Figure out why Z9 validation doesn't work.
-        if (typeZID === 'Z9') {
+        // TODO(T286939): Figure out why Z9 and Z18 validation doesn't work.
+        if (typeZID === 'Z18' || typeZID === 'Z9') {
             return;
         }
         const schemaValidator = getSchemaValidator(typeZID);

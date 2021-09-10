@@ -54,7 +54,7 @@ function isError(Z1) {
  */
 function isRefOrString(Z1) {
     // TODO: Prohibit Z18s.
-    return Z6Validator.validate(Z1) || Z9Validator.validate(Z1);
+    return !Z18Validator.validate(Z1) && (Z6Validator.validate(Z1) || Z9Validator.validate(Z1));
 }
 
 /**
@@ -157,9 +157,12 @@ function Z42() {
  * @return {bool} whether Z1 can validated as a Function Call
  */
 function isEvaluableFunctionCall(Z1) {
-    return (
-        isFunctionCall(Z1) &&
-        Z1.Z7K2.Z40K1.Z9K1 === Z41().Z40K1.Z9K1);
+    if (!isFunctionCall(Z1)) {
+        return false;
+    }
+    return (Z1.Z7K2 !== undefined) ?
+        Z1.Z7K2.Z40K1.Z9K1 === Z41().Z40K1.Z9K1 :
+        true;
 }
 
 // TODO: T282891

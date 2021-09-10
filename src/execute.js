@@ -203,7 +203,14 @@ async function getArgumentDicts(zobject, evaluatorUri, resolver, scope) {
             const localKeyRegex = /K[1-9]\d*$/;
             key = key.match(localKeyRegex)[0];
         }
-        const argument = await mutate(zobject, [key], evaluatorUri, resolver, scope);
+
+        // TODO(T290699): Replace this fix with using Z99's
+        let argument;
+        if (isEvaluableFunctionCall(zobject)) {
+            argument = await mutate(zobject, [key], evaluatorUri, resolver, scope);
+        } else {
+            argument = zobject[ key ];
+        }
         argumentDict.argument = argument;
         argumentDicts.push(argumentDict);
     }
