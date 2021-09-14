@@ -332,8 +332,12 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, evaluatorUri, resolver, scop
         }
         const type = Z1[key].Z1K1.Z9K1 || Z1[key].Z1K1;
         const declaredType = argumentDict.declaredType;
-        // if an argument type, it's not validated because every other type is Z1
-        if (declaredType !== type && declaredType !== 'Z1') {
+
+        // Type mismatches for Z7, Z9, and Z18 will be caught at runtime.
+        const skippableTypes = new Set(['Z18', 'Z9', 'Z7']);
+        // TODO: More intricate subtype semantics once we have generic types
+        // (just checking for Z1 is not sufficient).
+        if (!(declaredType === type || declaredType === 'Z1' || skippableTypes.has(type))) {
             errors.push(
                 normalError(
                     [error.argument_type_mismatch],
