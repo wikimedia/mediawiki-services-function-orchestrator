@@ -1,6 +1,6 @@
 # WikiFunctions function-orchestrator
 The orchestrator manages the execution of `Z7`s (Function Calls). It is the point
-of interoperation between MediaWiki and the function evaluator, which executes
+of interoperation between [MediaWiki](https://wikitech.wikimedia.org/wiki/MediaWiki_at_WMF) and the function evaluator, which executes
 native code in various programming languages. Among other things, this separation
 of concerns allows the orchestrator to make calls to MediaWiki relatively safely
 while not extending the same permissions to the function evaluator.
@@ -9,7 +9,7 @@ Eventually, the orchestrator will also be responsible for deciding which
 implementation to run for a function (if there are multiple implementations) and
 caching the deterministic results of dereferencing and function execution.
 
-See also the [service-template-node](https://www.mediawiki.org/wiki/ServiceTemplateNode))
+See also the [service-template-node](https://www.mediawiki.org/wiki/ServiceTemplateNode)
 documentation for information on how the orchestrator works as a service.
 
 <a href='the-code'></a>
@@ -45,7 +45,7 @@ system, focusing on particular execution paths.
 ## Argument Resolution
 The orchestrator is also responsible for managing the execution of function
 compositions. As such, it implements many features of functional programming
-languages. One such features is lazy evaluation: when the
+languages. One such feature is lazy evaluation: when the
 [`execute` function](#execute-function) is called with a `Z7`, it opens a new
 namespace (currently referred to in code as a `Frame`) and stores all of the
 `Z7`'s argument instantiations in that namespace. It does not attempt to analyze
