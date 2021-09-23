@@ -6,7 +6,7 @@
 	"Z7K1": "Z802",
 	"Z802K1": {
 		"Z1K1": "Z6",
-		"Z6K1": "arbitraty string (should be bool)"
+		"Z6K1": "arbitrary string (should be bool)"
 	},
 	"Z802K2": {
 		"Z1K1": {
