@@ -1,10 +1,10 @@
 'use strict';
 
 const traverse = require('json-schema-traverse');
-const { Z10ToArray } = require('../function-schemata/javascript/src/utils.js');
+const { Z10ToArray, makeFalse } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error.js');
 const { execute } = require('./execute.js');
-const { createSchema, isFunctionCall, isRefOrString, Z42 } = require('./utils.js');
+const { createSchema, isFunctionCall, isRefOrString } = require('./utils.js');
 
 const validators = {};
 
@@ -30,7 +30,7 @@ function createValidatorZ7(Z8, Z1) {
 
     const argumentValue = { ...Z1 };
     if (isFunctionCall(Z1)) {
-        argumentValue.Z7K2 = Z42();
+        argumentValue.Z7K2 = makeFalse();
     }
 
     return {

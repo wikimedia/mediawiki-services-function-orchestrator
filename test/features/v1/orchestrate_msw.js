@@ -3,7 +3,7 @@
 const assert = require('../../utils/assert.js');
 const canonicalize = require('../../../function-schemata/javascript/src/canonicalize.js');
 const normalize = require('../../../function-schemata/javascript/src/normalize.js');
-const { makeResultEnvelope } = require('../../../function-schemata/javascript/src/utils.js');
+const { makeResultEnvelope, makeTrue, makeFalse } = require('../../../function-schemata/javascript/src/utils.js');
 const utils = require('../../../src/utils.js');
 const { rest } = require('msw');
 const { setupServer } = require('msw/node');
@@ -305,7 +305,7 @@ describe('orchestrate', function () {
                 []
               ]
           },
-          normalize([ utils.Z41(), utils.Z42(), utils.Z42(), utils.Z41() ]),
+          normalize([ makeTrue(), makeFalse(), makeFalse(), makeTrue() ]),
           null
         );
     }

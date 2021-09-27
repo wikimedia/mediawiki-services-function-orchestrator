@@ -2,9 +2,9 @@
 
 const utils = require('../function-schemata/javascript/src/utils');
 const normalize = require('../function-schemata/javascript/src/normalize');
-const { makeBoolean, Z41, Z42 } = require('./utils.js');
+const { makeBoolean } = require('./utils.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
-const { makeResultEnvelope } = require('../function-schemata/javascript/src/utils.js');
+const { makeResultEnvelope, makeTrue, makeFalse } = require('../function-schemata/javascript/src/utils.js');
 const { mutate } = require('./zobject.js');
 
 /**
@@ -18,7 +18,7 @@ const { mutate } = require('./zobject.js');
  * @return {bool} whether Z40 corresponds to Z41 (true) or not
  */
 function isTrue(Z40) {
-    return Z40.Z40K1.Z9K1 === Z41().Z40K1.Z9K1;
+    return Z40.Z40K1.Z9K1 === makeTrue().Z40K1.Z9K1;
 }
 
 /**
@@ -140,9 +140,9 @@ function BUILTIN_TAIL_(Z10) {
 function BUILTIN_EMPTY_(Z10) {
     let result;
     if (utils.isEmpty(Z10)) {
-        result = Z41();
+        result = makeTrue();
     } else {
-        result = Z42();
+        result = makeFalse();
     }
     return makeResultEnvelope(result, null);
 }
@@ -207,9 +207,9 @@ function BUILTIN_CHARS_TO_STRING_(Z10) {
 function BUILTIN_SAME_(Z86_1, Z86_2) {
     let result;
     if (Z86_1.Z86K1.Z6K1 === Z86_2.Z86K1.Z6K1) {
-        result = Z41();
+        result = makeTrue();
     } else {
-        result = Z42();
+        result = makeFalse();
     }
     return makeResultEnvelope(result, null);
 }

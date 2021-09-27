@@ -3,7 +3,7 @@
 const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
 const normalize = require('../function-schemata/javascript/src/normalize.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
-const { makeResultEnvelope } = require('../function-schemata/javascript/src/utils.js');
+const { makeResultEnvelope, makeTrue } = require('../function-schemata/javascript/src/utils.js');
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z1Validator = normalFactory.create('Z1');
@@ -132,26 +132,6 @@ function Z23(canonical = false) {
 }
 
 /**
- * Z9 Reference to Z41 (true).
- * TODO: T282891
- *
- * @return {Object} a reference to Z41 (true)
- */
-function Z41() {
-    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } };
-}
-
-/**
- * Z9 Reference to Z42 (false).
- * TODO: T282891
- *
- * @return {Object} a reference to Z42 (false)
- */
-function Z42() {
-    return { Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } };
-}
-
-/**
  * Validates a ZObject against the Function Call schema.
  *
   @param {Object} Z1 object to be validated
@@ -162,7 +142,7 @@ function isEvaluableFunctionCall(Z1) {
         return false;
     }
     return (Z1.Z7K2 !== undefined) ?
-        Z1.Z7K2.Z40K1.Z9K1 === Z41().Z40K1.Z9K1 :
+        Z1.Z7K2.Z40K1.Z9K1 === makeTrue().Z40K1.Z9K1 :
         true;
 }
 
@@ -286,7 +266,5 @@ module.exports = {
     makeBoolean,
     makePair,
     maybeNormalize,
-    Z23,
-    Z41,
-    Z42
+    Z23
 };
