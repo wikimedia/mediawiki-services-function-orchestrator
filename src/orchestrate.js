@@ -1,7 +1,7 @@
 'use strict';
 
 const canonicalize = require('../function-schemata/javascript/src/canonicalize.js');
-const { arrayToZ10 } = require('../function-schemata/javascript/src/utils.js');
+const { arrayToZ10, makeResultEnvelope } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error');
 const { validate } = require('./validation.js');
 const { execute } = require('./execute.js');
@@ -23,10 +23,10 @@ async function maybeValidate(zobject, doValidate, resolver) {
         const errors = await validate(zobject, resolver);
         if (errors.length > 0) {
             // TODO: Wrap errors in a Z5.
-            return makePair(null, arrayToZ10(errors));
+            return makeResultEnvelope(null, arrayToZ10(errors));
         }
     }
-    return makePair(zobject, null);
+    return makeResultEnvelope(zobject, null);
 }
 
 /**
@@ -39,9 +39,9 @@ async function maybeValidate(zobject, doValidate, resolver) {
 async function Z7OrError(zobject) {
     if (isFunctionCall(zobject)) {
         zobject.Z7K2 = Z41();
-        return makePair(zobject, null);
+        return makeResultEnvelope(zobject, null);
     }
-    return makePair(
+    return makeResultEnvelope(
         null,
         normalError(
             [ error.wrong_content_type ],

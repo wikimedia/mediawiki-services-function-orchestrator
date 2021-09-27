@@ -2,8 +2,9 @@
 
 const utils = require('../function-schemata/javascript/src/utils');
 const normalize = require('../function-schemata/javascript/src/normalize');
-const { makePair, makeBoolean, Z41, Z42 } = require('./utils.js');
+const { makeBoolean, Z41, Z42 } = require('./utils.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
+const { makeResultEnvelope } = require('../function-schemata/javascript/src/utils.js');
 const { mutate } = require('./zobject.js');
 
 /**
@@ -25,7 +26,7 @@ function isTrue(Z40) {
  */
 
 function BUILTIN_ECHO_(input) {
-    return makePair(input, null);
+    return makeResultEnvelope(input, null);
 }
 
 function BUILTIN_IF_(antecedent, trueConsequent, falseConsequent) {
@@ -35,7 +36,7 @@ function BUILTIN_IF_(antecedent, trueConsequent, falseConsequent) {
     } else {
         result = falseConsequent;
     }
-    return makePair(result, null);
+    return makeResultEnvelope(result, null);
 }
 
 function BUILTIN_VALUE_BY_KEY_(Z39, Z1) {
@@ -49,7 +50,7 @@ function BUILTIN_VALUE_BY_KEY_(Z39, Z1) {
     } else {
         goodResult = Z1[key];
     }
-    return makePair(goodResult, badResult);
+    return makeResultEnvelope(goodResult, badResult);
 }
 
 function reifyRecursive(Z1) {
@@ -84,7 +85,7 @@ function reifyRecursive(Z1) {
 }
 
 function BUILTIN_REIFY_(Z1) {
-    return makePair(reifyRecursive(Z1), null);
+    return makeResultEnvelope(reifyRecursive(Z1), null);
 }
 
 function abstractRecursive(Z10) {
@@ -103,37 +104,37 @@ function abstractRecursive(Z10) {
 function BUILTIN_ABSTRACT_(Z10) {
     // TODO: Validate that List is a reified list, i.e. that all elements
     // are Z22s.
-    return makePair(abstractRecursive(Z10), null);
+    return makeResultEnvelope(abstractRecursive(Z10), null);
 }
 
 function BUILTIN_CONS_(Z1, Z10) {
     const result = utils.arrayToZ10([Z1]);
     result.Z10K2 = Z10;
-    return makePair(result, null);
+    return makeResultEnvelope(result, null);
 }
 
 function BUILTIN_HEAD_(Z10) {
     if (utils.isEmpty(Z10)) {
-        return makePair(
+        return makeResultEnvelope(
             null,
             normalError(
                 [ error.argument_type_mismatch ],
                 [ 'An empty list has no head.' ]));
     }
 
-    return makePair(Z10.Z10K1, null);
+    return makeResultEnvelope(Z10.Z10K1, null);
 }
 
 function BUILTIN_TAIL_(Z10) {
     if (utils.isEmpty(Z10)) {
-        return makePair(
+        return makeResultEnvelope(
             null,
             normalError(
                 [ error.argument_type_mismatch ],
                 [ 'An empty list has no tail.' ]));
     }
 
-    return makePair(Z10.Z10K2, null);
+    return makeResultEnvelope(Z10.Z10K2, null);
 }
 
 function BUILTIN_EMPTY_(Z10) {
@@ -143,26 +144,26 @@ function BUILTIN_EMPTY_(Z10) {
     } else {
         result = Z42();
     }
-    return makePair(result, null);
+    return makeResultEnvelope(result, null);
 }
 
 function BUILTIN_FIRST_(Z22) {
-    return makePair(Z22.Z22K1, null);
+    return makeResultEnvelope(Z22.Z22K1, null);
 }
 
 function BUILTIN_SECOND_(Z22) {
-    return makePair(Z22.Z22K2, null);
+    return makeResultEnvelope(Z22.Z22K2, null);
 }
 
 function BUILTIN_EQUALS_BOOLEAN_(Z40_1, Z40_2) {
-    return makePair(
+    return makeResultEnvelope(
         makeBoolean((Z40_1.Z40K1.Z9K1 === Z40_2.Z40K1.Z9K1)),
         null
     );
 }
 
 function BUILTIN_EQUALS_STRING_(Z6_1, Z6_2) {
-    return makePair(
+    return makeResultEnvelope(
         makeBoolean((Z6_1.Z6K1 === Z6_2.Z6K1)),
         null
     );
@@ -180,7 +181,7 @@ function stringToCharsInternal(characterArray) {
 }
 
 function BUILTIN_STRING_TO_CHARS_(Z6) {
-    return makePair(stringToCharsInternal(Array.from(Z6.Z6K1)), null);
+    return makeResultEnvelope(stringToCharsInternal(Array.from(Z6.Z6K1)), null);
 }
 
 function charsToStringInternal(Z10) {
@@ -194,7 +195,7 @@ function charsToStringInternal(Z10) {
 
 function BUILTIN_CHARS_TO_STRING_(Z10) {
     // TODO: Validate all members of Z10 are Z86.
-    return makePair(
+    return makeResultEnvelope(
         {
             Z1K1: 'Z6',
             Z6K1: charsToStringInternal(Z10).join('')
@@ -210,15 +211,15 @@ function BUILTIN_SAME_(Z86_1, Z86_2) {
     } else {
         result = Z42();
     }
-    return makePair(result, null);
+    return makeResultEnvelope(result, null);
 }
 
 function BUILTIN_UNQUOTE_(Z99) {
-    return makePair(Z99.Z99K1, null);
+    return makeResultEnvelope(Z99.Z99K1, null);
 }
 
 function BUILTIN_EMPTY_VALIDATOR_(Z1) {
-    return makePair({
+    return makeResultEnvelope({
         Z1K1: {
             Z1K1: 'Z9',
             Z9K1: 'Z10'
@@ -266,7 +267,7 @@ function arrayValidator(Z10, key, identity) {
         previous = Number(utils.kid_from_global_key(key).replace('K', ''));
     }
 
-    return makePair(
+    return makeResultEnvelope(
         utils.arrayToZ10(
             messages.map((message) =>
                 normalError([error.array_element_not_well_formed], [message])
@@ -300,7 +301,7 @@ function BUILTIN_Z4_TYPE_VALIDATOR_(Z1) {
         );
     }
 
-    return makePair(utils.arrayToZ10(errors), null);
+    return makeResultEnvelope(utils.arrayToZ10(errors), null);
 }
 
 async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, evaluatorUri, resolver, scope) {
@@ -347,7 +348,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, evaluatorUri, resolver, scop
         }
     }
 
-    return makePair(utils.arrayToZ10(errors), null);
+    return makeResultEnvelope(utils.arrayToZ10(errors), null);
 }
 
 async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1, evaluatorUri, resolver, scope) {
@@ -372,7 +373,7 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1, evaluatorUri, resolver, 
         seen.add(languages[i]);
     }
 
-    return makePair(utils.arrayToZ10(errors), null);
+    return makeResultEnvelope(utils.arrayToZ10(errors), null);
 }
 
 function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_(Z1) {
@@ -394,7 +395,7 @@ function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_(Z1) {
         seen.add(languages[i]);
     }
 
-    return makePair(utils.arrayToZ10(errors), null);
+    return makeResultEnvelope(utils.arrayToZ10(errors), null);
 }
 
 function BUILTIN_ERROR_TYPE_VALIDATOR_(Z1) {
