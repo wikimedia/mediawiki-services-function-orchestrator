@@ -187,7 +187,7 @@ function charsToStringInternal(Z10) {
     const Z10Array = utils.Z10ToArray(Z10);
     const result = [];
     for (const Z86 of Z10Array) {
-        result.push(Z86.Z86K1.Z6K1);
+        result.push(Z86.Z6K1 || Z86.Z86K1.Z6K1);
     }
     return result;
 }
