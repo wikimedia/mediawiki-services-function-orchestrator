@@ -1,7 +1,7 @@
 'use strict';
 
 const canonicalize = require('../function-schemata/javascript/src/canonicalize.js');
-const { arrayToZ10, makeResultEnvelope, makeTrue } = require('../function-schemata/javascript/src/utils.js');
+const { arrayToZ10, makeResultEnvelope } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error');
 const { validate } = require('./validation.js');
 const { execute } = require('./execute.js');
@@ -38,7 +38,6 @@ async function maybeValidate(zobject, doValidate, resolver) {
  */
 async function Z7OrError(zobject) {
     if (isFunctionCall(zobject)) {
-        zobject.Z7K2 = makeTrue();
         return makeResultEnvelope(zobject, null);
     }
     return makeResultEnvelope(

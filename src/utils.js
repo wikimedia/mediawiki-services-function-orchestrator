@@ -3,20 +3,17 @@
 const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
 const normalize = require('../function-schemata/javascript/src/normalize.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
-const { makeResultEnvelope, makeTrue } = require('../function-schemata/javascript/src/utils.js');
+const { makeResultEnvelope } = require('../function-schemata/javascript/src/utils.js');
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z1Validator = normalFactory.create('Z1');
 const Z6Validator = normalFactory.create('Z6');
-const Z7BackendValidator = normalFactory.create('Z7_backend');
+const Z7Validator = normalFactory.create('Z7');
 const Z9Validator = normalFactory.create('Z9');
 const Z18Validator = normalFactory.create('Z18');
 const Z23Validator = normalFactory.create('Z23');
 
 function createSchema(ZID) {
-    if (ZID === 'Z7') {
-        ZID = 'Z7_backend';
-    }
     return normalFactory.create(ZID);
 }
 
@@ -65,7 +62,7 @@ function isRefOrString(Z1) {
  * @return {bool} whether Z1 can validated as a Function Call
  */
 function isFunctionCall(Z1) {
-    return (Z7BackendValidator.validate(Z1) &&
+    return (Z7Validator.validate(Z1) &&
         !(Z9Validator.validate(Z1)) &&
         !(Z18Validator.validate(Z1)));
 }
@@ -129,21 +126,6 @@ function Z23(canonical = false) {
         return 'Z23';
     }
 	return { Z1K1: 'Z9', Z9K1: 'Z23' };
-}
-
-/**
- * Validates a ZObject against the Function Call schema.
- *
-  @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validated as a Function Call
- */
-function isEvaluableFunctionCall(Z1) {
-    if (!isFunctionCall(Z1)) {
-        return false;
-    }
-    return (Z1.Z7K2 !== undefined) ?
-        Z1.Z7K2.Z40K1.Z9K1 === makeTrue().Z40K1.Z9K1 :
-        true;
 }
 
 // TODO: Replace uses of this with upstream makeResultEnvelope
@@ -258,7 +240,6 @@ module.exports = {
     generateError,
     isArgumentReference,
     isError,
-    isEvaluableFunctionCall,
     isFunctionCall,
     isNothing,
     isRefOrString,

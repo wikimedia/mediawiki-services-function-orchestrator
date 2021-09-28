@@ -1,9 +1,9 @@
 'use strict';
 
 const { normalError, error } = require('../function-schemata/javascript/src/error');
-const { Z10ToArray, makeResultEnvelope, makeTrue } = require('../function-schemata/javascript/src/utils');
+const { Z10ToArray, makeResultEnvelope } = require('../function-schemata/javascript/src/utils');
 const { Composition, Evaluated, Implementation } = require('./implementation.js');
-const { containsError, containsValue, createSchema, isArgumentReference, isEvaluableFunctionCall, isFunctionCall, isRefOrString } = require('./utils.js');
+const { containsError, containsValue, createSchema, isArgumentReference, isFunctionCall, isRefOrString } = require('./utils.js');
 const { mutate } = require('./zobject.js');
 
 let execute = null;
@@ -78,10 +78,6 @@ class Frame extends BaseFrame {
      * @param {Object} argumentDict
      */
     setArgument(name, argumentDict) {
-        const argument = argumentDict.argument;
-        if (isFunctionCall(argument) && argument.Z7K2 === undefined) {
-            argumentDict.argument.Z7K2 = makeTrue();
-        }
         this.names_.set(name, ArgumentState.UNEVALUATED(argumentDict));
     }
 
@@ -103,7 +99,7 @@ class Frame extends BaseFrame {
                 argument = argumentState.argumentDict.argument;
                 continue;
             }
-            if (isEvaluableFunctionCall(argument)) {
+            if (isFunctionCall(argument)) {
                 // TODO(T289018): What if a Z7 needs to refer to an argument
                 // in the same frame? Does that even make sense to do?
                 const evaluationResult = await execute(
@@ -164,9 +160,7 @@ class Frame extends BaseFrame {
         // been evaluated and can be returned directly.
         if (boundValue.state === 'UNEVALUATED' && !lazily) {
             // If state is UNEVALUATED, evaluation is not lazy, and the argument
-            // is a Z7 with Z7K2 === Z41, the value must be evaluted before
-            // returning.
-            // Otherwise, it is necessary to evaluate the argument.
+            // is a Z7, the value must be evaluated before returning.
             const argumentDict = boundValue.argumentDict;
             const evaluatedArgument = await this.processArgument(
                 argumentDict, evaluatorUri, resolver);
@@ -204,13 +198,7 @@ async function getArgumentDicts(zobject, evaluatorUri, resolver, scope) {
             key = key.match(localKeyRegex)[0];
         }
 
-        // TODO(T290699): Replace this fix with using Z99's
-        let argument;
-        if (isEvaluableFunctionCall(zobject)) {
-            argument = await mutate(zobject, [key], evaluatorUri, resolver, scope);
-        } else {
-            argument = zobject[ key ];
-        }
+        const argument = await mutate(zobject, [key], evaluatorUri, resolver, scope);
         argumentDict.argument = argument;
         argumentDicts.push(argumentDict);
     }

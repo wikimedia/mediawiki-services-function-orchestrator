@@ -1,10 +1,10 @@
 'use strict';
 
 const traverse = require('json-schema-traverse');
-const { Z10ToArray, makeFalse } = require('../function-schemata/javascript/src/utils.js');
+const { Z10ToArray } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error.js');
 const { execute } = require('./execute.js');
-const { createSchema, isFunctionCall, isRefOrString } = require('./utils.js');
+const { createSchema, isRefOrString } = require('./utils.js');
 
 const validators = {};
 
@@ -27,11 +27,7 @@ function getSchemaValidator(zid) {
 function createValidatorZ7(Z8, Z1) {
     // since this is a validator, we always expect a SINGLE argument (the object itself).
     const argument = Z10ToArray(Z8.Z8K1)[0];
-
     const argumentValue = { ...Z1 };
-    if (isFunctionCall(Z1)) {
-        argumentValue.Z7K2 = makeFalse();
-    }
 
     return {
         Z1K1: {
@@ -39,7 +35,13 @@ function createValidatorZ7(Z8, Z1) {
             Z9K1: 'Z7'
         },
         Z7K1: Z8,
-        [argument.Z17K2.Z6K1]: argumentValue
+        [argument.Z17K2.Z6K1]: {
+            Z1K1: {
+                Z1K1: 'Z9',
+                Z9K1: 'Z99'
+            },
+            Z99K1: argumentValue
+        }
     };
 }
 

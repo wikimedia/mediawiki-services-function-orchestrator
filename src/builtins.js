@@ -275,7 +275,8 @@ function arrayValidator(Z10, key, identity) {
         ), null);
 }
 
-function BUILTIN_FUNCTION_VALIDATOR_(Z1) {
+function BUILTIN_FUNCTION_VALIDATOR_(Z99) {
+    const Z1 = Z99.Z99K1;
     return arrayValidator(
         Z1.Z8K1,
         (x) => x.Z17K2.Z6K1,
@@ -283,7 +284,8 @@ function BUILTIN_FUNCTION_VALIDATOR_(Z1) {
     );
 }
 
-function BUILTIN_Z4_TYPE_VALIDATOR_(Z1) {
+function BUILTIN_Z4_TYPE_VALIDATOR_(Z99) {
+    const Z1 = Z99.Z99K1;
     const errors = utils.Z10ToArray(
         arrayValidator(
             Z1.Z4K2,
@@ -304,7 +306,8 @@ function BUILTIN_Z4_TYPE_VALIDATOR_(Z1) {
     return makeResultEnvelope(utils.arrayToZ10(errors), null);
 }
 
-async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, evaluatorUri, resolver, scope) {
+async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z99, evaluatorUri, resolver, scope) {
+    const Z1 = Z99.Z99K1;
     const errors = [];
 
     const { getArgumentDicts } = require('./execute.js');
@@ -351,7 +354,8 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z1, evaluatorUri, resolver, scop
     return makeResultEnvelope(utils.arrayToZ10(errors), null);
 }
 
-async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1, evaluatorUri, resolver, scope) {
+async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z99, evaluatorUri, resolver, scope) {
+    const Z1 = Z99.Z99K1;
     const errors = [];
     const Z11s = utils.Z10ToArray(Z1.Z12K1);
     const languages = await Promise.all(Z11s.map(async (Z11) => await mutate(
@@ -376,7 +380,8 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_(Z1, evaluatorUri, resolver, 
     return makeResultEnvelope(utils.arrayToZ10(errors), null);
 }
 
-function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_(Z1) {
+function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_(Z99) {
+    const Z1 = Z99.Z99K1;
     const errors = [];
     const Z31s = utils.Z10ToArray(Z1.Z32K1);
     const languages = Z31s.map((Z31) => Z31.Z31K1.Z60K1.Z6K1);
@@ -398,7 +403,8 @@ function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_(Z1) {
     return makeResultEnvelope(utils.arrayToZ10(errors), null);
 }
 
-function BUILTIN_ERROR_TYPE_VALIDATOR_(Z1) {
+function BUILTIN_ERROR_TYPE_VALIDATOR_(Z99) {
+    const Z1 = Z99.Z99K1;
     return arrayValidator(
         Z1.Z50K1,
         (x) => x.Z3K2.Z6K1,
