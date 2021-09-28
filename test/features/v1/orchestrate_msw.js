@@ -3,6 +3,7 @@
 const assert = require('../../utils/assert.js');
 const canonicalize = require('../../../function-schemata/javascript/src/canonicalize.js');
 const normalize = require('../../../function-schemata/javascript/src/normalize.js');
+const { makeResultEnvelope } = require('../../../function-schemata/javascript/src/utils.js');
 const utils = require('../../../src/utils.js');
 const { rest } = require('msw');
 const { setupServer } = require('msw/node');
@@ -150,7 +151,7 @@ describe('orchestrate', function () {
     );
 
     {
-        cannedResponses.setEvaluator('Z1000', utils.makePair({ Z1K1: 'Z6', Z6K1: '13' }, null));
+        cannedResponses.setEvaluator('Z1000', makeResultEnvelope({ Z1K1: 'Z6', Z6K1: '13' }, null));
         test(
           'evaluated function call',
           readJSON('./test/features/v1/test_data/evaluated.json'),

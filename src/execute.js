@@ -1,9 +1,9 @@
 'use strict';
 
 const { normalError, error } = require('../function-schemata/javascript/src/error');
-const { Z10ToArray } = require('../function-schemata/javascript/src/utils');
+const { Z10ToArray, makeResultEnvelope } = require('../function-schemata/javascript/src/utils');
 const { Composition, Evaluated, Implementation } = require('./implementation.js');
-const { containsError, containsValue, createSchema, isArgumentReference, isEvaluableFunctionCall, isFunctionCall, isRefOrString, makePair, Z41 } = require('./utils.js');
+const { containsError, containsValue, createSchema, isArgumentReference, isEvaluableFunctionCall, isFunctionCall, isRefOrString, Z41 } = require('./utils.js');
 const { mutate } = require('./zobject.js');
 
 let execute = null;
@@ -234,7 +234,7 @@ async function validateReturnType(result, zobject, evaluatorUri, resolver, scope
 
     if (thebits === 0) {
         // Neither value nor error.
-        return makePair(
+        return makeResultEnvelope(
             null,
             normalError(
                 [error.not_wellformed_value],
@@ -245,7 +245,7 @@ async function validateReturnType(result, zobject, evaluatorUri, resolver, scope
         const returnType = Z7K1.Z8K2;
         const returnValidator = createSchema(returnType.Z9K1);
         if (!returnValidator.validate(result.Z22K1)) {
-            return makePair(
+            return makeResultEnvelope(
                 null,
                 normalError(
                     [error.argument_type_mismatch],
@@ -253,7 +253,7 @@ async function validateReturnType(result, zobject, evaluatorUri, resolver, scope
         }
     } else if (thebits === 3) {
         // Both value and error.
-        return makePair(
+        return makeResultEnvelope(
             null,
             normalError(
                 [error.not_wellformed_value],
@@ -340,7 +340,7 @@ execute = async function (zobject, evaluatorUri, resolver, oldScope = null) {
         }
         for (const instantiation of await Promise.all(instantiationPromises)) {
             if (instantiation.state === 'ERROR') {
-                return makePair(null, instantiation.error);
+                return makeResultEnvelope(null, instantiation.error);
             }
             argumentInstantiations.push(instantiation.argumentDict);
         }

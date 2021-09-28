@@ -3,6 +3,7 @@
 const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
 const normalize = require('../function-schemata/javascript/src/normalize.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
+const { makeResultEnvelope } = require('../function-schemata/javascript/src/utils.js');
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z1Validator = normalFactory.create('Z1');
@@ -165,7 +166,8 @@ function isEvaluableFunctionCall(Z1) {
         true;
 }
 
-// TODO: T282891
+// TODO: Replace uses of this with upstream makeResultEnvelope
+// (which doesn't handle the third parameter)
 function makePair(goodResult = null, badResult = null, canonical = false) {
     let Z1K1;
     if (canonical) {
@@ -256,10 +258,10 @@ function generateError(errorString = 'An unknown error occurred') {
 async function maybeNormalize(zobject) {
     try {
         const result = normalize(zobject);
-        return makePair(result, null);
+        return makeResultEnvelope(result, null);
     } catch (err) {
         // TODO(T287886): failing to normalize() should return Z5s instead of throwing errors.
-        return makePair(
+        return makeResultEnvelope(
             null,
             normalError(
                 [ error.not_wellformed ],
