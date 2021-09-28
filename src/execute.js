@@ -1,9 +1,9 @@
 'use strict';
 
 const { normalError, error } = require('../function-schemata/javascript/src/error');
-const { Z10ToArray, makeResultEnvelope } = require('../function-schemata/javascript/src/utils');
+const { Z10ToArray, makeResultEnvelope, makeTrue } = require('../function-schemata/javascript/src/utils');
 const { Composition, Evaluated, Implementation } = require('./implementation.js');
-const { containsError, containsValue, createSchema, isArgumentReference, isEvaluableFunctionCall, isFunctionCall, isRefOrString, Z41 } = require('./utils.js');
+const { containsError, containsValue, createSchema, isArgumentReference, isEvaluableFunctionCall, isFunctionCall, isRefOrString } = require('./utils.js');
 const { mutate } = require('./zobject.js');
 
 let execute = null;
@@ -80,7 +80,7 @@ class Frame extends BaseFrame {
     setArgument(name, argumentDict) {
         const argument = argumentDict.argument;
         if (isFunctionCall(argument) && argument.Z7K2 === undefined) {
-            argumentDict.argument.Z7K2 = Z41();
+            argumentDict.argument.Z7K2 = makeTrue();
         }
         this.names_.set(name, ArgumentState.UNEVALUATED(argumentDict));
     }
