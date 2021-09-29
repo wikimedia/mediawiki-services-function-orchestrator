@@ -1,9 +1,9 @@
 'use strict';
 
 const { normalError, error } = require('../function-schemata/javascript/src/error');
-const { Z10ToArray, makeResultEnvelope } = require('../function-schemata/javascript/src/utils');
+const { makeResultEnvelope, Z10ToArray } = require('../function-schemata/javascript/src/utils');
 const { Composition, Evaluated, Implementation } = require('./implementation.js');
-const { containsError, containsValue, createSchema, isArgumentReference, isFunctionCall, isRefOrString } = require('./utils.js');
+const { containsError, containsValue, createSchema, isArgumentReference, isFunctionCall, isGenericType, isType } = require('./utils.js');
 const { mutate } = require('./zobject.js');
 
 let execute = null;
@@ -87,6 +87,19 @@ class Frame extends BaseFrame {
         // function and exit early.
         let argument = argumentDict.argument;
         while (true) {
+            if (isGenericType(argument)) {
+                // TODO: Do we need to make the local keys global?
+                const Z4 = await execute(argument.Z1K1, evaluatorUri, resolver, this.lastFrame_);
+                if (!isType(Z4)) {
+                    // TODO(T287919): Is this an argument type mismatch?
+                    return ArgumentState.ERROR(
+                        normalError(
+                            [error.argument_type_mismatch],
+                            ['Generic type function did not return a Z4: ' + JSON.stringify(argument)]));
+                }
+                argument.Z1K1 = Z4;
+                continue;
+            }
             if (isArgumentReference(argument)) {
                 const argumentName = argument.Z18K1.Z6K1;
                 // TODO(T289018): Add a test for same function nested in different
@@ -113,15 +126,8 @@ class Frame extends BaseFrame {
             break;
         }
 
-        let argumentType;
-        if (isRefOrString(argument)) {
-            argumentType = argument.Z1K1;
-        } else {
-            argumentType = argument.Z1K1.Z9K1;
-        }
-
-        const declarationSchema = createSchema(argumentDict.declaredType);
-        const actualSchema = createSchema(argumentType);
+        const declarationSchema = createSchema(argumentDict.declaredType, true);
+        const actualSchema = createSchema(argument.Z1K1);
         if (!declarationSchema.validate(argument)) {
             return ArgumentState.ERROR(
                 normalError(
@@ -132,7 +138,7 @@ class Frame extends BaseFrame {
             return ArgumentState.ERROR(
                 normalError(
                     [error.argument_type_mismatch],
-                    ['Could not validate argument ' + JSON.stringify(argument) + ' as apparent type ' + argumentDict.argumentType]));
+                    ['Could not validate argument ' + JSON.stringify(argument) + ' as apparent type ' + JSON.toString(argument.Z1K1) ]));
         }
         return ArgumentState.EVALUATED({ name: argumentDict.name, argument: argument });
     }
@@ -184,13 +190,12 @@ class Frame extends BaseFrame {
 async function getArgumentDicts(zobject, evaluatorUri, resolver, scope) {
     const argumentDicts = [];
     const Z8K1 = await mutate(zobject, [ 'Z7K1', 'Z8K1' ], evaluatorUri, resolver, scope);
-
     for (const Z17 of Z10ToArray(Z8K1)) {
         const argumentDict = {};
         const argumentName = await mutate(Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope);
         argumentDict.name = argumentName;
         // TODO: This is flaky to rely on; find a better way to determine type.
-        const declaredType = Z17.Z17K1.Z9K1;
+        const declaredType = await mutate(Z17, [ 'Z17K1' ], evaluatorUri, resolver, scope);
         argumentDict.declaredType = declaredType;
         let key = argumentName;
         if (zobject[ key ] === undefined) {
@@ -198,7 +203,7 @@ async function getArgumentDicts(zobject, evaluatorUri, resolver, scope) {
             key = key.match(localKeyRegex)[0];
         }
 
-        const argument = await mutate(zobject, [key], evaluatorUri, resolver, scope);
+        const argument = zobject[ key ];
         argumentDict.argument = argument;
         argumentDicts.push(argumentDict);
     }
@@ -230,14 +235,21 @@ async function validateReturnType(result, zobject, evaluatorUri, resolver, scope
     } else if (thebits === 2) {
         // Value returned; validate its return type..
         const Z7K1 = await mutate(zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope);
-        const returnType = Z7K1.Z8K2;
-        const returnValidator = createSchema(returnType.Z9K1);
-        if (!returnValidator.validate(result.Z22K1)) {
+        const returnType = await mutate(Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope);
+        let returnZID;
+        if (isType(returnType)) {
+            returnZID = returnType.Z4K1.Z9K1;
+        } else {
+            returnZID = returnType.Z9K1;
+        }
+        // TODO(T292252): Should be returnType, not returnZID.
+        const returnValidator = createSchema(returnZID);
+        if (returnZID !== 'Z10' && !returnValidator.validate(result.Z22K1)) {
             return makeResultEnvelope(
                 null,
                 normalError(
                     [error.argument_type_mismatch],
-                    ['Could not validate return value as type ' + returnType.Z9K1]));
+                    ['Could not validate return value as type ' + returnZID]));
         }
     } else if (thebits === 3) {
         // Both value and error.
@@ -341,10 +353,13 @@ execute = async function (zobject, evaluatorUri, resolver, oldScope = null) {
     let result = await implementation.execute(zobject, argumentInstantiations);
 
     // Execute result if implementation is lazily evaluated.
+    // TODO: Replace calls below with mutate.
     if (implementation.returnsLazy()) {
         const goodResult = await mutate(result, [ 'Z22K1' ], evaluatorUri, resolver, scope);
         if (isFunctionCall(goodResult) || isArgumentReference(goodResult)) {
             result = await execute(goodResult, evaluatorUri, resolver, scope);
+        } else {
+            result.Z22K1 = goodResult;
         }
     }
 

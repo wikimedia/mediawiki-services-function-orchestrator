@@ -4,22 +4,26 @@ const traverse = require('json-schema-traverse');
 const { Z10ToArray } = require('../function-schemata/javascript/src/utils.js');
 const { error, normalError } = require('../function-schemata/javascript/src/error.js');
 const { execute } = require('./execute.js');
-const { createSchema, isRefOrString } = require('./utils.js');
+const { createSchema, getTypeZID, isRefOrString } = require('./utils.js');
 
 const validators = {};
 
 /**
  * Returns a validator schema for the given ZID.
  *
- * @param {string} zid the type ZID.
+ * @param {Object} Z1 the type ZObject
  * @return {Schema} a fully-initialized Schema or null if unsupported.
  */
-function getSchemaValidator(zid) {
-    if (validators[zid]) {
-        return validators[zid];
+function getSchemaValidator(Z1) {
+    // TODO(flakytypes): What about ZID collisions of user-defined/generic types?
+    const ZID = getTypeZID(Z1);
+    if (validators[ZID]) {
+        return validators[ZID];
     } else {
-        const validator = createSchema(zid);
-        validators[zid] = validator;
+        const validator = createSchema(Z1.Z1K1);
+        if (ZID !== null) {
+            validators[ZID] = validator;
+        }
         return validator;
     }
 }
@@ -107,25 +111,30 @@ async function validate(zobject, resolver) {
     const ZObjectTypes = await getContainedTypeZObjects(zobject, resolver);
 
     traverse(zobject, { allKeys: true }, (Z1) => {
-        const typeZID = isRefOrString(Z1) ? Z1.Z1K1 : Z1.Z1K1.Z9K1;
+        const typeZID = getTypeZID(Z1);
 
         // TODO(T286936): Figure out why non-sequential error pops with duplicate keys.
         // TODO(T286939): Figure out why Z9 and Z18 validation doesn't work.
         if (typeZID === 'Z18' || typeZID === 'Z9') {
             return;
         }
-        const schemaValidator = getSchemaValidator(typeZID);
+        const schemaValidator = getSchemaValidator(Z1);
 
+        // TODO: Find a way to allow Boolean literals, e.g. "Z41"
         if (!schemaValidator.validate(Z1)) {
             errors.push(
                 normalError(
                     [error.not_wellformed],
                     // TODO: improve this message, maybe look at schemaValidator.errors
-                    ['Invalid schema for ' + typeZID]
+                    ['Invalid schema for ' + typeZID + ' with object: ' + JSON.stringify(Z1)]
                 )
             );
         } else {
-            validatorPromises.push(runTypeValidator(Z1, ZObjectTypes[typeZID], resolver));
+            let ZID = typeZID;
+            if (ZID === 'Z7_backend') {
+                ZID = 'Z7';
+            }
+            validatorPromises.push(runTypeValidator(Z1, ZObjectTypes[ZID], resolver));
         }
     });
 

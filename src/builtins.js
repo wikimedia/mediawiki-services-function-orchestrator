@@ -2,7 +2,7 @@
 
 const utils = require('../function-schemata/javascript/src/utils');
 const normalize = require('../function-schemata/javascript/src/normalize');
-const { makeBoolean } = require('./utils.js');
+const { isReference, isType, makeBoolean } = require('./utils.js');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 const { makeResultEnvelope, makeTrue, makeFalse } = require('../function-schemata/javascript/src/utils.js');
 const { mutate } = require('./zobject.js');
@@ -320,6 +320,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z99, evaluatorUri, resolver, sco
     const keysToSkip = new Set(['Z1K1', 'Z7K1', 'Z7K2']);
 
     // TODO: Also check declared arguments that are absent from the Z7.
+    // TODO: Also check local keys.
     for (const key of Object.keys(Z1)) {
         if (keysToSkip.has(key)) {
             continue;
@@ -335,7 +336,14 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_(Z99, evaluatorUri, resolver, sco
             continue;
         }
         const type = Z1[key].Z1K1.Z9K1 || Z1[key].Z1K1;
-        const declaredType = argumentDict.declaredType;
+        let declaredType = argumentDict.declaredType;
+        // TODO: Fix type semantics below; do something when declaredType is a Z4.
+        if (isType(declaredType)) {
+            continue;
+        }
+        if (isReference(declaredType)) {
+            declaredType = declaredType.Z9K1;
+        }
 
         // Type mismatches for Z7, Z9, and Z18 will be caught at runtime.
         const skippableTypes = new Set(['Z18', 'Z9', 'Z7']);
@@ -412,6 +420,95 @@ function BUILTIN_ERROR_TYPE_VALIDATOR_(Z99) {
     );
 }
 
+function Z3For(typeZ4, nameZ6) {
+    return {
+        Z1K1: {
+            Z1K1: 'Z9',
+            Z9K1: 'Z3'
+        },
+        Z3K1: typeZ4,
+        Z3K2: nameZ6,
+        Z3K3: {
+            Z1K1: {
+                Z1K1: 'Z9',
+                Z9K1: 'Z12'
+            },
+            Z12K1: {
+                Z1K1: {
+                    Z1K1: 'Z9',
+                    Z9K1: 'Z10'
+                }
+            }
+        }
+    };
+}
+
+/**
+ * Wraps English label in a Z12/Multilingual String object.
+ *
+ * @param {string} name The English label.
+ * @return {Object} a Z12/Multilingual String containing a single Z11 wrapping the label
+ */
+function Z12For(name) {
+    return {
+        Z1K1: {
+            Z1K1: 'Z9',
+            Z9K1: 'Z12'
+        },
+        Z12K1: utils.arrayToZ10([
+            {
+                Z1K1: {
+                    Z1K1: 'Z9',
+                    Z9K1: 'Z11'
+                },
+                Z11K1: {
+                    Z1K1: 'Z9',
+                    Z9K1: 'Z1002'
+                },
+                Z11K2: {
+                    Z1K1: 'Z6',
+                    Z6K1: name
+                }
+            }
+        ])
+    };
+}
+
+function BUILTIN_LIST_TYPE_(typeZ4) {
+    const itsMe = {
+        Z1K1: {
+            Z1K1: 'Z9',
+            Z9K1: 'Z7'
+        },
+        Z7K1: {
+            Z1K1: 'Z9',
+            // TODO(T292260): This ZID is only provisional.
+            Z9K1: 'Z1010'
+        },
+        // TODO(T292260): This key must change along with the ZID.
+        Z1010K1: typeZ4
+    };
+    const Z4 = {
+        Z1K1: {
+            Z1K1: 'Z9',
+            Z9K1: 'Z4'
+        },
+        // TODO: This could be helpful (easy to tell that something is a list)
+        // but blatantly incorrect. Should we pass the ZID of the generic type
+        // as a parameter?
+        Z4K1: itsMe,
+        Z4K2: utils.arrayToZ10([
+            Z3For(typeZ4, { Z1K1: 'Z6', Z6K1: 'K1' }, Z12For('head')),
+            Z3For(itsMe, { Z1K1: 'Z6', Z6K1: 'K2' }, Z12For('tail'))
+        ]),
+        Z4K3: {
+            Z1K1: 'Z9',
+            Z9K1: 'Z110'
+        }
+    };
+    return makeResultEnvelope(Z4, null);
+}
+
 const builtinFunctions = new Map();
 
 builtinFunctions.set('Z901', BUILTIN_ECHO_);
@@ -431,6 +528,7 @@ builtinFunctions.set('Z968', BUILTIN_STRING_TO_CHARS_);
 builtinFunctions.set('Z986', BUILTIN_CHARS_TO_STRING_);
 builtinFunctions.set('Z988', BUILTIN_SAME_);
 builtinFunctions.set('Z999', BUILTIN_UNQUOTE_);
+builtinFunctions.set('Z1910', BUILTIN_LIST_TYPE_);
 
 // validators
 builtinFunctions.set('Z201', BUILTIN_EMPTY_VALIDATOR_);
@@ -674,6 +772,13 @@ builtinReferences.set('Z899', createZ8(
     [
         createArgument('Z99', 'Z899K1')
     ], 'Z1', 'Z999'
+));
+// TODO(T292260): Z1010 and Z1910 are only provisional.
+builtinReferences.set('Z1010', createZ8(
+    'Z1910',
+    [
+        createArgument('Z4', 'Z1010K1')
+    ], 'Z4', 'Z1910'
 ));
 
 (function setValidatorsReferences() {

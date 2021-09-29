@@ -310,4 +310,23 @@ describe('orchestrate', function () {
         );
     }
 
+    {
+        cannedResponses.setWiki('Z10101', {
+            Z1K1: 'Z2',
+            Z2K1: 'Z10101',
+            Z2K2: readJSON('./test/features/v1/test_data/Z10101.json')
+        });
+        cannedResponses.setWiki('Z10103', {
+            Z1K1: 'Z2',
+            Z2K1: 'Z10103',
+            Z2K2: readJSON('./test/features/v1/test_data/Z10103.json')
+        });
+        test(
+          'generic types',
+          readJSON('./test/features/v1/test_data/generic-if.json'),
+          readJSON('./test/features/v1/test_data/Z10103.json'),
+          null
+        );
+    }
+
 });

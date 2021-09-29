@@ -1,45 +1,40 @@
 'use strict';
 
-const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
 const normalize = require('../function-schemata/javascript/src/normalize.js');
+const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
+const { isUserDefined } = require('../function-schemata/javascript/src/utils');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 const { makeResultEnvelope } = require('../function-schemata/javascript/src/utils.js');
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z1Validator = normalFactory.create('Z1');
+const Z4Validator = normalFactory.create('Z4');
 const Z6Validator = normalFactory.create('Z6');
 const Z7Validator = normalFactory.create('Z7');
 const Z9Validator = normalFactory.create('Z9');
 const Z18Validator = normalFactory.create('Z18');
 const Z23Validator = normalFactory.create('Z23');
 
-function createSchema(ZID) {
-    return normalFactory.create(ZID);
+/**
+ * Validates a ZObject against the Type schema.
+ *
+  @param {Object} Z1 object to be validated
+ * @return {bool} whether Z1 can validated as a Type
+ */
+function isType(Z1) {
+    return (Z4Validator.validate(Z1) &&
+        !(Z9Validator.validate(Z1)) &&
+        !(Z18Validator.validate(Z1)));
 }
 
 /**
- * Validates a ZObject.
+ * Determines whether argument is a Z9.
  *
-  @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validate as a Z1
+ * @param {Object} Z1 a ZObject
+ * @return {bool} true if Z1 validates as Z9
  */
-function isZObject(Z1) {
-    return Z1Validator.validate(Z1);
-}
-
-/**
- * Validates a ZObject against the Error schema.
- *
-  @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validate as an Error
- */
-function isError(Z1) {
-    // TODO(T287921): Assay that Z1 validates as Z5 but not as Z9 or Z18.
-    try {
-        return Z1.Z1K1 === 'Z5' || Z1.Z1K1.Z9K1 === 'Z5';
-    } catch (error) {
-        return false;
-    }
+function isReference(Z1) {
+    return Z9Validator.validate(Z1);
 }
 
 /**
@@ -67,14 +62,82 @@ function isFunctionCall(Z1) {
         !(Z18Validator.validate(Z1)));
 }
 
+function createSchema(Z1K1) {
+    let ZID = null;
+    if (isType(Z1K1)) {
+        ZID = Z1K1.Z4K1.Z9K1;
+    } else if (isReference(Z1K1)) {
+        ZID = Z1K1.Z9K1;
+    }
+    if (ZID === null || isUserDefined(ZID)) {
+        // TODO(T291989): Do actual validation here.
+        ZID = 'Z1';
+    }
+    return normalFactory.create(ZID);
+}
+
+function getTypeZID(Z1) {
+    let result;
+    if (isRefOrString(Z1)) {
+        result = Z1.Z1K1;
+    } else if (isType(Z1.Z1K1)) {
+        result = Z1.Z1K1.Z4K1.Z9K1;
+    } else {
+        result = Z1.Z1K1.Z9K1;
+    }
+    return result;
+}
+
 /**
- * Determines whether argument is a Z9.
+ * Validates a ZObject.
  *
- * @param {Object} Z1 a ZObject
- * @return {bool} true if Z1 validates as Z9
+ * @param {Object} Z1 object to be validated
+ * @return {bool} whether Z1 can validate as a Z1
  */
-function isReference(Z1) {
-    return Z9Validator.validate(Z1);
+function isZObject(Z1) {
+    return Z1Validator.validate(Z1);
+}
+
+/**
+ * Validates a ZObject against the Error schema.
+ *
+ * @param {Object} Z1 object to be validated
+ * @return {bool} whether Z1 can validate as an Error
+ */
+function isError(Z1) {
+    // TODO(T287921): Assay that Z1 validates as Z5 but not as Z9 or Z18.
+    try {
+        return Z1.Z1K1 === 'Z5' || Z1.Z1K1.Z9K1 === 'Z5';
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
+ * Validates a ZObject against the GENERIC schema.
+ *
+ * @param {Object} Z1 object to be validated
+ * @return {bool} whether Z1 can validate as a generic type instantiation
+ */
+function isGenericType(Z1) {
+    // TODO: Use the GENERIC schema.
+    try {
+        if (!isFunctionCall(Z1.Z1K1)) {
+            return false;
+        }
+        const localKeyRegex = /K[1-9]\d*$/;
+        for (const key of Object.keys(Z1)) {
+            if (key === 'Z1K1' || key === 'Z7K1') {
+                continue;
+            }
+            if (key.match(localKeyRegex) === null) {
+                return false;
+            }
+        }
+        return true;
+    } catch (err) {
+        return false;
+    }
 }
 
 /**
@@ -238,12 +301,15 @@ module.exports = {
     containsValue,
     createSchema,
     generateError,
+    getTypeZID,
     isArgumentReference,
     isError,
     isFunctionCall,
+    isGenericType,
     isNothing,
     isRefOrString,
     isReference,
+    isType,
     makeBoolean,
     makePair,
     maybeNormalize,
