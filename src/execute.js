@@ -3,7 +3,7 @@
 const { normalError, error } = require('../function-schemata/javascript/src/error');
 const { makeResultEnvelope, Z10ToArray } = require('../function-schemata/javascript/src/utils');
 const { Composition, Evaluated, Implementation } = require('./implementation.js');
-const { containsError, containsValue, createSchema, isArgumentReference, isFunctionCall, isGenericType, isType } = require('./utils.js');
+const { containsError, containsValue, createSchema, isArgumentReference, isFunctionCall, isType } = require('./utils.js');
 const { mutate } = require('./zobject.js');
 
 let execute = null;
@@ -85,47 +85,7 @@ class Frame extends BaseFrame {
         // TODO: If we could statically analyze type compatibility (i.e., "Z6
         // can be a Z1"), we could perform validation before executing the
         // function and exit early.
-        let argument = argumentDict.argument;
-        while (true) {
-            if (isGenericType(argument)) {
-                // TODO: Do we need to make the local keys global?
-                const Z4 = await execute(argument.Z1K1, evaluatorUri, resolver, this.lastFrame_);
-                if (!isType(Z4)) {
-                    // TODO(T287919): Is this an argument type mismatch?
-                    return ArgumentState.ERROR(
-                        normalError(
-                            [error.argument_type_mismatch],
-                            ['Generic type function did not return a Z4: ' + JSON.stringify(argument)]));
-                }
-                argument.Z1K1 = Z4;
-                continue;
-            }
-            if (isArgumentReference(argument)) {
-                const argumentName = argument.Z18K1.Z6K1;
-                // TODO(T289018): Add a test for same function nested in different
-                // scopes to test circular references.
-                const argumentState = await this.retrieveArgument(
-                    argumentName, evaluatorUri, resolver);
-                if (argumentState.state === 'ERROR') {
-                    return argumentState;
-                }
-                argument = argumentState.argumentDict.argument;
-                continue;
-            }
-            if (isFunctionCall(argument)) {
-                // TODO(T289018): What if a Z7 needs to refer to an argument
-                // in the same frame? Does that even make sense to do?
-                const evaluationResult = await execute(
-                    argument, evaluatorUri, resolver, this.lastFrame_);
-                if (containsError(evaluationResult)) {
-                    return ArgumentState.ERROR(evaluationResult.Z22K2);
-                }
-                argument = evaluationResult.Z22K1;
-                continue;
-            }
-            break;
-        }
-
+        const argument = await mutate(argumentDict, ['argument'], evaluatorUri, resolver, this.lastFrame_);
         const declarationSchema = createSchema(argumentDict.declaredType, true);
         const actualSchema = createSchema(argument.Z1K1);
         if (!declarationSchema.validate(argument)) {
