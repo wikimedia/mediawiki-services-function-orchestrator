@@ -1,16 +1,16 @@
 'use strict';
 
-const { generateError } = require('./utils');
+const { generateError } = require( './utils' );
 
 // any serialized string as input
 // the output is either an error object of error type Z401, or the JSON object parsed
-function parse(str) {
+function parse( str ) {
 	try {
-		const zobject = JSON.parse(str);
+		const zobject = JSON.parse( str );
 		return zobject;
-	} catch (err) {
-		const m = (err.name === 'SyntaxError') ? err.message : err.name;
-		return generateError(m);
+	} catch ( err ) {
+		const m = ( err.name === 'SyntaxError' ) ? err.message : err.name;
+		return generateError( m );
 	}
 }
 

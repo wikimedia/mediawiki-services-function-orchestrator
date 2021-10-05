@@ -1,18 +1,18 @@
 'use strict';
 
-const normalize = require('../function-schemata/javascript/src/normalize.js');
-const { keyForGeneric, SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
-const { isUserDefined, makeResultEnvelope } = require('../function-schemata/javascript/src/utils');
-const { normalError, error } = require('../function-schemata/javascript/src/error');
+const normalize = require( '../function-schemata/javascript/src/normalize.js' );
+const { keyForGeneric, SchemaFactory } = require( '../function-schemata/javascript/src/schema.js' );
+const { isUserDefined, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils' );
+const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 
 const normalFactory = SchemaFactory.NORMAL();
-const Z1Validator = normalFactory.create('Z1');
-const Z4Validator = normalFactory.create('Z4');
-const Z6Validator = normalFactory.create('Z6');
-const Z7Validator = normalFactory.create('Z7');
-const Z9Validator = normalFactory.create('Z9');
-const Z18Validator = normalFactory.create('Z18');
-const Z23Validator = normalFactory.create('Z23');
+const Z1Validator = normalFactory.create( 'Z1' );
+const Z4Validator = normalFactory.create( 'Z4' );
+const Z6Validator = normalFactory.create( 'Z6' );
+const Z7Validator = normalFactory.create( 'Z7' );
+const Z9Validator = normalFactory.create( 'Z9' );
+const Z18Validator = normalFactory.create( 'Z18' );
+const Z23Validator = normalFactory.create( 'Z23' );
 
 /**
  * Validates a ZObject against the Type schema.
@@ -20,10 +20,10 @@ const Z23Validator = normalFactory.create('Z23');
  * @param {Object} Z1 object to be validated
  * @return {bool} whether Z1 can validated as a Type
  */
-function isType(Z1) {
-	return (Z4Validator.validate(Z1) &&
-		!(Z9Validator.validate(Z1)) &&
-		!(Z18Validator.validate(Z1)));
+function isType( Z1 ) {
+	return ( Z4Validator.validate( Z1 ) &&
+		!( Z9Validator.validate( Z1 ) ) &&
+		!( Z18Validator.validate( Z1 ) ) );
 }
 
 /**
@@ -32,8 +32,8 @@ function isType(Z1) {
  * @param {Object} Z1 a ZObject
  * @return {bool} true if Z1 validates as Z9
  */
-function isReference(Z1) {
-	return Z9Validator.validate(Z1);
+function isReference( Z1 ) {
+	return Z9Validator.validate( Z1 );
 }
 
 /**
@@ -44,9 +44,10 @@ function isReference(Z1) {
  * @param {Object} Z1 a ZObject
  * @return {bool} true if Z1 validates as either Z6 or Z7
  */
-function isRefOrString(Z1) {
+function isRefOrString( Z1 ) {
 	// TODO: Prohibit Z18s.
-	return !Z18Validator.validate(Z1) && (Z6Validator.validate(Z1) || Z9Validator.validate(Z1));
+	return !Z18Validator.validate( Z1 ) &&
+		( Z6Validator.validate( Z1 ) || Z9Validator.validate( Z1 ) );
 }
 
 /**
@@ -55,23 +56,23 @@ function isRefOrString(Z1) {
  * @param {Object} Z1 object to be validated
  * @return {bool} whether Z1 can validated as a Function Call
  */
-function isFunctionCall(Z1) {
+function isFunctionCall( Z1 ) {
 	return (
-		Z7Validator.validate(Z1) &&
-		!(Z9Validator.validate(Z1)) &&
-		!(Z18Validator.validate(Z1))
+		Z7Validator.validate( Z1 ) &&
+		!( Z9Validator.validate( Z1 ) ) &&
+		!( Z18Validator.validate( Z1 ) )
 	);
 }
 
-function getTypeZID(Z1) {
+function getTypeZID( Z1 ) {
 	let result = null;
-	if (isRefOrString(Z1)) {
+	if ( isRefOrString( Z1 ) ) {
 		result = Z1.Z1K1;
-	} else if (isType(Z1.Z1K1)) {
+	} else if ( isType( Z1.Z1K1 ) ) {
 		const Z4K1 = Z1.Z1K1.Z4K1;
-		if (isReference(Z4K1)) {
+		if ( isReference( Z4K1 ) ) {
 			result = Z4K1.Z9K1;
-		} else if (isFunctionCall(Z4K1)) {
+		} else if ( isFunctionCall( Z4K1 ) ) {
 			// TODO(T292787): Use identifyOfFunction from utils (or eliminate this function).
 			result = Z4K1.Z7K1.Z9K1;
 		} else {
@@ -83,33 +84,33 @@ function getTypeZID(Z1) {
 	return result;
 }
 
-function createSchema(Z1) {
+function createSchema( Z1 ) {
 	// TODO(T292787): Collapse this logic into getTypeZID.
 	let ZID = null;
 	try {
 		const Z1K1 = Z1.Z1K1;
-		if ((Z1K1.Z1K1.Z9K1 === 'Z4') && (Z1K1.Z4K1.Z7K1 !== undefined)) {
-			const result = normalFactory.createUserDefined([ Z1K1 ]);
-			const key = keyForGeneric(Z1K1);
-			return result.get(key);
+		if ( ( Z1K1.Z1K1.Z9K1 === 'Z4' ) && ( Z1K1.Z4K1.Z7K1 !== undefined ) ) {
+			const result = normalFactory.createUserDefined( [ Z1K1 ] );
+			const key = keyForGeneric( Z1K1 );
+			return result.get( key );
 		}
-		if (isType(Z1K1)) {
+		if ( isType( Z1K1 ) ) {
 			ZID = Z1K1.Z4K1.Z9K1;
-		} else if (isReference(Z1K1)) {
+		} else if ( isReference( Z1K1 ) ) {
 			ZID = Z1K1.Z9K1;
-		} else if (isFunctionCall(Z1K1)) {
+		} else if ( isFunctionCall( Z1K1 ) ) {
 			// TODO: Why would this happen?
 		}
-		if (ZID === null || isUserDefined(ZID)) {
+		if ( ZID === null || isUserDefined( ZID ) ) {
 			// TODO(T291989): Do actual validation here.
 		}
-	} catch (err) {
+	} catch ( err ) {
 		ZID = 'Z1';
 	}
-	if (ZID === null) {
+	if ( ZID === null ) {
 		ZID = 'Z1';
 	}
-	return normalFactory.create(ZID);
+	return normalFactory.create( ZID );
 }
 
 /**
@@ -118,8 +119,8 @@ function createSchema(Z1) {
  * @param {Object} Z1 object to be validated
  * @return {bool} whether Z1 can validate as a Z1
  */
-function isZObject(Z1) {
-	return Z1Validator.validate(Z1);
+function isZObject( Z1 ) {
+	return Z1Validator.validate( Z1 );
 }
 
 /**
@@ -128,11 +129,11 @@ function isZObject(Z1) {
  * @param {Object} Z1 object to be validated
  * @return {bool} whether Z1 can validate as an Error
  */
-function isError(Z1) {
+function isError( Z1 ) {
 	// TODO(T287921): Assay that Z1 validates as Z5 but not as Z9 or Z18.
 	try {
 		return Z1.Z1K1 === 'Z5' || Z1.Z1K1.Z9K1 === 'Z5';
-	} catch (error) {
+	} catch ( error ) {
 		return false;
 	}
 }
@@ -143,23 +144,23 @@ function isError(Z1) {
  * @param {Object} Z1 object to be validated
  * @return {bool} whether Z1 can validate as a generic type instantiation
  */
-function isGenericType(Z1) {
+function isGenericType( Z1 ) {
 	// TODO: Use the GENERIC schema.
 	try {
-		if (!isFunctionCall(Z1.Z1K1)) {
+		if ( !isFunctionCall( Z1.Z1K1 ) ) {
 			return false;
 		}
 		const localKeyRegex = /K[1-9]\d*$/;
-		for (const key of Object.keys(Z1)) {
-			if (key === 'Z1K1' || key === 'Z7K1') {
+		for ( const key of Object.keys( Z1 ) ) {
+			if ( key === 'Z1K1' || key === 'Z7K1' ) {
 				continue;
 			}
-			if (key.match(localKeyRegex) === null) {
+			if ( key.match( localKeyRegex ) === null ) {
 				return false;
 			}
 		}
 		return true;
-	} catch (err) {
+	} catch ( err ) {
 		return false;
 	}
 }
@@ -170,8 +171,8 @@ function isGenericType(Z1) {
  * @param {Object} Z1 a ZObject
  * @return {bool} true if Z1 validates as Z18
  */
-function isArgumentReference(Z1) {
-	return Z18Validator.validate(Z1) && !Z9Validator.validate(Z1);
+function isArgumentReference( Z1 ) {
+	return Z18Validator.validate( Z1 ) && !Z9Validator.validate( Z1 );
 }
 
 /**
@@ -182,9 +183,9 @@ function isArgumentReference(Z1) {
  * @param {Object} Z1 a ZObject
  * @return {bool} true if Z1 validates as Z23
  */
-function isNothing(Z1) {
+function isNothing( Z1 ) {
 	// TODO: More precise canonical-form validation of Z23.
-	return Z23Validator.validate(Z1) || Z1 === 'Z23';
+	return Z23Validator.validate( Z1 ) || Z1 === 'Z23';
 }
 
 /**
@@ -193,8 +194,8 @@ function isNothing(Z1) {
  * @param {Object} pair a Z22
  * @return {bool} true if Z22K2 is a Z5; false otherwise
  */
-function containsError(pair) {
-	return isError(pair.Z22K2);
+function containsError( pair ) {
+	return isError( pair.Z22K2 );
 }
 
 /**
@@ -203,13 +204,13 @@ function containsError(pair) {
  * @param {Object} pair a Z22
  * @return {bool} true if Z22K2 is not the Unit; false otherwise
  */
-function containsValue(pair) {
-	return isZObject(pair.Z22K1) && !(isNothing(pair.Z22K1));
+function containsValue( pair ) {
+	return isZObject( pair.Z22K1 ) && !( isNothing( pair.Z22K1 ) );
 }
 
 // TODO: T282891
-function Z23(canonical = false) {
-	if (canonical) {
+function Z23( canonical = false ) {
+	if ( canonical ) {
 		return 'Z23';
 	}
 	return { Z1K1: 'Z9', Z9K1: 'Z23' };
@@ -217,9 +218,9 @@ function Z23(canonical = false) {
 
 // TODO: Replace uses of this with upstream makeResultEnvelope
 // (which doesn't handle the third parameter)
-function makePair(goodResult = null, badResult = null, canonical = false) {
+function makePair( goodResult = null, badResult = null, canonical = false ) {
 	let Z1K1;
-	if (canonical) {
+	if ( canonical ) {
 		Z1K1 = 'Z22';
 	} else {
 		Z1K1 = {
@@ -229,14 +230,14 @@ function makePair(goodResult = null, badResult = null, canonical = false) {
 	}
 	return {
 		Z1K1: Z1K1,
-		Z22K1: goodResult === null ? Z23(canonical) : goodResult,
-		Z22K2: badResult === null ? Z23(canonical) : badResult
+		Z22K1: goodResult === null ? Z23( canonical ) : goodResult,
+		Z22K2: badResult === null ? Z23( canonical ) : badResult
 	};
 }
 
-function makeBoolean(truthy = false, canonical = false) {
+function makeBoolean( truthy = false, canonical = false ) {
 	const zobject = {};
-	if (canonical) {
+	if ( canonical ) {
 		zobject.Z1K1 = 'Z40';
 	} else {
 		zobject.Z1K1 = {
@@ -245,8 +246,8 @@ function makeBoolean(truthy = false, canonical = false) {
 		};
 	}
 
-	if (truthy) {
-		if (canonical) {
+	if ( truthy ) {
+		if ( canonical ) {
 			zobject.Z40K1 = 'Z41';
 		} else {
 			zobject.Z40K1 = {
@@ -255,7 +256,7 @@ function makeBoolean(truthy = false, canonical = false) {
 			};
 		}
 	} else {
-		if (canonical) {
+		if ( canonical ) {
 			zobject.Z40K1 = 'Z42';
 		} else {
 			zobject.Z40K1 = {
@@ -269,7 +270,7 @@ function makeBoolean(truthy = false, canonical = false) {
 }
 
 // TODO: This needs to generate an actual error instead of Z6s.
-function generateError(errorString = 'An unknown error occurred') {
+function generateError( errorString = 'An unknown error occurred' ) {
 	return {
 		Z1K1: {
 			Z1K1: 'Z9',
@@ -304,17 +305,17 @@ function generateError(errorString = 'An unknown error occurred') {
  * @param {Object} zobject a ZObject
  * @return {Object} a Z22 as described above
  */
-async function maybeNormalize(zobject) {
+async function maybeNormalize( zobject ) {
 	try {
-		const result = normalize(zobject);
-		return makeResultEnvelope(result, null);
-	} catch (err) {
+		const result = normalize( zobject );
+		return makeResultEnvelope( result, null );
+	} catch ( err ) {
 		// TODO(T287886): failing to normalize() should return Z5s instead of throwing errors.
 		return makeResultEnvelope(
 			null,
 			normalError(
 				[ error.not_wellformed ],
-				[ JSON.stringify(zobject) ]
+				[ JSON.stringify( zobject ) ]
 			)
 		);
 	}

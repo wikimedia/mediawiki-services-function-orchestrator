@@ -4,16 +4,13 @@
 		"wikimedia/server"
 	],
 	"rules": {
-		"array-bracket-spacing": "off",
 		"camelcase": [
 			"error",
 			{
 				"properties": "never"
 			}
 		],
-		"computed-property-spacing": "off",
 		"jsdoc/no-undefined-types": "off",
-		"no-multi-spaces": "off",
 		"no-shadow": "off",
 		"no-underscore-dangle": "off",
 		"no-unused-vars": [
@@ -21,8 +18,7 @@
 			{
 				"args": "none"
 			}
-		],
-		"space-in-parens": ["error", "never"]
+		]
 	},
 	"overrides": [
 		{
