@@ -19,14 +19,14 @@ const { ReferenceResolver } = require('./db.js');
  * @return {Object} a Z22
  */
 async function maybeValidate(zobject, doValidate, resolver) {
-    if (doValidate) {
-        const errors = await validate(zobject, resolver);
-        if (errors.length > 0) {
-            // TODO: Wrap errors in a Z5.
-            return makeResultEnvelope(null, arrayToZ10(errors));
-        }
-    }
-    return makeResultEnvelope(zobject, null);
+	if (doValidate) {
+		const errors = await validate(zobject, resolver);
+		if (errors.length > 0) {
+			// TODO: Wrap errors in a Z5.
+			return makeResultEnvelope(null, arrayToZ10(errors));
+		}
+	}
+	return makeResultEnvelope(zobject, null);
 }
 
 /**
@@ -37,16 +37,16 @@ async function maybeValidate(zobject, doValidate, resolver) {
  * @return {Object} a Z22 as described above
  */
 async function Z7OrError(zobject) {
-    if (isFunctionCall(zobject)) {
-        return makeResultEnvelope(zobject, null);
-    }
-    return makeResultEnvelope(
-        null,
-        normalError(
-            [ error.wrong_content_type ],
-            [ 'The provided object is not a function call' ]
-        )
-    );
+	if (isFunctionCall(zobject)) {
+		return makeResultEnvelope(zobject, null);
+	}
+	return makeResultEnvelope(
+		null,
+		normalError(
+			[ error.wrong_content_type ],
+			[ 'The provided object is not a function call' ]
+		)
+	);
 }
 
 /**
@@ -58,56 +58,54 @@ async function Z7OrError(zobject) {
  */
 async function orchestrate(input) {
 
-    let zobject = input.zobject;
-    if (zobject === undefined) {
-       zobject = input;
-    }
+	let zobject = input.zobject;
+	if (zobject === undefined) {
+		zobject = input;
+	}
 
-    let currentPair;
+	let currentPair;
 
-    if (isError(zobject)) {
-        currentPair = makePair(null, zobject, /* canonicalize= */true);
-    } else {
-        currentPair = makePair(zobject, null, /* canonicalize= */true);
-    }
+	if (isError(zobject)) {
+		currentPair = makePair(null, zobject, /* canonicalize= */true);
+	} else {
+		currentPair = makePair(zobject, null, /* canonicalize= */true);
+	}
 
-    /*
-     * TODO: Receiving the evaluator and wiki URIs as parameters (especially a
-     * GET param!) is no good. Find a way to share config among services.
-     */
-    const evaluatorUri = input.evaluatorUri || null;
-    const wikiUri = input.wikiUri || null;
-    const resolver = new ReferenceResolver(wikiUri);
-    const doValidate = typeof input.doValidate === 'boolean' ? input.doValidate : true;
+	// TODO: Receiving the evaluator and wiki URIs as parameters (especially a
+	// GET param!) is no good. Find a way to share config among services.
+	const evaluatorUri = input.evaluatorUri || null;
+	const wikiUri = input.wikiUri || null;
+	const resolver = new ReferenceResolver(wikiUri);
+	const doValidate = typeof input.doValidate === 'boolean' ? input.doValidate : true;
 
-    const callTuples = [
-        [maybeNormalize, [], 'maybeNormalize'],
-        // TODO: Dereference top-level object if it is a Z9?
-        [Z7OrError, [], 'Z7OrError'],
-        [maybeValidate, [doValidate, resolver], 'maybeValidate'],
-        [execute, [evaluatorUri, resolver], 'execute']
-    ];
+	const callTuples = [
+		[maybeNormalize, [], 'maybeNormalize'],
+		// TODO: Dereference top-level object if it is a Z9?
+		[Z7OrError, [], 'Z7OrError'],
+		[maybeValidate, [doValidate, resolver], 'maybeValidate'],
+		[execute, [evaluatorUri, resolver], 'execute']
+	];
 
-    for (const callTuple of callTuples) {
-        // TODO(T287986): isNothing check is redundant once validation returns
-        // correct type.
-        if (containsError(currentPair) || isNothing(currentPair.Z22K1)) {
-            break;
-        }
-        console.log('calling function', callTuple[2], 'on currentPair:', currentPair);
-        const callable = callTuple[0];
-        const args = callTuple[1];
-        const zobject = currentPair.Z22K1;
-        currentPair = await callable(...[zobject, ...args]);
-    }
+	for (const callTuple of callTuples) {
+		// TODO(T287986): isNothing check is redundant once validation returns
+		// correct type.
+		if (containsError(currentPair) || isNothing(currentPair.Z22K1)) {
+			break;
+		}
+		console.log('calling function', callTuple[2], 'on currentPair:', currentPair);
+		const callable = callTuple[0];
+		const args = callTuple[1];
+		const zobject = currentPair.Z22K1;
+		currentPair = await callable(...[zobject, ...args]);
+	}
 
-    try {
-        return await canonicalize(currentPair);
-    } catch (err) {
-        // If canonicalization fails, return normalized form instead.
-        console.log('Could not canonicalize; outputting in normal form.');
-        return currentPair;
-    }
+	try {
+		return await canonicalize(currentPair);
+	} catch (err) {
+		// If canonicalization fails, return normalized form instead.
+		console.log('Could not canonicalize; outputting in normal form.');
+		return currentPair;
+	}
 }
 
 module.exports = orchestrate;

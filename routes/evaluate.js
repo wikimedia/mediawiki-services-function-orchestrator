@@ -12,13 +12,13 @@ const router = sUtil.router();
 
 /** ROUTE DECLARATIONS GO HERE **/
 router.post('/', async function (req, res) {
-    const input = await orchestrate(req.body);
+	const input = await orchestrate(req.body);
 	res.json(input);
 });
 
 router.get('/test/:data', async function (req, res) {
-    const result = await getTestResults(req.params.data);
-    res.json(result);
+	const result = await getTestResults(req.params.data);
+	res.json(result);
 });
 
 router.get('/', function (req, res) {
@@ -27,12 +27,12 @@ router.get('/', function (req, res) {
 
 module.exports = function (appObj) {
 
-    // the returned object mounts the routes on
-    // /{domain}/vX/mount/path
-    return {
-        path: '/evaluate',
-        api_version: 1,  // must be a number!
-        router: router
-    };
+	// the returned object mounts the routes on
+	// /{domain}/vX/mount/path
+	return {
+		path: '/evaluate',
+		api_version: 1,  // must be a number!
+		router: router
+	};
 
 };

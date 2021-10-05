@@ -17,43 +17,43 @@ const dontValidate = new Set([ 'Z18', 'Z9' ]);
  * @return {Schema} a fully-initialized Schema or null if unsupported.
  */
 function getSchemaValidator(ZID, Z1) {
-    // TODO(T286936): Figure out why non-sequential error pops with duplicate keys.
-    // TODO(T286939): Figure out why Z9 and Z18 validation doesn't work.
-    if (dontValidate.has(ZID)) {
-        return null;
-    }
-    let validator;
-    if (validators.has(ZID)) {
-        validator = validators.get(ZID);
-    } else {
-        validator = createSchema(Z1);
-        if (ZID !== null) {
-            // TODO: Should never be null.
-            validators.set(ZID, validator);
-        }
-    }
-    return validator;
+	// TODO(T286936): Figure out why non-sequential error pops with duplicate keys.
+	// TODO(T286939): Figure out why Z9 and Z18 validation doesn't work.
+	if (dontValidate.has(ZID)) {
+		return null;
+	}
+	let validator;
+	if (validators.has(ZID)) {
+		validator = validators.get(ZID);
+	} else {
+		validator = createSchema(Z1);
+		if (ZID !== null) {
+			// TODO: Should never be null.
+			validators.set(ZID, validator);
+		}
+	}
+	return validator;
 }
 
 function createValidatorZ7(Z8, Z1) {
-    // since this is a validator, we always expect a SINGLE argument (the object itself).
-    const argument = Z10ToArray(Z8.Z8K1)[0];
-    const argumentValue = { ...Z1 };
+	// since this is a validator, we always expect a SINGLE argument (the object itself).
+	const argument = Z10ToArray(Z8.Z8K1)[0];
+	const argumentValue = { ...Z1 };
 
-    return {
-        Z1K1: {
-            Z1K1: 'Z9',
-            Z9K1: 'Z7'
-        },
-        Z7K1: Z8,
-        [argument.Z17K2.Z6K1]: {
-            Z1K1: {
-                Z1K1: 'Z9',
-                Z9K1: 'Z99'
-            },
-            Z99K1: argumentValue
-        }
-    };
+	return {
+		Z1K1: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z7'
+		},
+		Z7K1: Z8,
+		[argument.Z17K2.Z6K1]: {
+			Z1K1: {
+				Z1K1: 'Z9',
+				Z9K1: 'Z99'
+			},
+			Z99K1: argumentValue
+		}
+	};
 }
 
 /**
@@ -65,24 +65,24 @@ function createValidatorZ7(Z8, Z1) {
  * @return {Array} an array of Z5/Error
  */
 async function runTypeValidator(Z1, typeZObject, resolver) {
-    const validatorZid = typeZObject.Z2K2.Z4K3;
+	const validatorZid = typeZObject.Z2K2.Z4K3;
 
-    try {
-        // TODO: Catch errors when async functions reject.
-        const dereferenced = await resolver.dereference([ validatorZid.Z9K1 ]);
-        const validatorZ8 = dereferenced[ validatorZid.Z9K1 ].Z2K2;
-        const validatorZ7 = createValidatorZ7(validatorZ8, Z1);
-        const result = await execute(validatorZ7, null, resolver, null);
-        return Z10ToArray(result.Z22K1);
-    } catch (err) {
-        console.error(err);
-        return [
-            normalError(
-                [error.zid_not_found],
-                [`Builtin validator "${validatorZid.Z9K1}" not found for "${typeZObject.Z2K1.Z9K1}"`]
-            )
-        ];
-    }
+	try {
+		// TODO: Catch errors when async functions reject.
+		const dereferenced = await resolver.dereference([ validatorZid.Z9K1 ]);
+		const validatorZ8 = dereferenced[ validatorZid.Z9K1 ].Z2K2;
+		const validatorZ7 = createValidatorZ7(validatorZ8, Z1);
+		const result = await execute(validatorZ7, null, resolver, null);
+		return Z10ToArray(result.Z22K1);
+	} catch (err) {
+		console.error(err);
+		return [
+			normalError(
+				[error.zid_not_found],
+				[`Builtin validator "${validatorZid.Z9K1}" not found for "${typeZObject.Z2K1.Z9K1}"`]
+			)
+		];
+	}
 }
 
 /**
@@ -94,13 +94,13 @@ async function runTypeValidator(Z1, typeZObject, resolver) {
  * @return {Object} an object mapping the ZID to the ZObject of the type.
  */
 async function getContainedTypeZObjects(zobject, resolver) {
-    const containedTypes = new Set();
+	const containedTypes = new Set();
 
-    traverse(zobject, { allKeys: true }, (Z1) =>
-      containedTypes.add(isRefOrString(Z1) ? Z1.Z1K1 : Z1.Z1K1.Z9K1)
-    );
+	traverse(zobject, { allKeys: true }, (Z1) =>
+		containedTypes.add(isRefOrString(Z1) ? Z1.Z1K1 : Z1.Z1K1.Z9K1)
+	);
 
-    return await resolver.dereference(containedTypes);
+	return await resolver.dereference(containedTypes);
 }
 
 /**
@@ -113,39 +113,39 @@ async function getContainedTypeZObjects(zobject, resolver) {
  */
 async function validate(zobject, resolver) {
 
-    const errors = [];
-    const validatorPromises = [];
-    const ZObjectTypes = await getContainedTypeZObjects(zobject, resolver);
+	const errors = [];
+	const validatorPromises = [];
+	const ZObjectTypes = await getContainedTypeZObjects(zobject, resolver);
 
-    traverse(zobject, { allKeys: true }, (Z1) => {
-        // TODO(T292787): What about ZID collisions of user-defined/generic types?
-        // TODO(T292787): Consider just keying this on Z1K1.
-        const ZID = getTypeZID(Z1);
-        const schemaValidator = getSchemaValidator(Z1, ZID);
-        if (schemaValidator === null) {
-            return;
-        }
+	traverse(zobject, { allKeys: true }, (Z1) => {
+		// TODO(T292787): What about ZID collisions of user-defined/generic types?
+		// TODO(T292787): Consider just keying this on Z1K1.
+		const ZID = getTypeZID(Z1);
+		const schemaValidator = getSchemaValidator(Z1, ZID);
+		if (schemaValidator === null) {
+			return;
+		}
 
-        // TODO: Find a way to allow Boolean literals, e.g. "Z41"
-        if (!schemaValidator.validate(Z1)) {
-            errors.push(
-                normalError(
-                    [error.not_wellformed],
-                    // TODO: improve this message, maybe look at schemaValidator.errors
-                    ['Invalid schema for ' + ZID + ' with object: ' + JSON.stringify(Z1)]
-                )
-            );
-        } else {
-            validatorPromises.push(runTypeValidator(Z1, ZObjectTypes[ZID], resolver));
-        }
-    });
+		// TODO: Find a way to allow Boolean literals, e.g. "Z41"
+		if (!schemaValidator.validate(Z1)) {
+			errors.push(
+				normalError(
+					[error.not_wellformed],
+					// TODO: improve this message, maybe look at schemaValidator.errors
+					['Invalid schema for ' + ZID + ' with object: ' + JSON.stringify(Z1)]
+				)
+			);
+		} else {
+			validatorPromises.push(runTypeValidator(Z1, ZObjectTypes[ZID], resolver));
+		}
+	});
 
-    const validatorErrors = await Promise.all(validatorPromises);
-    validatorErrors.forEach((typeErrors) =>
-        errors.push.apply(errors, typeErrors)
-    );
+	const validatorErrors = await Promise.all(validatorPromises);
+	validatorErrors.forEach((typeErrors) =>
+		errors.push.apply(errors, typeErrors)
+	);
 
-    return errors;
+	return errors;
 }
 
 module.exports = { validate };
