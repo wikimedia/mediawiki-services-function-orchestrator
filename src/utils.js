@@ -1,10 +1,9 @@
 'use strict';
 
 const normalize = require('../function-schemata/javascript/src/normalize.js');
-const { SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
-const { isUserDefined } = require('../function-schemata/javascript/src/utils');
+const { keyForGeneric, SchemaFactory } = require('../function-schemata/javascript/src/schema.js');
+const { isUserDefined, makeResultEnvelope } = require('../function-schemata/javascript/src/utils');
 const { normalError, error } = require('../function-schemata/javascript/src/error');
-const { makeResultEnvelope } = require('../function-schemata/javascript/src/utils.js');
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z1Validator = normalFactory.create('Z1');
@@ -62,30 +61,53 @@ function isFunctionCall(Z1) {
         !(Z18Validator.validate(Z1)));
 }
 
-function createSchema(Z1K1) {
-    let ZID = null;
-    if (isType(Z1K1)) {
-        ZID = Z1K1.Z4K1.Z9K1;
-    } else if (isReference(Z1K1)) {
-        ZID = Z1K1.Z9K1;
-    }
-    if (ZID === null || isUserDefined(ZID)) {
-        // TODO(T291989): Do actual validation here.
-        ZID = 'Z1';
-    }
-    return normalFactory.create(ZID);
-}
-
 function getTypeZID(Z1) {
-    let result;
+    let result = null;
     if (isRefOrString(Z1)) {
         result = Z1.Z1K1;
     } else if (isType(Z1.Z1K1)) {
-        result = Z1.Z1K1.Z4K1.Z9K1;
+        const Z4K1 = Z1.Z1K1.Z4K1;
+        if (isReference(Z4K1)) {
+            result = Z4K1.Z9K1;
+        } else if (isFunctionCall(Z4K1)) {
+            // TODO(T292787): Use identifyOfFunction from utils (or eliminate this function).
+            result = Z4K1.Z7K1.Z9K1;
+        } else {
+            // TODO(T292787): How could this happen?
+        }
     } else {
         result = Z1.Z1K1.Z9K1;
     }
     return result;
+}
+
+function createSchema(Z1) {
+    // TODO(T292787): Collapse this logic into getTypeZID.
+    let ZID = null;
+    try {
+        const Z1K1 = Z1.Z1K1;
+        if ((Z1K1.Z1K1.Z9K1 === 'Z4') && (Z1K1.Z4K1.Z7K1 !== undefined)) {
+            const result = normalFactory.createUserDefined([ Z1K1 ]);
+            const key = keyForGeneric(Z1K1);
+            return result.get(key);
+        }
+        if (isType(Z1K1)) {
+            ZID = Z1K1.Z4K1.Z9K1;
+        } else if (isReference(Z1K1)) {
+            ZID = Z1K1.Z9K1;
+        } else if (isFunctionCall(Z1K1)) {
+            // TODO: Why would this happen?
+        }
+        if (ZID === null || isUserDefined(ZID)) {
+            // TODO(T291989): Do actual validation here.
+        }
+    } catch (err) {
+        ZID = 'Z1';
+    }
+    if (ZID === null) {
+        ZID = 'Z1';
+    }
+    return normalFactory.create(ZID);
 }
 
 /**

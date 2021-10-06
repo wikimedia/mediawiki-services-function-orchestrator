@@ -324,7 +324,7 @@ describe('orchestrate', function () {
         test(
           'generic types',
           readJSON('./test/features/v1/test_data/generic-if.json'),
-          readJSON('./test/features/v1/test_data/Z10103.json'),
+          readJSON('./test/features/v1/test_data/Z10103-expanded.json'),
           null
         );
     }
