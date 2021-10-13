@@ -63,7 +63,7 @@
 		"openapi-schema-validator": "^3.0.3"
 	},
 	"engines": {
-		"node": "12.21.0"
+		"node": "12.22.5"
 	},
 	"deploy": {
 		"target": "debian",
