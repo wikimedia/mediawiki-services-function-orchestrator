@@ -86,13 +86,14 @@ class Frame extends BaseFrame {
         // can be a Z1"), we could perform validation before executing the
         // function and exit early.
         const argument = await mutate(argumentDict, ['argument'], evaluatorUri, resolver, this.lastFrame_);
-        const declarationSchema = createSchema(argumentDict.declaredType, true);
-        const actualSchema = createSchema(argument.Z1K1);
+        await mutate(argument, ['Z1K1'], evaluatorUri, resolver, this.lastFrame_);
+        const declarationSchema = createSchema({ Z1K1: argumentDict.declaredType });
+        const actualSchema = createSchema(argument);
         if (!declarationSchema.validate(argument)) {
             return ArgumentState.ERROR(
                 normalError(
                     [error.argument_type_mismatch],
-                    ['Could not validate argument ' + JSON.stringify(argument) + ' as declared type ' + argumentDict.declaredType]));
+                    ['Could not validate argument ' + JSON.stringify(argument) + ' as declared type ' + JSON.stringify(argumentDict.declaredType)]));
         }
         if (!actualSchema.validate(argument)) {
             return ArgumentState.ERROR(

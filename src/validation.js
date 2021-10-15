@@ -6,26 +6,33 @@ const { error, normalError } = require('../function-schemata/javascript/src/erro
 const { execute } = require('./execute.js');
 const { createSchema, getTypeZID, isRefOrString } = require('./utils.js');
 
-const validators = {};
+const validators = new Map();
+const dontValidate = new Set([ 'Z18', 'Z9' ]);
 
 /**
  * Returns a validator schema for the given ZID.
  *
+ * @param {string} ZID type identifier of Z1
  * @param {Object} Z1 the type ZObject
  * @return {Schema} a fully-initialized Schema or null if unsupported.
  */
-function getSchemaValidator(Z1) {
-    // TODO(flakytypes): What about ZID collisions of user-defined/generic types?
-    const ZID = getTypeZID(Z1);
-    if (validators[ZID]) {
-        return validators[ZID];
-    } else {
-        const validator = createSchema(Z1.Z1K1);
-        if (ZID !== null) {
-            validators[ZID] = validator;
-        }
-        return validator;
+function getSchemaValidator(ZID, Z1) {
+    // TODO(T286936): Figure out why non-sequential error pops with duplicate keys.
+    // TODO(T286939): Figure out why Z9 and Z18 validation doesn't work.
+    if (dontValidate.has(ZID)) {
+        return null;
     }
+    let validator;
+    if (validators.has(ZID)) {
+        validator = validators.get(ZID);
+    } else {
+        validator = createSchema(Z1);
+        if (ZID !== null) {
+            // TODO: Should never be null.
+            validators.set(ZID, validator);
+        }
+    }
+    return validator;
 }
 
 function createValidatorZ7(Z8, Z1) {
@@ -111,14 +118,13 @@ async function validate(zobject, resolver) {
     const ZObjectTypes = await getContainedTypeZObjects(zobject, resolver);
 
     traverse(zobject, { allKeys: true }, (Z1) => {
-        const typeZID = getTypeZID(Z1);
-
-        // TODO(T286936): Figure out why non-sequential error pops with duplicate keys.
-        // TODO(T286939): Figure out why Z9 and Z18 validation doesn't work.
-        if (typeZID === 'Z18' || typeZID === 'Z9') {
+        // TODO(T292787): What about ZID collisions of user-defined/generic types?
+        // TODO(T292787): Consider just keying this on Z1K1.
+        const ZID = getTypeZID(Z1);
+        const schemaValidator = getSchemaValidator(Z1, ZID);
+        if (schemaValidator === null) {
             return;
         }
-        const schemaValidator = getSchemaValidator(Z1);
 
         // TODO: Find a way to allow Boolean literals, e.g. "Z41"
         if (!schemaValidator.validate(Z1)) {
@@ -126,14 +132,10 @@ async function validate(zobject, resolver) {
                 normalError(
                     [error.not_wellformed],
                     // TODO: improve this message, maybe look at schemaValidator.errors
-                    ['Invalid schema for ' + typeZID + ' with object: ' + JSON.stringify(Z1)]
+                    ['Invalid schema for ' + ZID + ' with object: ' + JSON.stringify(Z1)]
                 )
             );
         } else {
-            let ZID = typeZID;
-            if (ZID === 'Z7_backend') {
-                ZID = 'Z7';
-            }
             validatorPromises.push(runTypeValidator(Z1, ZObjectTypes[ZID], resolver));
         }
     });
