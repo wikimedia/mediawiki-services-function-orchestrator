@@ -82,14 +82,10 @@ describe( 'orchestrate', function () {
 			doValidate: true
 		};
 		if ( output !== null ) {
-			try {
-				output = canonicalize( output );
-			} catch ( err ) { }
+			output = canonicalize( output ).Z22K1;
 		}
 		if ( error !== null ) {
-			try {
-				error = canonicalize( error );
-			} catch ( err ) { }
+			error = canonicalize( error ).Z22K1;
 		}
 		it( 'orchestrate msw: ' + name, async () => {
 			let result = {};
@@ -305,7 +301,7 @@ describe( 'orchestrate', function () {
 					[]
 				]
 			},
-			normalize( [ makeTrue(), makeFalse(), makeFalse(), makeTrue() ] ),
+			normalize( [ makeTrue(), makeFalse(), makeFalse(), makeTrue() ] ).Z22K1,
 			null
 		);
 	}

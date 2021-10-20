@@ -1,9 +1,7 @@
 'use strict';
 
-const normalize = require( '../function-schemata/javascript/src/normalize.js' );
 const { keyForGeneric, SchemaFactory } = require( '../function-schemata/javascript/src/schema.js' );
-const { isUserDefined, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils' );
-const { normalError, error } = require( '../function-schemata/javascript/src/error' );
+const { isUserDefined } = require( '../function-schemata/javascript/src/utils' );
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z1Validator = normalFactory.create( 'Z1' );
@@ -298,29 +296,6 @@ function generateError( errorString = 'An unknown error occurred' ) {
 	};
 }
 
-/**
- * Normalizes a ZObject. Returns a pair <normalized object, Unit> if normalization
- * succeeds; returns a pair <Unit, Z5> otherwise.
- *
- * @param {Object} zobject a ZObject
- * @return {Object} a Z22 as described above
- */
-async function maybeNormalize( zobject ) {
-	try {
-		const result = normalize( zobject );
-		return makeResultEnvelope( result, null );
-	} catch ( err ) {
-		// TODO(T287886): failing to normalize() should return Z5s instead of throwing errors.
-		return makeResultEnvelope(
-			null,
-			normalError(
-				[ error.not_wellformed ],
-				[ JSON.stringify( zobject ) ]
-			)
-		);
-	}
-}
-
 module.exports = {
 	containsError,
 	containsValue,
@@ -337,6 +312,5 @@ module.exports = {
 	isType,
 	makeBoolean,
 	makePair,
-	maybeNormalize,
 	Z23
 };

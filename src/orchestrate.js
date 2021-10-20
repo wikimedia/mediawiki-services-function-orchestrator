@@ -1,11 +1,12 @@
 'use strict';
 
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
+const normalize = require( '../function-schemata/javascript/src/normalize.js' );
 const { arrayToZ10, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
-const { containsError, isError, isFunctionCall, isNothing, makePair, maybeNormalize } = require( './utils.js' );
+const { containsError, isError, isFunctionCall, isNothing, makePair } = require( './utils.js' );
 const { ReferenceResolver } = require( './db.js' );
 
 /**
@@ -79,7 +80,7 @@ async function orchestrate( input ) {
 	const doValidate = typeof input.doValidate === 'boolean' ? input.doValidate : true;
 
 	const callTuples = [
-		[ maybeNormalize, [], 'maybeNormalize' ],
+		[ normalize, [], 'normalize' ],
 		// TODO: Dereference top-level object if it is a Z9?
 		[ Z7OrError, [], 'Z7OrError' ],
 		[ maybeValidate, [ doValidate, resolver ], 'maybeValidate' ],
@@ -99,12 +100,14 @@ async function orchestrate( input ) {
 		currentPair = await callable( ...[ zobject, ...args ] );
 	}
 
-	try {
-		return await canonicalize( currentPair );
-	} catch ( err ) {
+	const canonicalized = canonicalize( currentPair );
+
+	if ( containsError( canonicalized ) ) {
 		// If canonicalization fails, return normalized form instead.
 		console.log( 'Could not canonicalize; outputting in normal form.' );
 		return currentPair;
+	} else {
+		return canonicalized.Z22K1;
 	}
 }
 

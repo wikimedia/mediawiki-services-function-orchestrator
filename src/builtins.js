@@ -660,7 +660,7 @@ function createZ8( identity, argumentList, returnType, builtinName ) {
 			}
 		} ],
 		Z8K5: identity
-	} );
+	} ).Z22K1;
 }
 
 const builtinReferences = new Map();

@@ -1,10 +1,11 @@
 'use strict';
 
 const preq = require( 'preq' );
+const { strictEqual } = require( 'assert' );
 const assert = require( '../../utils/assert.js' );
 const Server = require( '../../utils/server.js' );
-const { canonicalError, error } = require( '../../../function-schemata/javascript/src/error' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
+const { getMissingZ5 } = require( '../../../function-schemata/javascript/test/util' );
 const utils = require( '../../../src/utils.js' );
 const { readJSON } = require( '../../utils/read-json.js' );
 
@@ -26,14 +27,10 @@ describe( 'orchestration endpoint', function () {
 
 	const testFunctionCall = function ( name, input, output = null, error = null ) {
 		if ( output !== null ) {
-			try {
-				output = canonicalize( output );
-			} catch ( err ) { }
+			output = canonicalize( output ).Z22K1;
 		}
 		if ( error !== null ) {
-			try {
-				error = canonicalize( error );
-			} catch ( err ) { }
+			error = canonicalize( error ).Z22K1;
 		}
 		it( 'orchestration endpoint: ' + name, function () {
 			return preq.post( {
@@ -51,6 +48,27 @@ describe( 'orchestration endpoint', function () {
 						utils.makePair( output, error, /* canonical= */ true ),
 						name
 					);
+				} );
+		} );
+	};
+
+	const testZ5 = function ( name, input, codes ) {
+		it( 'orchestration endpoint: ' + name, function () {
+			return preq
+				.post( {
+					uri: uri,
+					headers: {
+						'content-type': 'application/json'
+					},
+					body: typeof input === 'string' ? { doValidate: false, zobject: input } : input
+				} )
+				.then( function ( res ) {
+					assert.status( res, 200 );
+					assert.contentType( res, 'application/json' );
+
+					const notFound = getMissingZ5( res.body, codes );
+
+					strictEqual( notFound.size, 0 );
 				} );
 		} );
 	};
@@ -127,48 +145,28 @@ describe( 'orchestration endpoint', function () {
 		readJSON( './test/features/v1/test_data/error-not-fn.json' )
 	);
 
-	// TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
-	test(
+	testZ5(
 		'record with list and invalid sub-record',
 		{ Z1K1: 'Z8', K2: [ 'Test', 'Second test' ], Z2K1: { K2: 'Test' } },
-		null,
-		canonicalError(
-			[ error.not_wellformed ],
-			[ '{"Z1K1":"Z8","K2":["Test","Second test"],"Z2K1":{"K2":"Test"}}' ]
-		)
+		[ 'Z502', 'Z523' ]
 	);
 
-	// TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
-	test(
+	testZ5(
 		'invalid zobject (int not string/list/record)',
 		{ Z1K1: 'Z2', Z2K1: 2 },
-		null,
-		canonicalError(
-			[ error.not_wellformed ],
-			[ '{"Z1K1":"Z2","Z2K1":2}' ]
-		)
+		[ 'Z502', 'Z521' ]
 	);
 
-	// TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
-	test(
+	testZ5(
 		'invalid zobject (float not string/list/record)',
 		{ Z1K1: 'Z2', Z2K1: 2.0 },
-		null,
-		canonicalError(
-			[ error.not_wellformed ],
-			[ '{"Z1K1":"Z2","Z2K1":2}' ]
-		)
+		[ 'Z502', 'Z521' ]
 	);
 
-	// TODO: Don't rely on JSON.stringify's default behavior; test parsed version of error string.
-	test(
+	testZ5(
 		'number in array',
 		[ 2 ],
-		null,
-		canonicalError(
-			[ error.not_wellformed ],
-			[ '[2]' ]
-		)
+		[ 'Z521' ]
 	);
 
 	// Parser
