@@ -35,25 +35,37 @@ function getSchemaValidator( ZID, Z1 ) {
 	return validator;
 }
 
-function createValidatorZ7( Z8, Z1 ) {
-	// since this is a validator, we always expect a SINGLE argument (the object itself).
-	const argument = Z10ToArray( Z8.Z8K1 )[ 0 ];
-	const argumentValue = { ...Z1 };
-
-	return {
+function createValidatorZ7( Z8, ...Z1s ) {
+	const argumentDeclarations = Z10ToArray( Z8.Z8K1 );
+	if ( argumentDeclarations.length !== Z1s.length ) {
+		return {
+		};
+	}
+	const result = {
 		Z1K1: {
 			Z1K1: 'Z9',
 			Z9K1: 'Z7'
 		},
-		Z7K1: Z8,
-		[ argument.Z17K2.Z6K1 ]: {
+		Z7K1: Z8
+	};
+	for ( const argument of argumentDeclarations ) {
+		const argumentValue = { ...Z1s.shift() };
+		result[ argument.Z17K2.Z6K1 ] = {
 			Z1K1: {
 				Z1K1: 'Z9',
 				Z9K1: 'Z99'
 			},
 			Z99K1: argumentValue
-		}
-	};
+		};
+	}
+	return result;
+}
+
+async function runValidationFunction( Z8Reference, Z1, resolver ) {
+	const dereferenced = await resolver.dereference( [ Z8Reference ] );
+	const validatorZ8 = dereferenced[ Z8Reference ].Z2K2;
+	const validatorZ7 = createValidatorZ7( validatorZ8, Z1 );
+	return await execute( validatorZ7, null, resolver, null, /* doValidate= */ false );
 }
 
 /**
@@ -69,10 +81,7 @@ async function runTypeValidator( Z1, typeZObject, resolver ) {
 
 	try {
 		// TODO: Catch errors when async functions reject.
-		const dereferenced = await resolver.dereference( [ validatorZid.Z9K1 ] );
-		const validatorZ8 = dereferenced[ validatorZid.Z9K1 ].Z2K2;
-		const validatorZ7 = createValidatorZ7( validatorZ8, Z1 );
-		const result = await execute( validatorZ7, null, resolver, null );
+		const result = await runValidationFunction( validatorZid.Z9K1, Z1, resolver );
 		return Z10ToArray( result.Z22K1 );
 	} catch ( err ) {
 		console.error( err );
@@ -148,4 +157,8 @@ async function validate( zobject, resolver ) {
 	return errors;
 }
 
-module.exports = { validate };
+module.exports = {
+	runTypeValidator,
+	runValidationFunction,
+	validate
+};
