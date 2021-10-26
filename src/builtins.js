@@ -2,7 +2,7 @@
 
 const utils = require( '../function-schemata/javascript/src/utils' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
-const { isReference, isType, makeBoolean } = require( './utils.js' );
+const { createSchema, isReference, isType, makeBoolean } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const { makeResultEnvelope, makeTrue, makeFalse } = require( '../function-schemata/javascript/src/utils.js' );
 const { mutate } = require( './zobject.js' );
@@ -216,6 +216,21 @@ function BUILTIN_SAME_( Z86_1, Z86_2 ) {
 
 function BUILTIN_UNQUOTE_( Z99 ) {
 	return makeResultEnvelope( Z99.Z99K1, null );
+}
+
+function BUILTIN_SCHEMA_VALIDATOR_( Z1 ) {
+	// TODO(T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
+	const theSchema = createSchema( Z1 );
+
+	// TODO(T294289): Return validationStatus Z5s as Z22K2.
+	const theStatus = theSchema.validateStatus( Z1 );
+	let errors;
+	if ( theStatus.isValid() ) {
+		errors = [];
+	} else {
+		errors = [ theStatus.getZ5() ];
+	}
+	return makeResultEnvelope( utils.arrayToZ10( errors ), null );
 }
 
 function BUILTIN_EMPTY_VALIDATOR_( Z1 ) {
@@ -565,6 +580,8 @@ builtinFunctions.set( 'Z270', BUILTIN_EMPTY_VALIDATOR_ );
 builtinFunctions.set( 'Z280', BUILTIN_EMPTY_VALIDATOR_ );
 builtinFunctions.set( 'Z286', BUILTIN_EMPTY_VALIDATOR_ );
 builtinFunctions.set( 'Z299', BUILTIN_EMPTY_VALIDATOR_ );
+// TODO(T292260): Assign proper ZID; collapse into setValidatorsReferences below.
+builtinFunctions.set( 'Z931', BUILTIN_SCHEMA_VALIDATOR_ );
 
 /**
  * Retrieves an in-memory JS function implementing a builtin.
@@ -775,10 +792,17 @@ builtinReferences.set( 'Z899', createZ8(
 ) );
 // TODO(T292260): Z1010 and Z1910 are only provisional.
 builtinReferences.set( 'Z1010', createZ8(
-	'Z1910',
+	'Z1010',
 	[
 		createArgument( 'Z4', 'Z1010K1' )
 	], 'Z4', 'Z1910'
+) );
+// TODO(T292260): Assign proper ZID.
+builtinReferences.set( 'Z831', createZ8(
+	'Z831',
+	[
+		createArgument( 'Z1', 'Z831K1' )
+	], 'Z10', 'Z931'
 ) );
 
 ( function setValidatorsReferences() {

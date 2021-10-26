@@ -3,7 +3,7 @@
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const { makeResultEnvelope, Z10ToArray } = require( '../function-schemata/javascript/src/utils' );
 const { Composition, Evaluated, Implementation } = require( './implementation.js' );
-const { containsError, containsValue, createSchema, isArgumentReference, isFunctionCall, isType } = require( './utils.js' );
+const { containsError, containsValue, isArgumentReference, isFunctionCall } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
 
 let execute = null;
@@ -62,6 +62,19 @@ class EmptyFrame extends BaseFrame {
 	}
 }
 
+async function validateAsType( Z1, resolver, typeZObject = null ) {
+	// TODO(T294275): Retrieve Z2s for generic Z4s and call runValidationFunction
+	// here; this Z8 here is a nasty hack.
+	const Z8Reference = 'Z831';
+
+	if ( typeZObject !== null ) {
+		Z1 = { ...Z1 };
+		Z1.Z1K1 = typeZObject;
+	}
+	const { runValidationFunction } = require( './validation.js' );
+	return await runValidationFunction( Z8Reference, Z1, resolver );
+}
+
 class Frame extends BaseFrame {
 
 	constructor( lastFrame = null ) {
@@ -81,25 +94,37 @@ class Frame extends BaseFrame {
 		this.names_.set( name, ArgumentState.UNEVALUATED( argumentDict ) );
 	}
 
-	async processArgument( argumentDict, evaluatorUri, resolver ) {
+	async processArgument( argumentDict, evaluatorUri, resolver, doValidate ) {
+		// TODO: "doValidate" is a heavy-handed hack to avoid infinite
+		// recursion. Better solutions include
+		//  -   validating directly with schemata if the type is built-in,
+		//      otherwise using a Function;
+		//  -   validating directly with schemata in all the cases where
+		//      doValidate is currently false, otherwise using a Function;
+		//  -   caching and reusing the results of function calls
 		// TODO: If we could statically analyze type compatibility (i.e., "Z6
 		// can be a Z1"), we could perform validation before executing the
 		// function and exit early.
 		const argument = await mutate( argumentDict, [ 'argument' ], evaluatorUri, resolver, this.lastFrame_ );
 		await mutate( argument, [ 'Z1K1' ], evaluatorUri, resolver, this.lastFrame_ );
-		const declarationSchema = createSchema( { Z1K1: argumentDict.declaredType } );
-		const actualSchema = createSchema( argument );
-		if ( !declarationSchema.validate( argument ) ) {
-			return ArgumentState.ERROR(
-				normalError(
-					[ error.argument_type_mismatch ],
-					[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as declared type ' + JSON.stringify( argumentDict.declaredType ) ] ) );
-		}
-		if ( !actualSchema.validate( argument ) ) {
-			return ArgumentState.ERROR(
-				normalError(
-					[ error.argument_type_mismatch ],
-					[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as apparent type ' + JSON.toString( argument.Z1K1 ) ] ) );
+		if ( doValidate ) {
+			const declaredResult = await validateAsType(
+				argument, resolver, argumentDict.declaredType );
+			if ( Z10ToArray( declaredResult.Z22K1 ).length > 0 ) {
+				// TODO: Include Z5 information from validator in this error.
+				return ArgumentState.ERROR(
+					normalError(
+						[ error.argument_type_mismatch ],
+						[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as declared type ' + JSON.stringify( argumentDict.declaredType ) ] ) );
+			}
+			const actualResult = await validateAsType( argument, resolver );
+			if ( Z10ToArray( actualResult.Z22K1 ).length > 0 ) {
+				// TODO: Include Z5 information from validator in this error.
+				return ArgumentState.ERROR(
+					normalError(
+						[ error.argument_type_mismatch ],
+						[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as apparent type ' + JSON.toString( argument.Z1K1 ) ] ) );
+			}
 		}
 		return ArgumentState.EVALUATED( { name: argumentDict.name, argument: argument } );
 	}
@@ -111,16 +136,21 @@ class Frame extends BaseFrame {
 	 * @param {string} evaluatorUri
 	 * @param {ReferenceResolver} resolver
 	 * @param {boolean} lazily
+	 * @param {boolean} doValidate if false, then the argument will be executed
+	 *      without validating return type (if it's a Z7)
 	 * @return {Object} argument instantiated with given name in lowest enclosing scope
 	 * along with enclosing scope
 	 */
-	async retrieveArgument( argumentName, evaluatorUri, resolver, lazily = false ) {
+	async retrieveArgument(
+		argumentName, evaluatorUri, resolver, lazily = false,
+		doValidate = true ) {
 		let boundValue = this.names_.get( argumentName );
 
 		// Name does not exist in this scope; look in the previous one
 		// (or return null if no previous scope).
 		if ( boundValue === undefined ) {
-			return this.lastFrame_.retrieveArgument( argumentName, evaluatorUri, resolver, lazily );
+			return this.lastFrame_.retrieveArgument(
+				argumentName, evaluatorUri, resolver, lazily, doValidate );
 		}
 
 		// If bound value is in the ERROR or EVALUATED state, it has already
@@ -130,7 +160,7 @@ class Frame extends BaseFrame {
 			// is a Z7, the value must be evaluated before returning.
 			const argumentDict = boundValue.argumentDict;
 			const evaluatedArgument = await this.processArgument(
-				argumentDict, evaluatorUri, resolver );
+				argumentDict, evaluatorUri, resolver, doValidate );
 			this.names_.set( argumentName, evaluatedArgument );
 			boundValue = evaluatedArgument;
 		}
@@ -197,20 +227,14 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 		// Value returned; validate its return type..
 		const Z7K1 = await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope );
 		const returnType = await mutate( Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope );
-		let returnZID;
-		if ( isType( returnType ) ) {
-			returnZID = returnType.Z4K1.Z9K1;
-		} else {
-			returnZID = returnType.Z9K1;
-		}
-		// TODO(T292252): Should be returnType, not returnZID.
-		const returnValidator = createSchema( returnZID );
-		if ( returnZID !== 'Z10' && !returnValidator.validate( result.Z22K1 ) ) {
+		const returnTypeValidation = await validateAsType( result.Z22K1, resolver, returnType );
+		if ( Z10ToArray( returnTypeValidation.Z22K1 ).length > 0 ) {
+			// TODO: Include Z5 information from validator in this error.
 			return makeResultEnvelope(
 				null,
 				normalError(
 					[ error.argument_type_mismatch ],
-					[ 'Could not validate return value as type ' + returnZID ] ) );
+					[ 'Could not validate return value as type ' + JSON.stringify( returnType ) ] ) );
 		}
 	} else if ( thebits === 3 ) {
 		// Both value and error.
@@ -242,9 +266,10 @@ function selectImplementation( implementations ) {
  * @param {string} evaluatorUri URI of native code evaluator service
  * @param {ReferenceResolver} resolver handles resolution of Z9s
  * @param {Scope} oldScope current variable bindings
+ * @param {boolean} doValidate whether to validate types of arguments and return value
  * @return {Object} result of executing function call
  */
-execute = async function ( zobject, evaluatorUri, resolver, oldScope = null ) {
+execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doValidate = true ) {
 	const scope = new Frame( oldScope );
 
 	// Retrieve argument declarations and instantiations.
@@ -296,7 +321,8 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null ) {
 			instantiationPromises.push(
 				scope.retrieveArgument(
 					argumentDict.name, evaluatorUri, resolver,
-					implementation.hasLazyVariable( argumentDict.name )
+					implementation.hasLazyVariable( argumentDict.name ),
+					doValidate
 				) );
 		}
 		for ( const instantiation of await Promise.all( instantiationPromises ) ) {
@@ -324,7 +350,10 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null ) {
 		}
 	}
 
-	return await validateReturnType( result, zobject, evaluatorUri, resolver, scope );
+	if ( doValidate ) {
+		result = await validateReturnType( result, zobject, evaluatorUri, resolver, scope );
+	}
+	return result;
 };
 
 module.exports = { execute, getArgumentDicts };
