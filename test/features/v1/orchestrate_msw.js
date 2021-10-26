@@ -146,6 +146,20 @@ describe( 'orchestrate', function () {
 		readJSON( './test/features/v1/test_data/invalid_key_nonsequential_expected.json' )
 	);
 
+	test(
+		'argument type error: argument type does not match declared type',
+		readJSON( './test/features/v1/test_data/invalid_call_argument_not_of_declared_type.json' ),
+		null,
+		readJSON( './test/features/v1/test_data/invalid_call_argument_not_of_declared_type_expected.json' )
+	);
+
+	test(
+		'return value type error: return value type does not match declared type',
+		readJSON( './test/features/v1/test_data/invalid_call_return_value_not_of_declared_type.json' ),
+		null,
+		readJSON( './test/features/v1/test_data/invalid_call_return_value_not_of_declared_type_expected.json' )
+	);
+
 	{
 		cannedResponses.setEvaluator( 'Z1000', makeResultEnvelope( { Z1K1: 'Z6', Z6K1: '13' }, null ) );
 		test(

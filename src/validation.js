@@ -38,8 +38,7 @@ function getSchemaValidator( ZID, Z1 ) {
 function createValidatorZ7( Z8, ...Z1s ) {
 	const argumentDeclarations = Z10ToArray( Z8.Z8K1 );
 	if ( argumentDeclarations.length !== Z1s.length ) {
-		return {
-		};
+		// TODO: Return error here.
 	}
 	const result = {
 		Z1K1: {
@@ -61,10 +60,10 @@ function createValidatorZ7( Z8, ...Z1s ) {
 	return result;
 }
 
-async function runValidationFunction( Z8Reference, Z1, resolver ) {
+async function runValidationFunction( Z8Reference, resolver, ...Z1s ) {
 	const dereferenced = await resolver.dereference( [ Z8Reference ] );
 	const validatorZ8 = dereferenced[ Z8Reference ].Z2K2;
-	const validatorZ7 = createValidatorZ7( validatorZ8, Z1 );
+	const validatorZ7 = createValidatorZ7( validatorZ8, ...Z1s );
 	return await execute( validatorZ7, null, resolver, null, /* doValidate= */ false );
 }
 
@@ -81,7 +80,7 @@ async function runTypeValidator( Z1, typeZObject, resolver ) {
 
 	try {
 		// TODO: Catch errors when async functions reject.
-		const result = await runValidationFunction( validatorZid.Z9K1, Z1, resolver );
+		const result = await runValidationFunction( validatorZid.Z9K1, resolver, Z1 );
 		return Z10ToArray( result.Z22K1 );
 	} catch ( err ) {
 		console.error( err );

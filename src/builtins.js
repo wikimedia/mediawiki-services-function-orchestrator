@@ -218,9 +218,11 @@ function BUILTIN_UNQUOTE_( Z99 ) {
 	return makeResultEnvelope( Z99.Z99K1, null );
 }
 
-function BUILTIN_SCHEMA_VALIDATOR_( Z1 ) {
+function BUILTIN_SCHEMA_VALIDATOR_( quotedObject, quotedType ) {
 	// TODO(T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
-	const theSchema = createSchema( Z1 );
+	const Z1 = quotedObject.Z99K1;
+	const Z4 = quotedType.Z99K1;
+	const theSchema = createSchema( { Z1K1: Z4 } );
 
 	// TODO(T294289): Return validationStatus Z5s as Z22K2.
 	const theStatus = theSchema.validateStatus( Z1 );
@@ -384,7 +386,7 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, evaluatorUri, resolver
 	const languages = await Promise.all( Z11s.map( async ( Z11 ) => await mutate(
 		Z11,
 		[ 'Z11K1', 'Z60K1', 'Z6K1' ],
-		evaluatorUri, resolver, scope ) ) );
+		evaluatorUri, resolver, scope ).Z22K1 ) );
 
 	const seen = new Set();
 	for ( let i = 0; i < languages.length; ++i ) {
@@ -801,7 +803,8 @@ builtinReferences.set( 'Z1010', createZ8(
 builtinReferences.set( 'Z831', createZ8(
 	'Z831',
 	[
-		createArgument( 'Z1', 'Z831K1' )
+		createArgument( 'Z99', 'Z831K1' ),
+		createArgument( 'Z99', 'Z831K2' )
 	], 'Z10', 'Z931'
 ) );
 

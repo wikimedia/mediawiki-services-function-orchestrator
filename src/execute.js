@@ -3,7 +3,7 @@
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const { makeResultEnvelope, Z10ToArray } = require( '../function-schemata/javascript/src/utils' );
 const { Composition, Evaluated, Implementation } = require( './implementation.js' );
-const { containsError, containsValue, isArgumentReference, isFunctionCall } = require( './utils.js' );
+const { containsError, containsValue } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
 
 let execute = null;
@@ -23,9 +23,9 @@ class ArgumentState {
 		return result;
 	}
 
-	static EVALUATED( argument ) {
+	static EVALUATED( argumentDict ) {
 		const result = new ArgumentState();
-		result.argumentDict = argument;
+		result.argumentDict = argumentDict;
 		result.state = 'EVALUATED';
 		return result;
 	}
@@ -67,12 +67,11 @@ async function validateAsType( Z1, resolver, typeZObject = null ) {
 	// here; this Z8 here is a nasty hack.
 	const Z8Reference = 'Z831';
 
-	if ( typeZObject !== null ) {
-		Z1 = { ...Z1 };
-		Z1.Z1K1 = typeZObject;
+	if ( typeZObject === null ) {
+		typeZObject = Z1.Z1K1;
 	}
 	const { runValidationFunction } = require( './validation.js' );
-	return await runValidationFunction( Z8Reference, Z1, resolver );
+	return await runValidationFunction( Z8Reference, resolver, Z1, typeZObject );
 }
 
 class Frame extends BaseFrame {
@@ -105,18 +104,16 @@ class Frame extends BaseFrame {
 		// TODO: If we could statically analyze type compatibility (i.e., "Z6
 		// can be a Z1"), we could perform validation before executing the
 		// function and exit early.
-		const argument = await mutate( argumentDict, [ 'argument' ], evaluatorUri, resolver, this.lastFrame_ );
-		await mutate( argument, [ 'Z1K1' ], evaluatorUri, resolver, this.lastFrame_ );
+		const argumentEnvelope = await mutate( argumentDict, [ 'argument' ], evaluatorUri, resolver, this.lastFrame_ );
+		if ( containsError( argumentEnvelope ) ) {
+			return ArgumentState.ERROR( argumentEnvelope.Z22K2 );
+		}
+		const argument = argumentEnvelope.Z22K1;
+		const typeEnvelope = await mutate( argument, [ 'Z1K1' ], evaluatorUri, resolver, this.lastFrame_ );
+		if ( containsError( typeEnvelope ) ) {
+			return ArgumentState.ERROR( typeEnvelope.Z22K2 );
+		}
 		if ( doValidate ) {
-			const declaredResult = await validateAsType(
-				argument, resolver, argumentDict.declaredType );
-			if ( Z10ToArray( declaredResult.Z22K1 ).length > 0 ) {
-				// TODO: Include Z5 information from validator in this error.
-				return ArgumentState.ERROR(
-					normalError(
-						[ error.argument_type_mismatch ],
-						[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as declared type ' + JSON.stringify( argumentDict.declaredType ) ] ) );
-			}
 			const actualResult = await validateAsType( argument, resolver );
 			if ( Z10ToArray( actualResult.Z22K1 ).length > 0 ) {
 				// TODO: Include Z5 information from validator in this error.
@@ -126,7 +123,10 @@ class Frame extends BaseFrame {
 						[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as apparent type ' + JSON.toString( argument.Z1K1 ) ] ) );
 			}
 		}
-		return ArgumentState.EVALUATED( { name: argumentDict.name, argument: argument } );
+		return ArgumentState.EVALUATED( {
+			name: argumentDict.name,
+			argument: argument
+		} );
 	}
 
 	/**
@@ -145,24 +145,52 @@ class Frame extends BaseFrame {
 		argumentName, evaluatorUri, resolver, lazily = false,
 		doValidate = true ) {
 		let boundValue = this.names_.get( argumentName );
+		let doSetBoundValue = false;
 
 		// Name does not exist in this scope; look in the previous one
 		// (or return null if no previous scope).
 		if ( boundValue === undefined ) {
-			return this.lastFrame_.retrieveArgument(
+			doSetBoundValue = true;
+			boundValue = await this.lastFrame_.retrieveArgument(
 				argumentName, evaluatorUri, resolver, lazily, doValidate );
-		}
-
-		// If bound value is in the ERROR or EVALUATED state, it has already
-		// been evaluated and can be returned directly.
-		if ( boundValue.state === 'UNEVALUATED' && !lazily ) {
-			// If state is UNEVALUATED, evaluation is not lazy, and the argument
-			// is a Z7, the value must be evaluated before returning.
+		} else if ( boundValue.state === 'UNEVALUATED' && !lazily ) {
+			doSetBoundValue = true;
+			// If boundValue is in the ERROR or EVALUATED state, it has already
+			// been evaluated and can be returned directly.
+			// If state is UNEVALUATED and evaluation is not lazy, the argument
+			// may need to be evaluated before returning (e.g., if a Z9, Z18,
+			// or Z7).
 			const argumentDict = boundValue.argumentDict;
 			const evaluatedArgument = await this.processArgument(
 				argumentDict, evaluatorUri, resolver, doValidate );
-			this.names_.set( argumentName, evaluatedArgument );
-			boundValue = evaluatedArgument;
+			if ( evaluatedArgument.state === 'ERROR' ) {
+				boundValue = evaluatedArgument;
+			} else if ( evaluatedArgument.state === 'EVALUATED' ) {
+				const newDict = {
+					name: argumentName,
+					argument: evaluatedArgument.argumentDict.argument,
+					declaredType: argumentDict.declaredType
+				};
+				boundValue = ArgumentState.EVALUATED( newDict );
+				if ( doValidate ) {
+					const argument = newDict.argument;
+					const declaredType = newDict.declaredType;
+					const declaredResult = await validateAsType(
+						argument, resolver, declaredType );
+					if ( Z10ToArray( declaredResult.Z22K1 ).length > 0 ) {
+						// TODO: Include Z5 information from validator in this error.
+						boundValue = ArgumentState.ERROR(
+							normalError(
+								[ error.argument_type_mismatch ],
+								[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as declared type ' + JSON.stringify( declaredType ) ] ) );
+					}
+				}
+			} else {
+				// TODO: Throw error here, since this shouldn't happen.
+			}
+		}
+		if ( doSetBoundValue ) {
+			this.names_.set( argumentName, boundValue );
 		}
 		return boundValue;
 	}
@@ -180,13 +208,13 @@ class Frame extends BaseFrame {
  */
 async function getArgumentDicts( zobject, evaluatorUri, resolver, scope ) {
 	const argumentDicts = [];
-	const Z8K1 = await mutate( zobject, [ 'Z7K1', 'Z8K1' ], evaluatorUri, resolver, scope );
+	const Z8K1 = ( await mutate( zobject, [ 'Z7K1', 'Z8K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 	for ( const Z17 of Z10ToArray( Z8K1 ) ) {
 		const argumentDict = {};
-		const argumentName = await mutate( Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope );
+		const argumentName = ( await mutate( Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		argumentDict.name = argumentName;
 		// TODO: This is flaky to rely on; find a better way to determine type.
-		const declaredType = await mutate( Z17, [ 'Z17K1' ], evaluatorUri, resolver, scope );
+		const declaredType = ( await mutate( Z17, [ 'Z17K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		argumentDict.declaredType = declaredType;
 		let key = argumentName;
 		if ( zobject[ key ] === undefined ) {
@@ -225,8 +253,8 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 				[ 'Function evaluation returned an empty object.' ] ) );
 	} else if ( thebits === 2 ) {
 		// Value returned; validate its return type..
-		const Z7K1 = await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope );
-		const returnType = await mutate( Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope );
+		const Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
+		const returnType = ( await mutate( Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		const returnTypeValidation = await validateAsType( result.Z22K1, resolver, returnType );
 		if ( Z10ToArray( returnTypeValidation.Z22K1 ).length > 0 ) {
 			// TODO: Include Z5 information from validator in this error.
@@ -281,13 +309,13 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 
 	// Ensure Z8 (Z7K1) is dereferenced. Also ensure implementations are
 	// dereferenced (Z8K4 and all elements thereof).
-	const Z8K4 = await mutate( zobject, [ 'Z7K1', 'Z8K4' ], evaluatorUri, resolver, scope );
+	const Z8K4 = ( await mutate( zobject, [ 'Z7K1', 'Z8K4' ], evaluatorUri, resolver, scope ) ).Z22K1;
 	const implementations = [];
 	if ( Z8K4 !== undefined ) {
 		let root = Z8K4;
 		while ( root.Z10K1 !== undefined ) {
 			// TODO: Write test making sure that Z14s are resolved.
-			const Z10K1 = await mutate( root, [ 'Z10K1' ], evaluatorUri, resolver, scope );
+			const Z10K1 = ( await mutate( root, [ 'Z10K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 			implementations.push( Z10K1 );
 			root = root.Z10K2;
 		}
@@ -340,16 +368,9 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 	let result = await implementation.execute( zobject, argumentInstantiations );
 
 	// Execute result if implementation is lazily evaluated.
-	// TODO: Replace calls below with mutate.
 	if ( implementation.returnsLazy() ) {
-		const goodResult = await mutate( result, [ 'Z22K1' ], evaluatorUri, resolver, scope );
-		if ( isFunctionCall( goodResult ) || isArgumentReference( goodResult ) ) {
-			result = await execute( goodResult, evaluatorUri, resolver, scope );
-		} else {
-			result.Z22K1 = goodResult;
-		}
+		result = await mutate( result, [ 'Z22K1' ], evaluatorUri, resolver, scope );
 	}
-
 	if ( doValidate ) {
 		result = await validateReturnType( result, zobject, evaluatorUri, resolver, scope );
 	}

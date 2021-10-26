@@ -122,7 +122,7 @@ class Evaluated extends Implementation {
 		// to the function evaluator.
 		const Z7 = {};
 		Z7.Z1K1 = zobject.Z1K1;
-		Z7.Z7K1 = await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_ );
+		Z7.Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_ ) ).Z22K1;
 		for ( const argumentDict of argumentList ) {
 			Z7[ argumentDict.name ] = argumentDict.argument;
 		}
