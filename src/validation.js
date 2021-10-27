@@ -1,10 +1,10 @@
 'use strict';
 
 const traverse = require( 'json-schema-traverse' );
-const { Z10ToArray } = require( '../function-schemata/javascript/src/utils.js' );
-const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { execute } = require( './execute.js' );
 const { createSchema, getTypeZID, isRefOrString } = require( './utils.js' );
+const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
+const { Z10ToArray } = require( '../function-schemata/javascript/src/utils.js' );
 
 const validators = new Map();
 const dontValidate = new Set( [ 'Z18', 'Z9' ] );
@@ -104,9 +104,20 @@ async function runTypeValidator( Z1, typeZObject, resolver ) {
 async function getContainedTypeZObjects( zobject, resolver ) {
 	const containedTypes = new Set();
 
-	traverse( zobject, { allKeys: true }, ( Z1 ) =>
-		containedTypes.add( isRefOrString( Z1 ) ? Z1.Z1K1 : Z1.Z1K1.Z9K1 )
-	);
+	traverse( zobject, { allKeys: true }, function ( Z1 ) {
+		let key;
+		if ( isRefOrString( Z1 ) ) {
+			key = Z1.Z1K1;
+		} else if ( isRefOrString( Z1.Z1K1 ) ) {
+			key = Z1.Z1K1.Z9K1;
+		}
+
+		// TODO(T294960): key is undefined when type is user-defined/generic.
+		// Should such types be validated here?
+		if ( key !== undefined ) {
+			containedTypes.add( isRefOrString( Z1 ) ? Z1.Z1K1 : Z1.Z1K1.Z9K1 );
+		}
+	} );
 
 	return await resolver.dereference( containedTypes );
 }
@@ -129,6 +140,10 @@ async function validate( zobject, resolver ) {
 		// TODO(T292787): What about ZID collisions of user-defined/generic types?
 		// TODO(T292787): Consider just keying this on Z1K1.
 		const ZID = getTypeZID( Z1 );
+		// TODO(T294960): key is undefined when type is user-defined/generic.
+		if ( ZID === null ) {
+			return;
+		}
 		const schemaValidator = getSchemaValidator( Z1, ZID );
 		if ( schemaValidator === null ) {
 			return;

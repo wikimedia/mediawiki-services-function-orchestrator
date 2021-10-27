@@ -2,6 +2,7 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
+const fs = require( 'fs' );
 const normalize = require( '../../../function-schemata/javascript/src/normalize.js' );
 const { makeResultEnvelope, makeTrue, makeFalse } = require( '../../../function-schemata/javascript/src/utils.js' );
 const utils = require( '../../../src/utils.js' );
@@ -159,6 +160,30 @@ describe( 'orchestrate', function () {
 		null,
 		readJSON( './test/features/v1/test_data/invalid_call_return_value_not_of_declared_type_expected.json' )
 	);
+
+	{
+		cannedResponses.setWiki( 'Z10101', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z10101',
+			Z2K2: readJSON( './test/features/v1/test_data/Z10101.json' )
+		} );
+		cannedResponses.setWiki( 'Z101030', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z101030',
+			Z2K2: readJSON( './test/features/v1/test_data/Z10103-bad.json' )
+		} );
+		const genericIf = readJSON( './test/features/v1/test_data/generic-if.json' );
+		const expectedErrorString = fs.readFileSync( './test/features/v1/test_data/generic_type_validation_error.txt', { encoding: 'utf8' } ).replace( /\s*$/, '' );
+		const expectedError = readJSON( './test/features/v1/test_data/generic_type_validation.json' );
+		expectedError.Z5K1.Z506K1 = expectedErrorString;
+		genericIf.Z1802K2 = 'Z101030';
+		test(
+			'generic type validation error',
+			genericIf,
+			null,
+			expectedError
+		);
+	}
 
 	{
 		cannedResponses.setEvaluator( 'Z1000', makeResultEnvelope( { Z1K1: 'Z6', Z6K1: '13' }, null ) );
@@ -331,9 +356,11 @@ describe( 'orchestrate', function () {
 			Z2K1: 'Z10103',
 			Z2K2: readJSON( './test/features/v1/test_data/Z10103.json' )
 		} );
+		const genericIf = readJSON( './test/features/v1/test_data/generic-if.json' );
+		genericIf.Z1802K2 = 'Z10103';
 		test(
 			'generic types',
-			readJSON( './test/features/v1/test_data/generic-if.json' ),
+			genericIf,
 			readJSON( './test/features/v1/test_data/Z10103-expanded.json' ),
 			null
 		);

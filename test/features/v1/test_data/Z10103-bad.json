@@ -1,0 +1,18 @@
+{
+	"Z1K1": "Z10101",
+	"K1": "stand in the desert; near them, on the sand",
+	"K2": {
+		"Z1K1": "Z10101",
+		"K1": {
+			"Z1K1": "Z86",
+			"Z86K1": "h"
+		},
+		"K2": {
+			"Z1K1": "Z10101",
+			"K1": "alf sunk, a shattered visage lies, whose frown",
+			"K2": {
+				"Z1K1": "Z10101"
+			}
+		}
+	}
+}

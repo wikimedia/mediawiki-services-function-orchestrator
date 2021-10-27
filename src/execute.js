@@ -1,10 +1,10 @@
 'use strict';
 
-const { normalError, error } = require( '../function-schemata/javascript/src/error' );
-const { makeResultEnvelope, Z10ToArray } = require( '../function-schemata/javascript/src/utils' );
 const { Composition, Evaluated, Implementation } = require( './implementation.js' );
-const { containsError, containsValue } = require( './utils.js' );
+const { containsError, containsValue, isRefOrString } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
+const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
+const { makeResultEnvelope, Z10ToArray } = require( '../function-schemata/javascript/src/utils.js' );
 
 let execute = null;
 
@@ -70,8 +70,45 @@ async function validateAsType( Z1, resolver, typeZObject = null ) {
 	if ( typeZObject === null ) {
 		typeZObject = Z1.Z1K1;
 	}
+
+	// TODO: Make this more elegant--should be possible to avoid passing strings
+	// in the first place.
+	if ( typeof typeZObject === 'string' || typeZObject instanceof String ) {
+		typeZObject = { Z1K1: 'Z9', Z9K1: typeZObject };
+	}
 	const { runValidationFunction } = require( './validation.js' );
 	return await runValidationFunction( Z8Reference, resolver, Z1, typeZObject );
+}
+
+/**
+ * Traverses a ZObject and resolves all Z1K1s.
+ *
+ * @param {Object} Z1 object whose Z1K1s are to be resolved
+ * @param {string} evaluatorUri URI of native code evaluator service
+ * @param {ReferenceResolver} resolver handles resolution of Z9s
+ * @param {Scope} scope current variable bindings
+ * @return {ArgumentState|null} error state or null if no error encountered
+ */
+async function resolveTypes( Z1, evaluatorUri, resolver, scope ) {
+	const objectQueue = [ Z1 ];
+	while ( objectQueue.length > 0 ) {
+		const nextObject = objectQueue.shift();
+		if ( isRefOrString( nextObject ) ) {
+			continue;
+		}
+		const typeEnvelope = await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope );
+		if ( containsError( typeEnvelope ) ) {
+			return ArgumentState.ERROR( typeEnvelope.Z22K2 );
+		}
+		nextObject.Z1K1 = typeEnvelope.Z22K1;
+		for ( const key of Object.keys( nextObject ) ) {
+			if ( key === 'Z1K1' ) {
+				continue;
+			}
+			objectQueue.push( nextObject[ key ] );
+		}
+	}
+	return null;
 }
 
 class Frame extends BaseFrame {
@@ -101,17 +138,14 @@ class Frame extends BaseFrame {
 		//  -   validating directly with schemata in all the cases where
 		//      doValidate is currently false, otherwise using a Function;
 		//  -   caching and reusing the results of function calls
-		// TODO: If we could statically analyze type compatibility (i.e., "Z6
-		// can be a Z1"), we could perform validation before executing the
-		// function and exit early.
 		const argumentEnvelope = await mutate( argumentDict, [ 'argument' ], evaluatorUri, resolver, this.lastFrame_ );
 		if ( containsError( argumentEnvelope ) ) {
 			return ArgumentState.ERROR( argumentEnvelope.Z22K2 );
 		}
 		const argument = argumentEnvelope.Z22K1;
-		const typeEnvelope = await mutate( argument, [ 'Z1K1' ], evaluatorUri, resolver, this.lastFrame_ );
-		if ( containsError( typeEnvelope ) ) {
-			return ArgumentState.ERROR( typeEnvelope.Z22K2 );
+		const typeError = await resolveTypes( argument, evaluatorUri, resolver, this.lastFrame_ );
+		if ( typeError !== null ) {
+			return typeError;
 		}
 		if ( doValidate ) {
 			const actualResult = await validateAsType( argument, resolver );
@@ -120,7 +154,7 @@ class Frame extends BaseFrame {
 				return ArgumentState.ERROR(
 					normalError(
 						[ error.argument_type_mismatch ],
-						[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as apparent type ' + JSON.toString( argument.Z1K1 ) ] ) );
+						[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as apparent type ' + JSON.stringify( argument.Z1K1 ) ] ) );
 			}
 		}
 		return ArgumentState.EVALUATED( {
@@ -133,8 +167,8 @@ class Frame extends BaseFrame {
 	 * Ascend enclosing scopes to find instantiation of argument with provided name.
 	 *
 	 * @param {string} argumentName
-	 * @param {string} evaluatorUri
-	 * @param {ReferenceResolver} resolver
+	 * @param {string} evaluatorUri URI of native code evaluator service
+	 * @param {ReferenceResolver} resolver handles resolution of Z9s
 	 * @param {boolean} lazily
 	 * @param {boolean} doValidate if false, then the argument will be executed
 	 *      without validating return type (if it's a Z7)
@@ -201,9 +235,9 @@ class Frame extends BaseFrame {
  * Retrieve argument declarations and instantiations from a Z7.
  *
  * @param {Object} zobject
- * @param {string} evaluatorUri
- * @param {ReferenceResolver} resolver
- * @param {Scope} scope
+ * @param {string} evaluatorUri URI of native code evaluator service
+ * @param {ReferenceResolver} resolver handles resolution of Z9s
+ * @param {Scope} scope current variable bindings
  * @return {Array} list of objects containing argument names
  */
 async function getArgumentDicts( zobject, evaluatorUri, resolver, scope ) {
@@ -235,9 +269,9 @@ async function getArgumentDicts( zobject, evaluatorUri, resolver, scope ) {
  *
  * @param {Object} result
  * @param {Object} zobject
- * @param {string} evaluatorUri
- * @param {ReferenceResolver} resolver
- * @param {Scope} scope
+ * @param {string} evaluatorUri URI of native code evaluator service
+ * @param {ReferenceResolver} resolver handles resolution of Z9s
+ * @param {Scope} scope current variable bindings
  * @return {Object} zobject if validation succeeds; error tuple otherwise
  */
 async function validateReturnType( result, zobject, evaluatorUri, resolver, scope ) {
@@ -369,6 +403,7 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 
 	// Execute result if implementation is lazily evaluated.
 	if ( implementation.returnsLazy() ) {
+		// TODO: Call processArgument here (or at least resolveTypes)?
 		result = await mutate( result, [ 'Z22K1' ], evaluatorUri, resolver, scope );
 	}
 	if ( doValidate ) {

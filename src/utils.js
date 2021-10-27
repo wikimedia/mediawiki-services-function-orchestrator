@@ -1,6 +1,6 @@
 'use strict';
 
-const { keyForGeneric, SchemaFactory } = require( '../function-schemata/javascript/src/schema.js' );
+const { SchemaFactory, TypeKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
 const { isUserDefined } = require( '../function-schemata/javascript/src/utils' );
 
 const normalFactory = SchemaFactory.NORMAL();
@@ -88,9 +88,15 @@ function createSchema( Z1 ) {
 	try {
 		const Z1K1 = Z1.Z1K1;
 		if ( ( Z1K1.Z1K1.Z9K1 === 'Z4' ) && ( Z1K1.Z4K1.Z7K1 !== undefined ) ) {
-			const result = normalFactory.createUserDefined( [ Z1K1 ] );
-			const key = keyForGeneric( Z1K1 );
-			return result.get( key );
+			try {
+				const result = normalFactory.createUserDefined( [ Z1K1 ] );
+				const key = TypeKeyFactory.create( Z1K1 ).asString();
+				console.log( 'key is', key, 'and result is', result.get( key ) );
+				return result.get( key );
+			} catch ( err ) {
+				console.log( 'error is', err );
+				throw err;
+			}
 		}
 		if ( isType( Z1K1 ) ) {
 			ZID = Z1K1.Z4K1.Z9K1;
