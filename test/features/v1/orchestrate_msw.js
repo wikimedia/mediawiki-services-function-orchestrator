@@ -411,4 +411,35 @@ describe( 'orchestrate', function () {
 		);
 	}
 
+	{
+		cannedResponses.setWiki( 'Z88301', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z88301',
+			Z2K2: readJSON( './test/features/v1/test_data/Z88301.json' )
+		} );
+		cannedResponses.setWiki( 'Z88303', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z88303',
+			Z2K2: readJSON( './test/features/v1/test_data/Z88303.json' )
+		} );
+		cannedResponses.setWiki( 'Z88311', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z88311',
+			Z2K2: readJSON( './test/features/v1/test_data/Z88311.json' )
+		} );
+		cannedResponses.setWiki( 'Z88321', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z88321',
+			Z2K2: readJSON( './test/features/v1/test_data/Z88321.json' )
+		} );
+		const genericMap = readJSON( './test/features/v1/test_data/generic-map.json' );
+		genericMap.Z1802K2 = 'Z88303';
+		test(
+			'generic map',
+			genericMap,
+			readJSON( './test/features/v1/test_data/Z88303-expanded.json' ),
+			null
+		);
+	}
+
 } );

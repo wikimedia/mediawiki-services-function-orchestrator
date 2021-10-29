@@ -112,8 +112,7 @@ async function getContainedTypeZObjects( zobject, resolver ) {
 			key = Z1.Z1K1.Z9K1;
 		}
 
-		// TODO(T294960): key is undefined when type is user-defined/generic.
-		// Should such types be validated here?
+		// Key is undefined when type is user-defined/generic.
 		if ( key !== undefined ) {
 			containedTypes.add( isRefOrString( Z1 ) ? Z1.Z1K1 : Z1.Z1K1.Z9K1 );
 		}

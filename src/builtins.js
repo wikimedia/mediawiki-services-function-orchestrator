@@ -469,6 +469,13 @@ function Z3For( typeZ4, nameZ6 ) {
 	};
 }
 
+function Z9For( typeZID ) {
+	return {
+		Z1K1: 'Z9',
+		Z9K1: typeZID
+	};
+}
+
 /**
  * Wraps English label in a Z12/Multilingual String object.
  *
@@ -564,6 +571,44 @@ function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 	return makeResultEnvelope( Z4, null );
 }
 
+async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, evaluatorUri, resolver, scope ) {
+	const { execute } = require( './execute.js' );
+	const itsMe = {
+		Z1K1: Z9For( 'Z7' ),
+		Z7K1: Z9For( 'Z883' ),
+		Z883K1: keyType,
+		Z883K2: valueType
+	};
+	const pairFunctionCall = {
+		Z1K1: Z9For( 'Z7' ),
+		Z7K1: Z9For( 'Z882' ),
+		Z882K1: keyType,
+		Z882K2: valueType
+	};
+	const pairType = ( await execute( pairFunctionCall, null, resolver, null ) ).Z22K1;
+	const listFunctionCall = {
+		Z1K1: Z9For( 'Z7' ),
+		Z7K1: Z9For( 'Z881' ),
+		Z881K1: pairType
+	};
+	const listType = ( await execute( listFunctionCall, null, resolver, null ) ).Z22K1;
+	const Z4 = {
+		Z1K1: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z4'
+		},
+		Z4K1: itsMe,
+		Z4K2: utils.arrayToZ10( [
+			Z3For( listType, { Z1K1: 'Z6', Z6K1: 'K1' }, Z12For( 'elements' ) )
+		] ),
+		Z4K3: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z110'
+		}
+	};
+	return makeResultEnvelope( Z4, null );
+}
+
 const builtinFunctions = new Map();
 
 builtinFunctions.set( 'Z901', BUILTIN_ECHO_ );
@@ -580,11 +625,12 @@ builtinFunctions.set( 'Z922', BUILTIN_SECOND_ );
 builtinFunctions.set( 'Z944', BUILTIN_EQUALS_BOOLEAN_ );
 builtinFunctions.set( 'Z966', BUILTIN_EQUALS_STRING_ );
 builtinFunctions.set( 'Z968', BUILTIN_STRING_TO_CHARS_ );
+builtinFunctions.set( 'Z981', BUILTIN_GENERIC_LIST_TYPE_ );
 builtinFunctions.set( 'Z982', BUILTIN_GENERIC_PAIR_TYPE_ );
+builtinFunctions.set( 'Z983', BUILTIN_GENERIC_MAP_TYPE_ );
 builtinFunctions.set( 'Z986', BUILTIN_CHARS_TO_STRING_ );
 builtinFunctions.set( 'Z988', BUILTIN_SAME_ );
 builtinFunctions.set( 'Z999', BUILTIN_UNQUOTE_ );
-builtinFunctions.set( 'Z981', BUILTIN_GENERIC_LIST_TYPE_ );
 
 // validators
 builtinFunctions.set( 'Z201', BUILTIN_EMPTY_VALIDATOR_ );
@@ -813,12 +859,25 @@ builtinReferences.set( 'Z868', createZ8(
 		createArgument( 'Z6', 'Z868K1' )
 	], 'Z1', 'Z968'
 ) );
+builtinReferences.set( 'Z881', createZ8(
+	'Z881',
+	[
+		createArgument( 'Z4', 'Z881K1' )
+	], 'Z4', 'Z981'
+) );
 builtinReferences.set( 'Z882', createZ8(
 	'Z882',
 	[
 		createArgument( 'Z4', 'Z882K1' ),
 		createArgument( 'Z4', 'Z882K2' )
 	], 'Z4', 'Z982'
+) );
+builtinReferences.set( 'Z883', createZ8(
+	'Z883',
+	[
+		createArgument( 'Z4', 'Z883K1' ),
+		createArgument( 'Z4', 'Z883K2' )
+	], 'Z4', 'Z983'
 ) );
 builtinReferences.set( 'Z886', createZ8(
 	'Z886',
@@ -838,12 +897,6 @@ builtinReferences.set( 'Z899', createZ8(
 	[
 		createArgument( 'Z99', 'Z899K1' )
 	], 'Z1', 'Z999'
-) );
-builtinReferences.set( 'Z881', createZ8(
-	'Z881',
-	[
-		createArgument( 'Z4', 'Z881K1' )
-	], 'Z4', 'Z981'
 ) );
 builtinReferences.set( 'Z831', createZ8(
 	'Z831',

@@ -96,7 +96,8 @@ async function resolveTypes( Z1, evaluatorUri, resolver, scope ) {
 		if ( isRefOrString( nextObject ) ) {
 			continue;
 		}
-		const typeEnvelope = await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope );
+		const typeEnvelope = await mutate(
+			nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope );
 		if ( containsError( typeEnvelope ) ) {
 			return ArgumentState.ERROR( typeEnvelope.Z22K2 );
 		}
