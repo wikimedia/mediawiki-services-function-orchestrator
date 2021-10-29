@@ -491,7 +491,7 @@ function Z12For( name ) {
 	};
 }
 
-function BUILTIN_LIST_TYPE_( typeZ4 ) {
+function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
 	const itsMe = {
 		Z1K1: {
 			Z1K1: 'Z9',
@@ -526,6 +526,37 @@ function BUILTIN_LIST_TYPE_( typeZ4 ) {
 	return makeResultEnvelope( Z4, null );
 }
 
+function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
+	const itsMe = {
+		Z1K1: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z7'
+		},
+		Z7K1: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z882'
+		},
+		Z882K1: firstType,
+		Z882K2: secondType
+	};
+	const Z4 = {
+		Z1K1: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z4'
+		},
+		Z4K1: itsMe,
+		Z4K2: utils.arrayToZ10( [
+			Z3For( firstType, { Z1K1: 'Z6', Z6K1: 'K1' }, Z12For( 'first' ) ),
+			Z3For( secondType, { Z1K1: 'Z6', Z6K1: 'K2' }, Z12For( 'second' ) )
+		] ),
+		Z4K3: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z110'
+		}
+	};
+	return makeResultEnvelope( Z4, null );
+}
+
 const builtinFunctions = new Map();
 
 builtinFunctions.set( 'Z901', BUILTIN_ECHO_ );
@@ -542,10 +573,11 @@ builtinFunctions.set( 'Z922', BUILTIN_SECOND_ );
 builtinFunctions.set( 'Z944', BUILTIN_EQUALS_BOOLEAN_ );
 builtinFunctions.set( 'Z966', BUILTIN_EQUALS_STRING_ );
 builtinFunctions.set( 'Z968', BUILTIN_STRING_TO_CHARS_ );
+builtinFunctions.set( 'Z982', BUILTIN_GENERIC_PAIR_TYPE_ );
 builtinFunctions.set( 'Z986', BUILTIN_CHARS_TO_STRING_ );
 builtinFunctions.set( 'Z988', BUILTIN_SAME_ );
 builtinFunctions.set( 'Z999', BUILTIN_UNQUOTE_ );
-builtinFunctions.set( 'Z1910', BUILTIN_LIST_TYPE_ );
+builtinFunctions.set( 'Z1910', BUILTIN_GENERIC_LIST_TYPE_ );
 
 // validators
 builtinFunctions.set( 'Z201', BUILTIN_EMPTY_VALIDATOR_ );
@@ -772,6 +804,13 @@ builtinReferences.set( 'Z868', createZ8(
 	[
 		createArgument( 'Z6', 'Z868K1' )
 	], 'Z1', 'Z968'
+) );
+builtinReferences.set( 'Z882', createZ8(
+	'Z882',
+	[
+		createArgument( 'Z4', 'Z882K1' ),
+		createArgument( 'Z4', 'Z882K2' )
+	], 'Z4', 'Z982'
 ) );
 builtinReferences.set( 'Z886', createZ8(
 	'Z886',

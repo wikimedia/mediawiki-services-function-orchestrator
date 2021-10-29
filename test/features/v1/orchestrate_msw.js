@@ -173,13 +173,37 @@ describe( 'orchestrate', function () {
 			Z2K2: readJSON( './test/features/v1/test_data/Z10103-bad.json' )
 		} );
 		const genericIf = readJSON( './test/features/v1/test_data/generic-if.json' );
-		const expectedErrorString = fs.readFileSync( './test/features/v1/test_data/generic_type_validation_error.txt', { encoding: 'utf8' } ).replace( /\s*$/, '' );
+		const expectedErrorString = fs.readFileSync( './test/features/v1/test_data/generic_list_validation_error.txt', { encoding: 'utf8' } ).replace( /\s*$/, '' );
 		const expectedError = readJSON( './test/features/v1/test_data/generic_type_validation.json' );
 		expectedError.Z5K1.Z506K1 = expectedErrorString;
 		genericIf.Z1802K2 = 'Z101030';
 		test(
-			'generic type validation error',
+			'generic type validation error: bad list',
 			genericIf,
+			null,
+			expectedError
+		);
+	}
+
+	{
+		cannedResponses.setWiki( 'Z88201', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z88201',
+			Z2K2: readJSON( './test/features/v1/test_data/Z88201.json' )
+		} );
+		cannedResponses.setWiki( 'Z882030', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z882030',
+			Z2K2: readJSON( './test/features/v1/test_data/Z88203-bad.json' )
+		} );
+		const genericPair = readJSON( './test/features/v1/test_data/generic-pair.json' );
+		const expectedErrorString = fs.readFileSync( './test/features/v1/test_data/generic_pair_validation_error.txt', { encoding: 'utf8' } ).replace( /\s*$/, '' );
+		const expectedError = readJSON( './test/features/v1/test_data/generic_type_validation.json' );
+		expectedError.Z5K1.Z506K1 = expectedErrorString;
+		genericPair.Z1802K2 = 'Z882030';
+		test(
+			'generic type validation error: bad pair',
+			genericPair,
 			null,
 			expectedError
 		);
@@ -359,9 +383,30 @@ describe( 'orchestrate', function () {
 		const genericIf = readJSON( './test/features/v1/test_data/generic-if.json' );
 		genericIf.Z1802K2 = 'Z10103';
 		test(
-			'generic types',
+			'generic if',
 			genericIf,
 			readJSON( './test/features/v1/test_data/Z10103-expanded.json' ),
+			null
+		);
+	}
+
+	{
+		cannedResponses.setWiki( 'Z88201', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z88201',
+			Z2K2: readJSON( './test/features/v1/test_data/Z88201.json' )
+		} );
+		cannedResponses.setWiki( 'Z88203', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z88203',
+			Z2K2: readJSON( './test/features/v1/test_data/Z88203.json' )
+		} );
+		const genericPair = readJSON( './test/features/v1/test_data/generic-pair.json' );
+		genericPair.Z1802K2 = 'Z88203';
+		test(
+			'generic pair',
+			genericPair,
+			readJSON( './test/features/v1/test_data/Z88203-expanded.json' ),
 			null
 		);
 	}
