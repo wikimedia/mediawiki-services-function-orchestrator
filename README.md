@@ -12,6 +12,23 @@ caching the deterministic results of dereferencing and function execution.
 See also the [service-template-node](https://www.mediawiki.org/wiki/ServiceTemplateNode)
 documentation for information on how the orchestrator works as a service.
 
+## Local installation
+You should use one of the [Docker images](https://docker-registry.wikimedia.org/wikimedia/mediawiki-services-function-orchestrator/tags/)
+for local use, and you do not need to download the raw code unless you want to
+modify the orchestrator. If you're going to attempt that, remember to clone the
+repository with the `--recurse-submodules` flag:
+
+```
+git clone --recurse-submodules ssh://gerrit.wikimedia.org:29418/mediawiki/services/function-orchestrator
+```
+
+If you've already cloned the repository but forgot that flag, you can adjust
+your local check-out with:
+
+```
+git submodule update --init
+```
+
 <a href='the-code'></a>
 ## The Code
 The orchestrator's code is complicated. To a certain extent, this is
