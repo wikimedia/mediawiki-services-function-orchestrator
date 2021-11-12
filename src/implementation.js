@@ -123,6 +123,8 @@ class Evaluated extends Implementation {
 		const Z7 = {};
 		Z7.Z1K1 = zobject.Z1K1;
 		Z7.Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_ ) ).Z22K1;
+		// Return type may be a function call and must be resolved to allow for serialization.
+		Z7.Z7K1.Z8K2 = ( await mutate( zobject.Z7K1, [ 'Z8K2' ], this.evaluatorUri_, this.resolver_, this.scope_ ) ).Z22K1;
 		for ( const argumentDict of argumentList ) {
 			Z7[ argumentDict.name ] = argumentDict.argument;
 		}
