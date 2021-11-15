@@ -242,7 +242,13 @@ class Frame extends BaseFrame {
  */
 async function getArgumentDicts( zobject, evaluatorUri, resolver, scope ) {
 	const argumentDicts = [];
-	const Z8K1 = ( await mutate( zobject, [ 'Z7K1', 'Z8K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
+	const Z8K1Envelope = ( await mutate( zobject, [ 'Z7K1', 'Z8K1' ], evaluatorUri, resolver, scope ) );
+	// This usually happens because dereferencing can't occur during validation
+	// (and is expected).
+	if ( containsError( Z8K1Envelope ) ) {
+		return Z8K1Envelope;
+	}
+	const Z8K1 = Z8K1Envelope.Z22K1;
 	for ( const Z17 of Z10ToArray( Z8K1 ) ) {
 		const argumentDict = {};
 		const argumentName = ( await mutate( Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
@@ -336,6 +342,9 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 
 	// Retrieve argument declarations and instantiations.
 	const argumentDicts = await getArgumentDicts( zobject, evaluatorUri, resolver, scope );
+	if ( containsError( argumentDicts ) ) {
+		return argumentDicts;
+	}
 	// TODO: Check for Z22 results; these are error states.
 	for ( const argumentDict of argumentDicts ) {
 		scope.setArgument( argumentDict.name, argumentDict );

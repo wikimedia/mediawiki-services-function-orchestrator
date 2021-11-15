@@ -3,7 +3,7 @@
 const Bluebird = require( 'bluebird' );
 const builtins = require( './builtins.js' );
 const fetch = require( 'node-fetch' );
-const { isArgumentReference } = require( './utils.js' );
+const { containsError, isArgumentReference } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
 const { makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 
@@ -124,7 +124,11 @@ class Evaluated extends Implementation {
 		Z7.Z1K1 = zobject.Z1K1;
 		Z7.Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_ ) ).Z22K1;
 		// Return type may be a function call and must be resolved to allow for serialization.
-		Z7.Z7K1.Z8K2 = ( await mutate( zobject.Z7K1, [ 'Z8K2' ], this.evaluatorUri_, this.resolver_, this.scope_ ) ).Z22K1;
+		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.evaluatorUri_, this.resolver_, this.scope_, true );
+		if ( containsError( returnTypeEnvelope ) ) {
+			return returnTypeEnvelope;
+		}
+		Z7.Z7K1.Z8K2 = returnTypeEnvelope.Z22K1;
 		for ( const argumentDict of argumentList ) {
 			Z7[ argumentDict.name ] = argumentDict.argument;
 		}

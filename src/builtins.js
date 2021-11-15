@@ -2,7 +2,7 @@
 
 const utils = require( '../function-schemata/javascript/src/utils' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
-const { createSchema, isReference, isType, makeBoolean } = require( './utils.js' );
+const { containsError, createSchema, isReference, isType, makeBoolean } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const { makeResultEnvelope, makeTrue, makeFalse } = require( '../function-schemata/javascript/src/utils.js' );
 const { mutate } = require( './zobject.js' );
@@ -323,15 +323,20 @@ function BUILTIN_Z4_TYPE_VALIDATOR_( Z99 ) {
 	return makeResultEnvelope( utils.arrayToZ10( errors ), null );
 }
 
-async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, evaluatorUri, resolver, scope ) {
+async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
+	Z99, errors, evaluatorUri, resolver, scope ) {
 	const Z1 = Z99.Z99K1;
-	const errors = [];
-
 	const { getArgumentDicts } = require( './execute.js' );
-	const argumentDicts = await getArgumentDicts( Z1, evaluatorUri, resolver, scope );
+	const argumentDicts = await getArgumentDicts( Z1, evaluatorUri, resolver, scope, true );
+	if ( containsError( argumentDicts ) ) {
+		// This is probably because Z8K1 couldn't be dereferenced and is fine.
+		return;
+	}
 	const dictDict = {};
 	for ( const argumentDict of argumentDicts ) {
 		dictDict[ argumentDict.name ] = argumentDict;
+		const localKey = argumentDict.name.replace( /^Z\d+/, '' );
+		dictDict[ localKey ] = argumentDict;
 	}
 
 	const keysToSkip = new Set( [ 'Z1K1', 'Z7K1', 'Z7K2' ] );
@@ -375,7 +380,11 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, evaluatorUri, resolver, sc
 			);
 		}
 	}
+}
 
+async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, evaluatorUri, resolver, scope ) {
+	const errors = [];
+	await BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_( Z99, errors, evaluatorUri, resolver, scope );
 	return makeResultEnvelope( utils.arrayToZ10( errors ), null );
 }
 
