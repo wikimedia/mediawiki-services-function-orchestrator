@@ -508,11 +508,9 @@ function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
 		},
 		Z7K1: {
 			Z1K1: 'Z9',
-			// TODO(T292260): This ZID is only provisional.
-			Z9K1: 'Z1010'
+			Z9K1: 'Z881'
 		},
-		// TODO(T292260): This key must change along with the ZID.
-		Z1010K1: typeZ4
+		Z881K1: typeZ4
 	};
 	const Z4 = {
 		Z1K1: {
@@ -586,7 +584,7 @@ builtinFunctions.set( 'Z982', BUILTIN_GENERIC_PAIR_TYPE_ );
 builtinFunctions.set( 'Z986', BUILTIN_CHARS_TO_STRING_ );
 builtinFunctions.set( 'Z988', BUILTIN_SAME_ );
 builtinFunctions.set( 'Z999', BUILTIN_UNQUOTE_ );
-builtinFunctions.set( 'Z1910', BUILTIN_GENERIC_LIST_TYPE_ );
+builtinFunctions.set( 'Z981', BUILTIN_GENERIC_LIST_TYPE_ );
 
 // validators
 builtinFunctions.set( 'Z201', BUILTIN_EMPTY_VALIDATOR_ );
@@ -623,8 +621,9 @@ builtinFunctions.set( 'Z270', BUILTIN_EMPTY_VALIDATOR_ );
 builtinFunctions.set( 'Z280', BUILTIN_EMPTY_VALIDATOR_ );
 builtinFunctions.set( 'Z286', BUILTIN_EMPTY_VALIDATOR_ );
 builtinFunctions.set( 'Z299', BUILTIN_EMPTY_VALIDATOR_ );
-// TODO(T292260): Assign proper ZID; collapse into setValidatorsReferences below.
+// TODO: Collapse into setValidatorsReferences below.
 builtinFunctions.set( 'Z931', BUILTIN_SCHEMA_VALIDATOR_ );
+// TODO: What about Z932?
 
 /**
  * Retrieves an in-memory JS function implementing a builtin.
@@ -840,14 +839,12 @@ builtinReferences.set( 'Z899', createZ8(
 		createArgument( 'Z99', 'Z899K1' )
 	], 'Z1', 'Z999'
 ) );
-// TODO(T292260): Z1010 and Z1910 are only provisional.
-builtinReferences.set( 'Z1010', createZ8(
-	'Z1010',
+builtinReferences.set( 'Z881', createZ8(
+	'Z881',
 	[
-		createArgument( 'Z4', 'Z1010K1' )
-	], 'Z4', 'Z1910'
+		createArgument( 'Z4', 'Z881K1' )
+	], 'Z4', 'Z981'
 ) );
-// TODO(T292260): Assign proper ZID.
 builtinReferences.set( 'Z831', createZ8(
 	'Z831',
 	[
