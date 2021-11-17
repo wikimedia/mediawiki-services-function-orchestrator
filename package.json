@@ -50,7 +50,6 @@
 		"uuid": "^3.3.2"
 	},
 	"devDependencies": {
-		"ajv": "7.1.1",
 		"eslint-config-wikimedia": "0.20.0",
 		"eslint-plugin-jsdoc": "^30.6.2",
 		"eslint-plugin-json": "^2.1.2",
