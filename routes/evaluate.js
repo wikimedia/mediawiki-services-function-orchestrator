@@ -10,7 +10,7 @@ const getTestResults = require( '../src/performTest.js' );
  */
 const router = sUtil.router();
 
-/** ROUTE DECLARATIONS GO HERE **/
+/** ROUTE DECLARATIONS GO HERE */
 router.post( '/', async function ( req, res ) {
 	const input = await orchestrate( req.body );
 	res.json( input );

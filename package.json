@@ -50,8 +50,7 @@
 		"uuid": "3.4.0"
 	},
 	"devDependencies": {
-		"eslint-config-wikimedia": "0.20.0",
-		"eslint-plugin-jsdoc": "32.3.4",
+		"eslint-config-wikimedia": "0.21.0",
 		"eslint-plugin-json": "2.1.2",
 		"extend": "3.0.2",
 		"mocha": "5.2.0",
