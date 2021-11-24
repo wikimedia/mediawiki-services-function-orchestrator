@@ -3,9 +3,8 @@
 const Bluebird = require( 'bluebird' );
 const builtins = require( './builtins.js' );
 const fetch = require( 'node-fetch' );
-const { containsError, isArgumentReference } = require( './utils.js' );
+const { containsError } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
-const { makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 
 fetch.Promise = Bluebird;
 
@@ -159,19 +158,9 @@ class Composition extends Implementation {
 	}
 
 	async execute() {
-		if ( isArgumentReference( this.composition_ ) ) {
-			const retrievedArgument = await this.scope_.retrieveArgument(
-				this.composition_.Z18K1.Z6K1,
-				this.evaluatorUri_,
-				this.resolver_ );
-			if ( retrievedArgument.state === 'ERROR' ) {
-				return makeResultEnvelope( null, retrievedArgument.error );
-			}
-			return makeResultEnvelope( retrievedArgument.argumentDict.argument, null );
-		}
-		const { execute } = require( './execute.js' );
-		return await execute(
-			this.composition_, this.evaluatorUri_, this.resolver_, this.scope_ );
+		return await mutate(
+			{ dummyKey: this.composition_ }, [ 'dummyKey' ],
+			this.evaluatorUri_, this.resolver_, this.scope_ );
 	}
 
 }

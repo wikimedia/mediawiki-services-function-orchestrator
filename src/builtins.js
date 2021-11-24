@@ -267,7 +267,7 @@ function BUILTIN_EMPTY_VALIDATOR_( Z1 ) {
 
 /**
  * Validates the keys of a normal Z10/List. This functions looks for duplicate or non-sequential
- * keys and keys that don't follow the expected format of Z<identity>Kn.
+ * keys and keys that don't follow the expected format of (Z)?<identity>Kn.
  *
  * @param {Object} Z10 the Z10/List being validated.
  * @param {Function} key a function to get the key of a list element.
@@ -279,30 +279,31 @@ function arrayValidator( Z10, key, identity ) {
 	const keys = utils.convertZListToArray( Z10 ).map( key );
 	const messages = [];
 
-	let previous = 0;
 	const seen = new Set();
 	for ( let i = 0; i < keys.length; ++i ) {
-		const key = keys[ i ];
-		const expected = `${identity}K${previous + 1}`;
-
-		if ( !key.startsWith( identity ) ) {
-			messages.push( `Invalid key at index ${i}: string should start with ${identity}` );
+		const originalKey = keys[ i ];
+		let key = originalKey;
+		if ( utils.isGlobalKey( key ) ) {
+			if ( !originalKey.startsWith( identity ) ) {
+				messages.push( `Invalid key at index ${i}: string should start with ${identity}` );
+			}
+			key = utils.kidFromGlobalKey( key );
+		}
+		const expectedIndex = i + 1;
+		const actualIndex = Number( key.replace( 'K', '' ) );
+		if ( seen.has( originalKey ) ) {
+			messages.push( `Duplicated key at index ${i}: ${originalKey}` );
+		} else {
+			seen.add( originalKey );
 		}
 
-		if ( seen.has( key ) ) {
-			messages.push( `Duplicated key at index ${i}: ${key}` );
-		}
-
-		if ( key !== expected ) {
+		if ( actualIndex !== expectedIndex ) {
 			if ( i === 0 ) {
-				messages.push( `Invalid key at index ${i}: ${key} (should be ${identity}K1)` );
+				messages.push( `Invalid key at index ${i}: ${originalKey} (should be K1 or ${identity}K1)` );
 			} else {
-				messages.push( `Non-sequential key at index ${i}: ${key}` );
+				messages.push( `Non-sequential key at index ${i}: ${originalKey}` );
 			}
 		}
-
-		seen.add( key );
-		previous = Number( utils.kidFromGlobalKey( key ).replace( 'K', '' ) );
 	}
 
 	return makeResultEnvelope(
