@@ -365,10 +365,28 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 		}
 	}
 
-	// TODO: Throw an error if there are no implementations
+	if ( implementations === [] ) {
+		return makeResultEnvelope(
+			null,
+			normalError(
+				[ error.error_in_evaluation ],
+				[ 'Could not find any implementations for ' + zobject.Z7K1.Z8K5.Z9K1 + '.' ]
+			)
+		);
+	}
 
 	const implementationZObject = selectImplementation( implementations );
 	const implementation = Implementation.create( implementationZObject );
+
+	if ( implementation === null ) {
+		return makeResultEnvelope(
+			null,
+			normalError(
+				[ error.error_in_evaluation ],
+				[ 'Could not create an implementation for ' + zobject.Z7K1.Z8K5.Z9K1 + '.' ]
+			)
+		);
+	}
 
 	// Check corner case where evaluated function must be dereferenced.
 	// TODO: Clone ZObject; add only one implementation and dereference only that.

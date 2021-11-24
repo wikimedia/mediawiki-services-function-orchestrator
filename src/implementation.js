@@ -48,6 +48,10 @@ class Implementation {
 	 * @return {Implementation} the implementation
 	 */
 	static create( Z14 ) {
+		if ( typeof Z14 === 'undefined' ) {
+			return null;
+		}
+
 		if ( Z14.Z14K4 !== undefined ) {
 			// TODO: Switch all builtins to use Z9 instead of Z6
 			const ZID = Z14.Z14K4.Z6K1 || Z14.Z14K4.Z9K1;
