@@ -5,12 +5,12 @@ const { isUserDefined } = require( '../function-schemata/javascript/src/utils' )
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z1Validator = normalFactory.create( 'Z1' );
-const Z4Validator = normalFactory.create( 'Z4' );
-const Z6Validator = normalFactory.create( 'Z6' );
-const Z7Validator = normalFactory.create( 'Z7' );
-const Z9Validator = normalFactory.create( 'Z9' );
-const Z18Validator = normalFactory.create( 'Z18' );
-const Z23Validator = normalFactory.create( 'Z23' );
+const Z4Validator = normalFactory.create( 'Z4_literal' );
+const Z6Validator = normalFactory.create( 'Z6_literal' );
+const Z7Validator = normalFactory.create( 'Z7_backend_literal' );
+const Z9Validator = normalFactory.create( 'Z9_literal' );
+const Z18Validator = normalFactory.create( 'Z18_literal' );
+const Z23Validator = normalFactory.create( 'Z23' ); // Z23 is always literal
 
 /**
  * Validates a ZObject against the Type schema.
@@ -19,9 +19,7 @@ const Z23Validator = normalFactory.create( 'Z23' );
  * @return {bool} whether Z1 can validated as a Type
  */
 function isType( Z1 ) {
-	return ( Z4Validator.validate( Z1 ) &&
-		!( Z9Validator.validate( Z1 ) ) &&
-		!( Z18Validator.validate( Z1 ) ) );
+	return Z4Validator.validate( Z1 );
 }
 
 /**
@@ -43,8 +41,7 @@ function isReference( Z1 ) {
  * @return {bool} true if Z1 validates as either Z6 or Z7
  */
 function isRefOrString( Z1 ) {
-	return !Z18Validator.validate( Z1 ) &&
-		( Z6Validator.validate( Z1 ) || Z9Validator.validate( Z1 ) );
+	return Z6Validator.validate( Z1 ) || Z9Validator.validate( Z1 );
 }
 
 /**
@@ -54,11 +51,7 @@ function isRefOrString( Z1 ) {
  * @return {bool} whether Z1 can validated as a Function Call
  */
 function isFunctionCall( Z1 ) {
-	return (
-		Z7Validator.validate( Z1 ) &&
-		!( Z9Validator.validate( Z1 ) ) &&
-		!( Z18Validator.validate( Z1 ) )
-	);
+	return Z7Validator.validate( Z1 );
 }
 
 function createSchema( Z1 ) {
@@ -137,7 +130,7 @@ function isGenericType( Z1 ) {
  * @return {bool} true if Z1 validates as Z18
  */
 function isArgumentReference( Z1 ) {
-	return Z18Validator.validate( Z1 ) && !Z9Validator.validate( Z1 );
+	return Z18Validator.validate( Z1 );
 }
 
 /**
