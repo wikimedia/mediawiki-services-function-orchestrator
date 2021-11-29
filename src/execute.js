@@ -71,8 +71,8 @@ async function validateAsType( Z1, resolver, typeZObject = null ) {
 		typeZObject = Z1.Z1K1;
 	}
 
-	// TODO: Make this more elegant--should be possible to avoid passing strings
-	// in the first place.
+	// TODO(T292787): Make this more elegant--should be possible to avoid
+	// passing strings in the first place.
 	if ( typeof typeZObject === 'string' || typeZObject instanceof String ) {
 		typeZObject = { Z1K1: 'Z9', Z9K1: typeZObject };
 	}
@@ -132,7 +132,7 @@ class Frame extends BaseFrame {
 	}
 
 	async processArgument( argumentDict, evaluatorUri, resolver, doValidate ) {
-		// TODO: "doValidate" is a heavy-handed hack to avoid infinite
+		// TODO(T296675): "doValidate" is a heavy-handed hack to avoid infinite
 		// recursion. Better solutions include
 		//  -   validating directly with schemata if the type is built-in,
 		//      otherwise using a Function;
@@ -151,7 +151,7 @@ class Frame extends BaseFrame {
 		if ( doValidate ) {
 			const actualResult = await validateAsType( argument, resolver );
 			if ( Z10ToArray( actualResult.Z22K1 ).length > 0 ) {
-				// TODO: Include Z5 information from validator in this error.
+				// TODO(T296676): Include Z5 information from validator in this error.
 				return ArgumentState.ERROR(
 					normalError(
 						[ error.argument_type_mismatch ],
@@ -213,7 +213,7 @@ class Frame extends BaseFrame {
 					const declaredResult = await validateAsType(
 						argument, resolver, declaredType );
 					if ( Z10ToArray( declaredResult.Z22K1 ).length > 0 ) {
-						// TODO: Include Z5 information from validator in this error.
+						// TODO(T296676): Include Z5 information from validator in this error.
 						boundValue = ArgumentState.ERROR(
 							normalError(
 								[ error.argument_type_mismatch ],
@@ -221,7 +221,7 @@ class Frame extends BaseFrame {
 					}
 				}
 			} else {
-				// TODO: Throw error here, since this shouldn't happen.
+				// TODO(T296676): Throw error here, since this shouldn't happen.
 			}
 		}
 		if ( doSetBoundValue ) {
@@ -254,7 +254,7 @@ async function getArgumentDicts( zobject, evaluatorUri, resolver, scope ) {
 		const argumentDict = {};
 		const argumentName = ( await mutate( Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		argumentDict.name = argumentName;
-		// TODO: This is flaky to rely on; find a better way to determine type.
+		// TODO(T292787): This is flaky to rely on; find a better way to determine type.
 		const declaredType = ( await mutate( Z17, [ 'Z17K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		argumentDict.declaredType = declaredType;
 		let key = argumentName;
@@ -298,7 +298,7 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 		const returnType = ( await mutate( Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		const returnTypeValidation = await validateAsType( result.Z22K1, resolver, returnType );
 		if ( Z10ToArray( returnTypeValidation.Z22K1 ).length > 0 ) {
-			// TODO: Include Z5 information from validator in this error.
+			// TODO(T296676): Include Z5 information from validator in this error.
 			return makeResultEnvelope(
 				null,
 				normalError(
@@ -317,9 +317,9 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 }
 
 function selectImplementation( implementations ) {
-	// TODO: Implement heuristics to decide which implement to use. Implicitly,
-	// current heuristic is to use a builtin if available; otherwise, choose a
-	// random implementation and return that.
+	// TODO(T296677): Implement heuristics to decide which implementation to
+	// use. Implicitly, current heuristic is to use a builtin if available;
+	// otherwise, choose a random implementation and return that.
 	const builtin = implementations.find( ( impl ) => Boolean( impl.Z14K4 ) );
 	if ( builtin !== undefined ) {
 		return builtin;
@@ -346,7 +346,7 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 	if ( containsError( argumentDicts ) ) {
 		return argumentDicts;
 	}
-	// TODO: Check for Z22 results; these are error states.
+	// TODO(T296678): Check for Z22 results; these are error states.
 	for ( const argumentDict of argumentDicts ) {
 		scope.setArgument( argumentDict.name, argumentDict );
 	}
@@ -358,7 +358,7 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 	if ( Z8K4 !== undefined ) {
 		let root = Z8K4;
 		while ( root.Z10K1 !== undefined ) {
-			// TODO: Write test making sure that Z14s are resolved.
+			// TODO(T296679): Write test making sure that Z14s are resolved.
 			const Z10K1 = ( await mutate( root, [ 'Z10K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 			implementations.push( Z10K1 );
 			root = root.Z10K2;
@@ -389,7 +389,6 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 	}
 
 	// Check corner case where evaluated function must be dereferenced.
-	// TODO: Clone ZObject; add only one implementation and dereference only that.
 	if ( implementation instanceof Evaluated ) {
 		if ( Z8K4 !== undefined ) {
 			let root = Z8K4;
@@ -405,7 +404,6 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 	const argumentInstantiations = [];
 	if ( !( implementation instanceof Composition ) ) {
 		// Populate arguments from scope.
-		// TODO: Check for errors in retrieve arguments and return early.
 		const instantiationPromises = [];
 		for ( const argumentDict of argumentDicts ) {
 			instantiationPromises.push(
@@ -431,7 +429,6 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 
 	// Execute result if implementation is lazily evaluated.
 	if ( implementation.returnsLazy() ) {
-		// TODO: Call processArgument here (or at least resolveTypes)?
 		result = await mutate( result, [ 'Z22K1' ], evaluatorUri, resolver, scope );
 	}
 	if ( doValidate ) {

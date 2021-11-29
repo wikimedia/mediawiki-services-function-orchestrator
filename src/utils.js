@@ -43,7 +43,6 @@ function isReference( Z1 ) {
  * @return {bool} true if Z1 validates as either Z6 or Z7
  */
 function isRefOrString( Z1 ) {
-	// TODO: Prohibit Z18s.
 	return !Z18Validator.validate( Z1 ) &&
 		( Z6Validator.validate( Z1 ) || Z9Validator.validate( Z1 ) );
 }
@@ -97,7 +96,7 @@ function createSchema( Z1 ) {
 		} else if ( isReference( Z1K1 ) ) {
 			ZID = Z1K1.Z9K1;
 		} else if ( isFunctionCall( Z1K1 ) ) {
-			// TODO: Why would this happen?
+			// TODO(T292787): Why would this happen?
 		}
 		if ( ZID === null || isUserDefined( ZID ) ) {
 			// TODO(T291989): Do actual validation here.
@@ -111,6 +110,7 @@ function createSchema( Z1 ) {
 	return normalFactory.create( ZID );
 }
 
+// TODO(T296659): Use validatesAs* from function-schemata instead of is*.
 /**
  * Validates a ZObject.
  *
@@ -143,7 +143,7 @@ function isError( Z1 ) {
  * @return {bool} whether Z1 can validate as a generic type instantiation
  */
 function isGenericType( Z1 ) {
-	// TODO: Use the GENERIC schema.
+	// TODO(T296658): Use the GENERIC schema.
 	try {
 		if ( !isFunctionCall( Z1.Z1K1 ) ) {
 			return false;
@@ -182,7 +182,6 @@ function isArgumentReference( Z1 ) {
  * @return {bool} true if Z1 validates as Z23
  */
 function isNothing( Z1 ) {
-	// TODO: More precise canonical-form validation of Z23.
 	return Z23Validator.validate( Z1 ) || Z1 === 'Z23';
 }
 
@@ -206,7 +205,7 @@ function containsValue( pair ) {
 	return isZObject( pair.Z22K1 ) && !( isNothing( pair.Z22K1 ) );
 }
 
-// TODO: T282891
+// TODO(T282891): Replace with function-schemata version.
 function Z23( canonical = false ) {
 	if ( canonical ) {
 		return 'Z23';
@@ -214,7 +213,7 @@ function Z23( canonical = false ) {
 	return { Z1K1: 'Z9', Z9K1: 'Z23' };
 }
 
-// TODO: Replace uses of this with upstream makeResultEnvelope
+// TODO(T282891): Replace uses of this with upstream makeResultEnvelope
 // (which doesn't handle the third parameter)
 function makePair( goodResult = null, badResult = null, canonical = false ) {
 	let Z1K1;
@@ -267,7 +266,7 @@ function makeBoolean( truthy = false, canonical = false ) {
 	return zobject;
 }
 
-// TODO: This needs to generate an actual error instead of Z6s.
+// TODO(T292650): This needs to generate an actual error instead of Z6s.
 function generateError( errorString = 'An unknown error occurred' ) {
 	return {
 		Z1K1: {

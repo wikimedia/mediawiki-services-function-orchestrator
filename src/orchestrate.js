@@ -23,7 +23,7 @@ async function maybeValidate( zobject, doValidate, resolver ) {
 	if ( doValidate ) {
 		const errors = await validate( zobject, resolver );
 		if ( errors.length > 0 ) {
-			// TODO: Wrap errors in a Z5.
+			// TODO(T296681): Wrap errors in a Z5.
 			return makeResultEnvelope( null, arrayToZ10( errors ) );
 		}
 	}
@@ -72,8 +72,9 @@ async function orchestrate( input ) {
 		currentPair = makePair( zobject, null, /* canonicalize= */true );
 	}
 
-	// TODO: Receiving the evaluator and wiki URIs as parameters (especially a
-	// GET param!) is no good. Find a way to share config among services.
+	// TODO(T286752): Receiving the evaluator and wiki URIs as parameters
+	// (especially a GET param!) is no good. Find a way to share config among
+	// services.
 	const evaluatorUri = input.evaluatorUri || null;
 	const wikiUri = input.wikiUri || null;
 	const resolver = new ReferenceResolver( wikiUri );
@@ -81,7 +82,7 @@ async function orchestrate( input ) {
 
 	const callTuples = [
 		[ normalize, [], 'normalize' ],
-		// TODO: Dereference top-level object if it is a Z9?
+		// TODO(T296685): Dereference top-level object if it is a Z9?
 		[ Z7OrError, [], 'Z7OrError' ],
 		[ maybeValidate, [ doValidate, resolver ], 'maybeValidate' ],
 		[ execute, [ evaluatorUri, resolver ], 'execute' ]

@@ -40,7 +40,7 @@ function BUILTIN_IF_( antecedent, trueConsequent, falseConsequent ) {
 }
 
 function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
-	// TODO: Add test for error case.
+	// TODO(T296667): Add test for error case.
 	let goodResult = null, badResult = null;
 	const key = Z39.Z39K1.Z6K1;
 	if ( Z1[ key ] === undefined ) {
@@ -102,8 +102,8 @@ function abstractRecursive( Z10 ) {
 }
 
 function BUILTIN_ABSTRACT_( Z10 ) {
-	// TODO: Validate that List is a reified list, i.e. that all elements
-	// are Z22s.
+	// TODO(T296666): Validate that List is a reified list, i.e. that all
+	// elements are Pairs(Key, ZObject).
 	return makeResultEnvelope( abstractRecursive( Z10 ), null );
 }
 
@@ -194,7 +194,7 @@ function charsToStringInternal( Z10 ) {
 }
 
 function BUILTIN_CHARS_TO_STRING_( Z10 ) {
-	// TODO: Validate all members of Z10 are Z86.
+	// TODO(T294482): Validate input is a List(Z86).
 	return makeResultEnvelope(
 		{
 			Z1K1: 'Z6',
@@ -327,7 +327,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 	Z99, errors, evaluatorUri, resolver, scope ) {
 	const Z1 = Z99.Z99K1;
 	const { getArgumentDicts } = require( './execute.js' );
-	const argumentDicts = await getArgumentDicts( Z1, evaluatorUri, resolver, scope, true );
+	const argumentDicts = await getArgumentDicts( Z1, evaluatorUri, resolver, scope );
 	if ( containsError( argumentDicts ) ) {
 		// This is probably because Z8K1 couldn't be dereferenced and is fine.
 		return;
@@ -341,8 +341,8 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 
 	const keysToSkip = new Set( [ 'Z1K1', 'Z7K1', 'Z7K2' ] );
 
-	// TODO: Also check declared arguments that are absent from the Z7.
-	// TODO: Also check local keys.
+	// TODO(T296668): Also check declared arguments that are absent from the Z7.
+	// TODO(T296668): Also check local keys.
 	for ( const key of Object.keys( Z1 ) ) {
 		if ( keysToSkip.has( key ) ) {
 			continue;
@@ -359,7 +359,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 		}
 		const type = Z1[ key ].Z1K1.Z9K1 || Z1[ key ].Z1K1;
 		let declaredType = argumentDict.declaredType;
-		// TODO: Fix type semantics below; do something when declaredType is a Z4.
+		// TODO(T296669): Fix type semantics below; do something when declaredType is a Z4.
 		if ( isType( declaredType ) ) {
 			continue;
 		}
@@ -369,8 +369,8 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 
 		// Type mismatches for Z7, Z9, and Z18 will be caught at runtime.
 		const skippableTypes = new Set( [ 'Z18', 'Z9', 'Z7' ] );
-		// TODO: More intricate subtype semantics once we have generic types
-		// (just checking for Z1 is not sufficient).
+		// TODO(T296669): More intricate subtype semantics once we have generic
+		// types (just checking for Z1 is not sufficient).
 		if ( !( declaredType === type || declaredType === 'Z1' || skippableTypes.has( type ) ) ) {
 			errors.push(
 				normalError(
@@ -524,9 +524,6 @@ function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
 			Z1K1: 'Z9',
 			Z9K1: 'Z4'
 		},
-		// TODO: This could be helpful (easy to tell that something is a list)
-		// but blatantly incorrect. Should we pass the ZID of the generic type
-		// as a parameter?
 		Z4K1: itsMe,
 		Z4K2: utils.arrayToZ10( [
 			Z3For( typeZ4, { Z1K1: 'Z6', Z6K1: 'K1' }, Z12For( 'head' ) ),
@@ -622,6 +619,7 @@ builtinFunctions.set( 'Z912', BUILTIN_TAIL_ );
 builtinFunctions.set( 'Z913', BUILTIN_EMPTY_ );
 builtinFunctions.set( 'Z921', BUILTIN_FIRST_ );
 builtinFunctions.set( 'Z922', BUILTIN_SECOND_ );
+builtinFunctions.set( 'Z931', BUILTIN_SCHEMA_VALIDATOR_ );
 builtinFunctions.set( 'Z944', BUILTIN_EQUALS_BOOLEAN_ );
 builtinFunctions.set( 'Z966', BUILTIN_EQUALS_STRING_ );
 builtinFunctions.set( 'Z968', BUILTIN_STRING_TO_CHARS_ );
@@ -667,9 +665,6 @@ builtinFunctions.set( 'Z270', BUILTIN_EMPTY_VALIDATOR_ );
 builtinFunctions.set( 'Z280', BUILTIN_EMPTY_VALIDATOR_ );
 builtinFunctions.set( 'Z286', BUILTIN_EMPTY_VALIDATOR_ );
 builtinFunctions.set( 'Z299', BUILTIN_EMPTY_VALIDATOR_ );
-// TODO: Collapse into setValidatorsReferences below.
-builtinFunctions.set( 'Z931', BUILTIN_SCHEMA_VALIDATOR_ );
-// TODO: What about Z932?
 
 /**
  * Retrieves an in-memory JS function implementing a builtin.
@@ -695,7 +690,6 @@ lazyFunctions.set( 'Z902', [ 'Z802K2', 'Z802K3' ] );
  * @return {Array} an array of variables which are lazy for the given function
  */
 function getLazyVariables( ZID ) {
-	// TODO: Unify this representation in builtinFunctions.
 	let lazy = lazyFunctions.get( ZID );
 	if ( lazy === undefined ) {
 		lazy = [];
@@ -713,7 +707,6 @@ lazyReturns.add( 'Z902' );
  * @return {boolean} whether the function is lazy
  */
 function getLazyReturn( ZID ) {
-	// TODO: Unify this representation in builtinFunctions.
 	return lazyReturns.has( ZID );
 }
 
@@ -931,7 +924,6 @@ builtinReferences.set( 'Z831', createZ8(
  * @return {Object} a Z8 or null
  */
 function resolveBuiltinReference( ZID ) {
-	// TODO: Resolve all terminal references (especially Z40), NOT just Z7K1.
 	const result = builtinReferences.get( ZID );
 	if ( result === undefined ) {
 		return null;

@@ -28,7 +28,7 @@ function getSchemaValidator( ZID, Z1 ) {
 	} else {
 		validator = createSchema( Z1 );
 		if ( ZID !== null ) {
-			// TODO: Should never be null.
+			// TODO(T292787): Should never be null.
 			validators.set( ZID, validator );
 		}
 	}
@@ -38,7 +38,8 @@ function getSchemaValidator( ZID, Z1 ) {
 function createValidatorZ7( Z8, ...Z1s ) {
 	const argumentDeclarations = Z10ToArray( Z8.Z8K1 );
 	if ( argumentDeclarations.length !== Z1s.length ) {
-		// TODO: Return error here.
+		// TODO(T2926668): Call BUILTIN_FUNCTION_CALL_VALIDATOR_ on result to
+		// avoid argument mismatches.
 	}
 	const result = {
 		Z1K1: {
@@ -79,7 +80,7 @@ async function runTypeValidator( Z1, typeZObject, resolver ) {
 	const validatorZid = typeZObject.Z2K2.Z4K3;
 
 	try {
-		// TODO: Catch errors when async functions reject.
+		// TODO(T296681): Catch errors when async functions reject.
 		const result = await runValidationFunction( validatorZid.Z9K1, resolver, Z1 );
 		return Z10ToArray( result.Z22K1 );
 	} catch ( err ) {
@@ -148,12 +149,11 @@ async function validate( zobject, resolver ) {
 			return;
 		}
 
-		// TODO: Find a way to allow Boolean literals, e.g. "Z41"
 		if ( !schemaValidator.validate( Z1 ) ) {
 			errors.push(
 				normalError(
 					[ error.not_wellformed ],
-					// TODO: improve this message, maybe look at schemaValidator.errors
+					// TODO(T296676): Return validator Z5 errors.
 					[ 'Invalid schema for ' + ZID + ' with object: ' + JSON.stringify( Z1 ) ]
 				)
 			);

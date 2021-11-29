@@ -21,7 +21,7 @@ class ReferenceResolver {
 	 * @return {Object} An object mapping ZIDs to ZObjects
 	 */
 	async dereference( ZIDs ) {
-		// TODO: Why is the top-level resolveBuiltinReference undefined here?
+		// Importing here instead of at top-level to avoid circular reference.
 		const { resolveBuiltinReference } = require( './builtins.js' );
 		const unresolved = new Set( ZIDs );
 		const dereferenced = {};

@@ -115,7 +115,6 @@ describe( 'orchestration endpoint', function () {
 		null,
 		readJSON( './test/features/v1/test_data/error-not-fn.json' )
 	);
-	// TODO: what about quotes in strings, tabulators and new lines?
 
 	test(
 		'empty list',
@@ -184,21 +183,16 @@ describe( 'orchestration endpoint', function () {
 		readJSON( './test/features/v1/test_data/error-not-fn.json' )
 	);
 
-	// TODO: testString('empty', '', ...);
-
 	testString(
 		'messy string',
 		'"This is a [basic] complicated test {string}!"',
 		null,
 		readJSON( './test/features/v1/test_data/error-not-fn.json' )
 	);
-	// TODO: what about quotes in strings, tabulators and new lines?
 
 	testString( 'string empty list', '[]', null, readJSON( './test/features/v1/test_data/error-not-fn.json' ) );
 
 	testString( 'string singleton list', '["Test"]', null, readJSON( './test/features/v1/test_data/error-not-fn.json' ) );
-
-	// TODO: Clean up the test suites
 
 	// Tests function calls.
 	testFunctionCall(
@@ -323,8 +317,6 @@ describe( 'orchestration endpoint', function () {
 		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no tail.' } }
 	);
 
-	// TODO: Enable test using ./test/features/v1/test_data/Z913_Z13.json once
-	// Z13 validates as a Z10.
 	testFunctionCall(
 		'function call for Z813 with reference to Z913',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z813_empty_Z10.json' ) },
@@ -456,20 +448,5 @@ describe( 'orchestration endpoint', function () {
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/composition_arg_only_false.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
 	);
-
-	/*
-	* TODO: Enable when mocking works.
-	*/
-
-	// TODO: Enable when running evaluator at localhost:6927 as local E2E test.
-	// testFunctionCall(
-	//   'evaluated function call',
-	//     {
-	//       zobject: readJSON('./test/features/v1/test_data/evaluated.json'),
-	//       evaluatorUri: 'http://localhost:6927/en.wikipedia.org/v1/evaluate',
-	//       doValidate: false
-	//     },
-	//     { Z1K1: 'Z6', Z6K1: '13' }
-	//   );
 
 } );

@@ -53,7 +53,7 @@ class Implementation {
 		}
 
 		if ( Z14.Z14K4 !== undefined ) {
-			// TODO: Switch all builtins to use Z9 instead of Z6
+			// TODO(T296682): Switch all builtins to use Z9 instead of Z6
 			const ZID = Z14.Z14K4.Z6K1 || Z14.Z14K4.Z9K1;
 			const builtin = builtins.getFunction( ZID );
 			const lazyVariables = builtins.getLazyVariables( ZID );
@@ -90,8 +90,6 @@ class BuiltIn extends Implementation {
 	 * @return {Object} the result of calling this.functor_ with provided arguments
 	 */
 	async execute( zobject, argumentList ) {
-		// TODO: This is a kludge, since argument names may not necessarily be
-		// sorted. Find something akin to Python's **.
 		const keys = [];
 		const nameToArgument = new Map();
 		for ( const argumentDict of argumentList ) {
@@ -147,7 +145,7 @@ class Evaluated extends Implementation {
 				return result.json();
 			} )
 			.catch( ( problem ) => {
-				// TODO: Create an error here.
+				// TODO(T296683): Create an error here.
 				return problem;
 			} );
 	}

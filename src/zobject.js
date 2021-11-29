@@ -4,10 +4,6 @@ const { containsError, isArgumentReference, isFunctionCall, isGenericType, isRef
 const { isUserDefined, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 
-// TODO: Return an ArgumentState reporting errors if any form of dereferencing fails,
-// otherwise successful ArgumentState.
-// TODO: Collapse functionality shared with src/execute.js:Frame::processArgument
-// into a single function.
 async function mutate( zobject, keys, evaluatorUri, resolver, scope = null ) {
 	const { execute } = require( './execute.js' );
 	if ( keys.length <= 0 ) {
@@ -28,9 +24,9 @@ async function mutate( zobject, keys, evaluatorUri, resolver, scope = null ) {
 			nextObject = dereferenced.argumentDict.argument;
 			continue;
 		}
-		// TODO: isUserDefined call here is only an optimization/testing
-		// expedient; it would be better to pre-populate the cache with builtin
-		// types.
+		// TODO(T296686): isUserDefined call here is only an
+		// optimization/testing expedient; it would be better to pre-populate
+		// the cache with builtin types.
 		if ( isReference( nextObject ) && isUserDefined( nextObject.Z9K1 ) ) {
 			const refKey = nextObject.Z9K1;
 			const dereferenced = await resolver.dereference( [ refKey ] );
@@ -39,7 +35,6 @@ async function mutate( zobject, keys, evaluatorUri, resolver, scope = null ) {
 			continue;
 		}
 		if ( isFunctionCall( nextObject ) ) {
-			// TODO: Do we need to make the local keys global?
 			const Z22 = await execute( nextObject, evaluatorUri, resolver, scope );
 			if ( containsError( Z22 ) ) {
 				return Z22;
@@ -49,7 +44,6 @@ async function mutate( zobject, keys, evaluatorUri, resolver, scope = null ) {
 			continue;
 		}
 		if ( isGenericType( nextObject ) ) {
-			// TODO: Do we need to make the local keys global?
 			const Z4 = ( await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 			if ( !isType( Z4 ) ) {
 				return makeResultEnvelope(
