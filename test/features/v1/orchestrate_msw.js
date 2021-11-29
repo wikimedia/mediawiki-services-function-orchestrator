@@ -162,6 +162,20 @@ describe( 'orchestrate', function () {
 	);
 
 	{
+		cannedResponses.setWiki( 'Z12422', {
+			Z1K1: 'Z2',
+			Z2K1: 'Z12422',
+			Z2K2: readJSON( './test/features/v1/test_data/misnamed-argument-Z12422.json' )
+		} );
+		test(
+			'argument name error: misnamed argument',
+			readJSON( './test/features/v1/test_data/misnamed-argument.json' ),
+			null,
+			readJSON( './test/features/v1/test_data/invalid_call_misnamed_argument_expected.json' )
+		);
+	}
+
+	{
 		cannedResponses.setWiki( 'Z10101', {
 			Z1K1: 'Z2',
 			Z2K1: 'Z10101',

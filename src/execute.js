@@ -125,10 +125,10 @@ class Frame extends BaseFrame {
 	 * Add new name and argument to this frame.
 	 *
 	 * @param {string} name
-	 * @param {Object} argumentDict
+	 * @param {ArgumentState} argumentState an ArgumentState, what else?
 	 */
-	setArgument( name, argumentDict ) {
-		this.names_.set( name, ArgumentState.UNEVALUATED( argumentDict ) );
+	setArgument( name, argumentState ) {
+		this.names_.set( name, argumentState );
 	}
 
 	async processArgument( argumentDict, evaluatorUri, resolver, doValidate ) {
@@ -225,7 +225,7 @@ class Frame extends BaseFrame {
 			}
 		}
 		if ( doSetBoundValue ) {
-			this.names_.set( argumentName, boundValue );
+			this.setArgument( argumentName, boundValue );
 		}
 		return boundValue;
 	}
@@ -241,8 +241,8 @@ class Frame extends BaseFrame {
  * @param {Scope} scope current variable bindings
  * @return {Array} list of objects containing argument names
  */
-async function getArgumentDicts( zobject, evaluatorUri, resolver, scope ) {
-	const argumentDicts = [];
+async function getArgumentStates( zobject, evaluatorUri, resolver, scope ) {
+	const argumentStates = [];
 	const Z8K1Envelope = ( await mutate( zobject, [ 'Z7K1', 'Z8K1' ], evaluatorUri, resolver, scope ) );
 	// This usually happens because dereferencing can't occur during validation
 	// (and is expected).
@@ -250,6 +250,9 @@ async function getArgumentDicts( zobject, evaluatorUri, resolver, scope ) {
 		return Z8K1Envelope;
 	}
 	const Z8K1 = Z8K1Envelope.Z22K1;
+	const foundKeys = new Set( Object.keys( zobject ) );
+	foundKeys.delete( 'Z1K1' );
+	foundKeys.delete( 'Z7K1' );
 	for ( const Z17 of Z10ToArray( Z8K1 ) ) {
 		const argumentDict = {};
 		const argumentName = ( await mutate( Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
@@ -264,11 +267,21 @@ async function getArgumentDicts( zobject, evaluatorUri, resolver, scope ) {
 		}
 
 		const argument = zobject[ key ];
-		argumentDict.argument = argument;
-		argumentDicts.push( argumentDict );
+
+		if ( argument === undefined ) {
+			argumentStates.push( ArgumentState.ERROR( `Could not find argument ${argumentName}.` ) );
+		} else {
+			foundKeys.delete( key );
+			argumentDict.argument = argument;
+			argumentStates.push( ArgumentState.UNEVALUATED( argumentDict ) );
+		}
 	}
 
-	return argumentDicts;
+	for ( const extraKey of foundKeys ) {
+		argumentStates.push( ArgumentState.ERROR( `Invalid key for function call: ${extraKey}.` ) );
+	}
+
+	return argumentStates;
 }
 
 /**
@@ -342,13 +355,18 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 	const scope = new Frame( oldScope );
 
 	// Retrieve argument declarations and instantiations.
-	const argumentDicts = await getArgumentDicts( zobject, evaluatorUri, resolver, scope );
-	if ( containsError( argumentDicts ) ) {
-		return argumentDicts;
-	}
-	// TODO(T296678): Check for Z22 results; these are error states.
-	for ( const argumentDict of argumentDicts ) {
-		scope.setArgument( argumentDict.name, argumentDict );
+	const argumentStates = await getArgumentStates( zobject, evaluatorUri, resolver, scope );
+	for ( const argumentState of argumentStates ) {
+		if ( argumentState.state === 'ERROR' ) {
+			return makeResultEnvelope(
+				null,
+				normalError(
+					[ error.error_in_evaluation ],
+					[ argumentState.error ]
+				)
+			);
+		}
+		scope.setArgument( argumentState.argumentDict.name, argumentState );
 	}
 
 	// Ensure Z8 (Z7K1) is dereferenced. Also ensure implementations are
@@ -405,7 +423,8 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 	if ( !( implementation instanceof Composition ) ) {
 		// Populate arguments from scope.
 		const instantiationPromises = [];
-		for ( const argumentDict of argumentDicts ) {
+		for ( const argumentState of argumentStates ) {
+			const argumentDict = argumentState.argumentDict;
 			instantiationPromises.push(
 				scope.retrieveArgument(
 					argumentDict.name, evaluatorUri, resolver,
@@ -437,4 +456,4 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 	return result;
 };
 
-module.exports = { execute, getArgumentDicts };
+module.exports = { execute, getArgumentStates };

@@ -2,7 +2,7 @@
 
 const utils = require( '../function-schemata/javascript/src/utils' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
-const { containsError, createSchema, isReference, isType, makeBoolean } = require( './utils.js' );
+const { createSchema, isReference, isType, makeBoolean } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const { makeResultEnvelope, makeTrue, makeFalse } = require( '../function-schemata/javascript/src/utils.js' );
 const { mutate } = require( './zobject.js' );
@@ -326,20 +326,22 @@ function BUILTIN_Z4_TYPE_VALIDATOR_( Z99 ) {
 async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 	Z99, errors, evaluatorUri, resolver, scope ) {
 	const Z1 = Z99.Z99K1;
-	const { getArgumentDicts } = require( './execute.js' );
-	const argumentDicts = await getArgumentDicts( Z1, evaluatorUri, resolver, scope );
-	if ( containsError( argumentDicts ) ) {
-		// This is probably because Z8K1 couldn't be dereferenced and is fine.
-		return;
-	}
+	const { getArgumentStates } = require( './execute.js' );
+	const argumentStates = await getArgumentStates( Z1, evaluatorUri, resolver, scope, true );
 	const dictDict = {};
-	for ( const argumentDict of argumentDicts ) {
+	for ( const argumentState of argumentStates ) {
+		if ( argumentState.state === 'ERROR' ) {
+			// This is probably because Z8K1 couldn't be dereferenced and is
+			// fine.
+			return;
+		}
+		const argumentDict = argumentState.argumentDict;
 		dictDict[ argumentDict.name ] = argumentDict;
 		const localKey = argumentDict.name.replace( /^Z\d+/, '' );
 		dictDict[ localKey ] = argumentDict;
 	}
 
-	const keysToSkip = new Set( [ 'Z1K1', 'Z7K1', 'Z7K2' ] );
+	const keysToSkip = new Set( [ 'Z1K1', 'Z7K1' ] );
 
 	// TODO(T296668): Also check declared arguments that are absent from the Z7.
 	// TODO(T296668): Also check local keys.
