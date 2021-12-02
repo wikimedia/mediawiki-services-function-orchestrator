@@ -61,53 +61,20 @@ function isFunctionCall( Z1 ) {
 	);
 }
 
-function getTypeZID( Z1 ) {
-	let result = null;
-	if ( isRefOrString( Z1 ) ) {
-		result = Z1.Z1K1;
-	} else if ( isType( Z1.Z1K1 ) ) {
-		const Z4K1 = Z1.Z1K1.Z4K1;
-		if ( isReference( Z4K1 ) ) {
-			result = Z4K1.Z9K1;
-		} else if ( isFunctionCall( Z4K1 ) ) {
-			// TODO(T292787): Use identifyOfFunction from utils (or eliminate this function).
-			result = Z4K1.Z7K1.Z9K1;
-		} else {
-			// TODO(T292787): How could this happen?
-		}
-	} else {
-		result = Z1.Z1K1.Z9K1;
-	}
-	return result;
-}
-
 function createSchema( Z1 ) {
-	// TODO(T292787): Collapse this logic into getTypeZID.
-	let ZID = null;
-	try {
-		const Z1K1 = Z1.Z1K1;
-		if ( ( Z1K1.Z1K1.Z9K1 === 'Z4' ) && ( Z1K1.Z4K1.Z7K1 !== undefined ) ) {
-			const result = normalFactory.createUserDefined( [ Z1K1 ] );
-			const key = ZObjectKeyFactory.create( Z1K1 ).asString();
-			return result.get( key );
-		}
-		if ( isType( Z1K1 ) ) {
-			ZID = Z1K1.Z4K1.Z9K1;
-		} else if ( isReference( Z1K1 ) ) {
-			ZID = Z1K1.Z9K1;
-		} else if ( isFunctionCall( Z1K1 ) ) {
-			// TODO(T292787): Why would this happen?
-		}
-		if ( ZID === null || isUserDefined( ZID ) ) {
-			// TODO(T291989): Do actual validation here.
-		}
-	} catch ( err ) {
-		ZID = 'Z1';
+	if ( isRefOrString( Z1 ) ) {
+		return normalFactory.create( Z1.Z1K1 );
 	}
-	if ( ZID === null ) {
-		ZID = 'Z1';
+	const Z1K1 = Z1.Z1K1;
+	if ( isReference( Z1K1 ) ) {
+		if ( isUserDefined( Z1K1.Z9K1 ) ) {
+			throw new Error( `Tried to create schema for unrecognized ZID ${Z1K1.Z9K1}` );
+		}
+		return normalFactory.create( Z1K1.Z9K1 );
 	}
-	return normalFactory.create( ZID );
+	const result = normalFactory.createUserDefined( [ Z1K1 ] );
+	const key = ZObjectKeyFactory.create( Z1K1 ).asString();
+	return result.get( key );
 }
 
 // TODO(T296659): Use validatesAs* from function-schemata instead of is*.
@@ -300,7 +267,6 @@ module.exports = {
 	containsValue,
 	createSchema,
 	generateError,
-	getTypeZID,
 	isArgumentReference,
 	isError,
 	isFunctionCall,

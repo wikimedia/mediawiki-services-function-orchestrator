@@ -2,37 +2,32 @@
 
 const traverse = require( 'json-schema-traverse' );
 const { execute } = require( './execute.js' );
-const { createSchema, getTypeZID, isRefOrString } = require( './utils.js' );
+const { createSchema } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
+const { ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
 const { Z10ToArray } = require( '../function-schemata/javascript/src/utils.js' );
 
 const validators = new Map();
-const dontValidate = new Set( [ 'Z18', 'Z9' ] );
 
 /**
  * Returns a validator schema for the given ZID.
  *
- * @param {string} ZID type identifier of Z1
  * @param {Object} Z1 the type ZObject
  * @return {Schema} a fully-initialized Schema or null if unsupported.
  */
-function getSchemaValidator( ZID, Z1 ) {
-	// TODO(T286936): Figure out why non-sequential error pops with duplicate keys.
-	// TODO(T286939): Figure out why Z9 and Z18 validation doesn't work.
-	if ( dontValidate.has( ZID ) ) {
-		return null;
-	}
-	let validator;
-	if ( validators.has( ZID ) ) {
-		validator = validators.get( ZID );
+function getSchemaValidator( Z1 ) {
+	const result = {
+		typeKey: null,
+		schemaValidator: null
+	};
+	result.typeKey = ZObjectKeyFactory.create( Z1.Z1K1 );
+	const keyString = result.typeKey.asString();
+	if ( validators.has( keyString ) ) {
+		result.schemaValidator = validators.get( keyString );
 	} else {
-		validator = createSchema( Z1 );
-		if ( ZID !== null ) {
-			// TODO(T292787): Should never be null.
-			validators.set( ZID, validator );
-		}
+		result.schemaValidator = createSchema( Z1 );
 	}
-	return validator;
+	return result;
 }
 
 function createValidatorZ7( Z8, ...Z1s ) {
@@ -106,17 +101,8 @@ async function getContainedTypeZObjects( zobject, resolver ) {
 	const containedTypes = new Set();
 
 	traverse( zobject, { allKeys: true }, function ( Z1 ) {
-		let key;
-		if ( isRefOrString( Z1 ) ) {
-			key = Z1.Z1K1;
-		} else if ( isRefOrString( Z1.Z1K1 ) ) {
-			key = Z1.Z1K1.Z9K1;
-		}
-
-		// Key is undefined when type is user-defined/generic.
-		if ( key !== undefined ) {
-			containedTypes.add( isRefOrString( Z1 ) ? Z1.Z1K1 : Z1.Z1K1.Z9K1 );
-		}
+		const key = ZObjectKeyFactory.create( Z1.Z1K1 ).asString();
+		containedTypes.add( key );
 	} );
 
 	return await resolver.dereference( containedTypes );
@@ -137,28 +123,35 @@ async function validate( zobject, resolver ) {
 	const ZObjectTypes = await getContainedTypeZObjects( zobject, resolver );
 
 	traverse( zobject, { allKeys: true }, ( Z1 ) => {
-		// TODO(T292787): What about ZID collisions of user-defined/generic types?
-		// TODO(T292787): Consider just keying this on Z1K1.
-		const ZID = getTypeZID( Z1 );
-		// TODO(T294960): key is undefined when type is user-defined/generic.
-		if ( ZID === null ) {
+		let validatorTuple;
+		try {
+			validatorTuple = getSchemaValidator( Z1 );
+		} catch ( error ) {
+			errors.push(
+				normalError(
+					[ error.zid_not_found ],
+					[ error.message ] ) );
 			return;
 		}
-		const schemaValidator = getSchemaValidator( Z1, ZID );
+		const {
+			typeKey,
+			schemaValidator
+		} = validatorTuple;
 		if ( schemaValidator === null ) {
 			return;
 		}
-
 		if ( !schemaValidator.validate( Z1 ) ) {
 			errors.push(
 				normalError(
 					[ error.not_wellformed ],
 					// TODO(T296676): Return validator Z5 errors.
-					[ 'Invalid schema for ' + ZID + ' with object: ' + JSON.stringify( Z1 ) ]
+					[ 'Could not validate object: ' + JSON.stringify( Z1 ) ]
 				)
 			);
 		} else {
-			validatorPromises.push( runTypeValidator( Z1, ZObjectTypes[ ZID ], resolver ) );
+			validatorPromises.push(
+				runTypeValidator( Z1, ZObjectTypes[ typeKey.asString() ], resolver )
+			);
 		}
 	} );
 
