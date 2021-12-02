@@ -232,6 +232,13 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
+		'function call for Z903 (value by key) with bad key',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z903_bad_key.json' ) },
+		null,
+		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z507', Z507K1: 'Object did not contain key "Z10K5"' } }
+	);
+
+	testFunctionCall(
 		'function call for Z805 with reference to Z905',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z805.json' ) },
 		readJSON( './test/features/v1/test_data/Z905_expected.json' )
