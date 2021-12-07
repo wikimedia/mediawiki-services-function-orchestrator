@@ -5,7 +5,7 @@ const { strictEqual } = require( 'assert' );
 const assert = require( '../../utils/assert.js' );
 const Server = require( '../../utils/server.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-const { getMissingZ5 } = require( '../../../function-schemata/javascript/test/util' );
+const { getMissingZ5 } = require( '../../../function-schemata/javascript/test/testUtils.js' );
 const utils = require( '../../../src/utils.js' );
 const { readJSON } = require( '../../utils/read-json.js' );
 

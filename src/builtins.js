@@ -281,7 +281,7 @@ function arrayValidator( Z10, key, identity ) {
 		}
 
 		seen.add( key );
-		previous = Number( utils.kid_from_global_key( key ).replace( 'K', '' ) );
+		previous = Number( utils.kidFromGlobalKey( key ).replace( 'K', '' ) );
 	}
 
 	return makeResultEnvelope(

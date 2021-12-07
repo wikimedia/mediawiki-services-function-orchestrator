@@ -1,6 +1,6 @@
 'use strict';
 
-const { SchemaFactory, TypeKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
+const { SchemaFactory, ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
 const { isUserDefined } = require( '../function-schemata/javascript/src/utils' );
 
 const normalFactory = SchemaFactory.NORMAL();
@@ -88,7 +88,7 @@ function createSchema( Z1 ) {
 		const Z1K1 = Z1.Z1K1;
 		if ( ( Z1K1.Z1K1.Z9K1 === 'Z4' ) && ( Z1K1.Z4K1.Z7K1 !== undefined ) ) {
 			const result = normalFactory.createUserDefined( [ Z1K1 ] );
-			const key = TypeKeyFactory.create( Z1K1 ).asString();
+			const key = ZObjectKeyFactory.create( Z1K1 ).asString();
 			return result.get( key );
 		}
 		if ( isType( Z1K1 ) ) {
