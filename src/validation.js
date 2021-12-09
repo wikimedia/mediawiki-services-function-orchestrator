@@ -88,7 +88,7 @@ async function runTypeValidator( Z1, typeZObject, resolver ) {
 		return [
 			normalError(
 				[ error.zid_not_found ],
-				[ `Builtin validator "${validatorZid.Z9K1}" not found for "${typeZObject.Z2K1.Z9K1}"` ]
+				[ `Builtin validator "${validatorZid.Z9K1}" not found for "${typeZObject.Z2K1.Z6K1}"` ]
 			)
 		];
 	}

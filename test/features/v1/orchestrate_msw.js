@@ -164,7 +164,7 @@ describe( 'orchestrate', function () {
 	{
 		cannedResponses.setWiki( 'Z12422', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z12422',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12422' },
 			Z2K2: readJSON( './test/features/v1/test_data/misnamed-argument-Z12422.json' )
 		} );
 		test(
@@ -178,7 +178,7 @@ describe( 'orchestrate', function () {
 	{
 		cannedResponses.setWiki( 'Z12422', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z12422',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12422' },
 			Z2K2: readJSON( './test/features/v1/test_data/misnamed-argument-Z12422.json' )
 		} );
 		test(
@@ -192,12 +192,12 @@ describe( 'orchestrate', function () {
 	{
 		cannedResponses.setWiki( 'Z10101', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z10101',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10101' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z10101.json' )
 		} );
 		cannedResponses.setWiki( 'Z101030', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z101030',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z101030' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z10103-bad.json' )
 		} );
 		const genericIf = readJSON( './test/features/v1/test_data/generic-if.json' );
@@ -216,12 +216,12 @@ describe( 'orchestrate', function () {
 	{
 		cannedResponses.setWiki( 'Z88201', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z88201',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88201' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88201.json' )
 		} );
 		cannedResponses.setWiki( 'Z882030', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z882030',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z882030' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88203-bad.json' )
 		} );
 		const genericPair = readJSON( './test/features/v1/test_data/generic-pair.json' );
@@ -400,12 +400,12 @@ describe( 'orchestrate', function () {
 	{
 		cannedResponses.setWiki( 'Z10101', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z10101',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10101' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z10101.json' )
 		} );
 		cannedResponses.setWiki( 'Z10103', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z10103',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10103' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z10103.json' )
 		} );
 		const genericIf = readJSON( './test/features/v1/test_data/generic-if.json' );
@@ -421,12 +421,12 @@ describe( 'orchestrate', function () {
 	{
 		cannedResponses.setWiki( 'Z88201', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z88201',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88201' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88201.json' )
 		} );
 		cannedResponses.setWiki( 'Z88203', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z88203',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88203' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88203.json' )
 		} );
 		const genericPair = readJSON( './test/features/v1/test_data/generic-pair.json' );
@@ -442,22 +442,22 @@ describe( 'orchestrate', function () {
 	{
 		cannedResponses.setWiki( 'Z88301', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z88301',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88301' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88301.json' )
 		} );
 		cannedResponses.setWiki( 'Z88303', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z88303',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88303' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88303.json' )
 		} );
 		cannedResponses.setWiki( 'Z88311', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z88311',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88311' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88311.json' )
 		} );
 		cannedResponses.setWiki( 'Z88321', {
 			Z1K1: 'Z2',
-			Z2K1: 'Z88321',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88321' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88321.json' )
 		} );
 		const genericMap = readJSON( './test/features/v1/test_data/generic-map.json' );

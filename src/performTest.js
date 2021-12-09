@@ -87,9 +87,9 @@ async function getTestResults( data ) {
 		zTester
 	) {
 		const payload = {
-			zFunctionId: zFunction.Z2K1.Z9K1,
-			zImplementationId: zImplementation.Z2K1.Z9K1,
-			zTesterId: zTester.Z2K1.Z9K1,
+			zFunctionId: zFunction.Z2K1.Z6K1,
+			zImplementationId: zImplementation.Z2K1.Z6K1,
+			zTesterId: zTester.Z2K1.Z6K1,
 			validationResponse: null
 		};
 
