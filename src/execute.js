@@ -247,7 +247,7 @@ async function getArgumentStates( zobject, evaluatorUri, resolver, scope ) {
 	// This usually happens because dereferencing can't occur during validation
 	// (and is expected).
 	if ( containsError( Z8K1Envelope ) ) {
-		return Z8K1Envelope;
+		return [ ArgumentState.ERROR( 'Could not dereference Z8K1' ) ];
 	}
 	const Z8K1 = Z8K1Envelope.Z22K1;
 	const foundKeys = new Set( Object.keys( zobject ) );
