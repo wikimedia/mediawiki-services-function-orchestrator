@@ -2,7 +2,7 @@
 
 const utils = require( '../function-schemata/javascript/src/utils' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
-const { createSchema, isReference, isType, makeBoolean } = require( './utils.js' );
+const { createSchema, isReference, isType, makeBoolean, traverseZ10 } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const { makeResultEnvelope, makeTrue, makeFalse } = require( '../function-schemata/javascript/src/utils.js' );
 const { mutate } = require( './zobject.js' );
@@ -218,10 +218,17 @@ function BUILTIN_UNQUOTE_( Z99 ) {
 	return makeResultEnvelope( Z99.Z99K1, null );
 }
 
-function BUILTIN_SCHEMA_VALIDATOR_( quotedObject, quotedType ) {
+async function BUILTIN_SCHEMA_VALIDATOR_(
+	quotedObject, quotedType, evaluatorUri, resolver, scope ) {
 	// TODO(T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
 	const Z1 = quotedObject.Z99K1;
 	const Z4 = quotedType.Z99K1;
+
+	// Ensure all internal type references are resolved.
+	// TODO(T297904): Also need to resolve generic types.
+	await traverseZ10( Z4.Z4K2, async function ( Z3Tail ) {
+		await mutate( Z3Tail, [ 'Z10K1', 'Z3K1' ], evaluatorUri, resolver, scope );
+	} );
 	const theSchema = createSchema( { Z1K1: Z4 } );
 
 	// TODO(T294289): Return validationStatus Z5s as Z22K2.
@@ -310,16 +317,6 @@ function BUILTIN_Z4_TYPE_VALIDATOR_( Z99 ) {
 			Z1.Z4K1.Z9K1
 		)
 	);
-
-	if ( Z1.Z4K3.Z8K2.Z9K1 !== 'Z10' ) {
-		errors.push(
-			normalError(
-				[ error.not_wellformed ],
-				[ 'Invalid return type for validator: should be Z10' ]
-			)
-		);
-	}
-
 	return makeResultEnvelope( utils.arrayToZ10( errors ), null );
 }
 

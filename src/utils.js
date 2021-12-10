@@ -72,6 +72,7 @@ function createSchema( Z1 ) {
 		}
 		return normalFactory.create( Z1K1.Z9K1 );
 	}
+
 	const result = normalFactory.createUserDefined( [ Z1K1 ] );
 	const key = ZObjectKeyFactory.create( Z1K1 ).asString();
 	return result.get( key );
@@ -262,6 +263,17 @@ function generateError( errorString = 'An unknown error occurred' ) {
 	};
 }
 
+async function traverseZ10( Z10, callback ) {
+	let tail = Z10;
+	if ( tail === undefined ) {
+		return;
+	}
+	while ( tail.Z10K1 !== undefined ) {
+		await callback( tail );
+		tail = tail.Z10K2;
+	}
+}
+
 module.exports = {
 	containsError,
 	containsValue,
@@ -277,5 +289,6 @@ module.exports = {
 	isType,
 	makeBoolean,
 	makePair,
+	traverseZ10,
 	Z23
 };

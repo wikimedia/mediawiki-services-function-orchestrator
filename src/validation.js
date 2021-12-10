@@ -21,12 +21,14 @@ function getSchemaValidator( Z1 ) {
 		schemaValidator: null
 	};
 	result.typeKey = ZObjectKeyFactory.create( Z1.Z1K1 );
-	const keyString = result.typeKey.asString();
-	if ( validators.has( keyString ) ) {
-		result.schemaValidator = validators.get( keyString );
-	} else {
-		result.schemaValidator = createSchema( Z1 );
+	if ( result.typeKey.type() === 'GenericTypeKey' ) {
+		return result;
 	}
+	const keyString = result.typeKey.asString();
+	if ( !validators.has( keyString ) ) {
+		validators.set( keyString, createSchema( Z1 ) );
+	}
+	result.schemaValidator = validators.get( keyString );
 	return result;
 }
 
@@ -101,11 +103,16 @@ async function getContainedTypeZObjects( zobject, resolver ) {
 	const containedTypes = new Set();
 
 	traverse( zobject, { allKeys: true }, function ( Z1 ) {
-		const key = ZObjectKeyFactory.create( Z1.Z1K1 ).asString();
-		containedTypes.add( key );
+		const typeKey = ZObjectKeyFactory.create( Z1.Z1K1 );
+		const key = typeKey.asString();
+		// TODO(T297717): We should add other types to the set, not just builtins.
+		if ( typeKey.type() === 'SimpleTypeKey' ) {
+			containedTypes.add( key );
+		}
 	} );
 
-	return await resolver.dereference( containedTypes );
+	const result = await resolver.dereference( containedTypes );
+	return result;
 }
 
 /**
@@ -127,6 +134,7 @@ async function validate( zobject, resolver ) {
 		try {
 			validatorTuple = getSchemaValidator( Z1 );
 		} catch ( error ) {
+			console.error( 'Attempting to validate Z1', Z1, 'produced error', error );
 			errors.push(
 				normalError(
 					[ error.zid_not_found ],
@@ -138,6 +146,10 @@ async function validate( zobject, resolver ) {
 			schemaValidator
 		} = validatorTuple;
 		if ( schemaValidator === null ) {
+			return;
+		}
+		if ( ZObjectTypes[ typeKey.asString() ] === undefined ) {
+			// TODO(T297717): We should add other types to the set, not just builtins.
 			return;
 		}
 		if ( !schemaValidator.validate( Z1 ) ) {

@@ -1,7 +1,7 @@
 'use strict';
 
 const { Composition, Evaluated, Implementation } = require( './implementation.js' );
-const { containsError, containsValue, isRefOrString } = require( './utils.js' );
+const { containsError, containsValue, isRefOrString, traverseZ10 } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { makeResultEnvelope, convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
@@ -373,15 +373,11 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 	// dereferenced (Z8K4 and all elements thereof).
 	const Z8K4 = ( await mutate( zobject, [ 'Z7K1', 'Z8K4' ], evaluatorUri, resolver, scope ) ).Z22K1;
 	const implementations = [];
-	if ( Z8K4 !== undefined ) {
-		let root = Z8K4;
-		while ( root.Z10K1 !== undefined ) {
-			// TODO(T296679): Write test making sure that Z14s are resolved.
-			const Z10K1 = ( await mutate( root, [ 'Z10K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
-			implementations.push( Z10K1 );
-			root = root.Z10K2;
-		}
-	}
+	await traverseZ10( Z8K4, async function ( tail ) {
+		// TODO(T296679): Write test making sure that Z14s are resolved.
+		const Z10K1 = ( await mutate( tail, [ 'Z10K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
+		implementations.push( Z10K1 );
+	} );
 
 	if ( implementations === [] ) {
 		return makeResultEnvelope(
@@ -408,15 +404,11 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 
 	// Check corner case where evaluated function must be dereferenced.
 	if ( implementation instanceof Evaluated ) {
-		if ( Z8K4 !== undefined ) {
-			let root = Z8K4;
-			while ( root.Z10K1 !== undefined ) {
-				if ( root.Z10K1.Z14K3 !== undefined ) {
-					await mutate( root, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], evaluatorUri, resolver, scope );
-				}
-				root = root.Z10K2;
+		await traverseZ10( Z8K4, async function ( tail ) {
+			if ( tail.Z10K1.Z14K3 !== undefined ) {
+				await mutate( tail, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], evaluatorUri, resolver, scope );
 			}
-		}
+		} );
 	}
 
 	const argumentInstantiations = [];

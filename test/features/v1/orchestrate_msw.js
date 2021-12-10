@@ -470,4 +470,59 @@ describe( 'orchestrate', function () {
 		);
 	}
 
+	{
+		cannedResponses.setWiki( 'Z88401', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88401' },
+			Z2K2: readJSON( './test/features/v1/test_data/Z88401.json' )
+		} );
+		cannedResponses.setWiki( 'Z88402', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88402' },
+			Z2K2: readJSON( './test/features/v1/test_data/Z88402.json' )
+		} );
+		cannedResponses.setWiki( 'Z88403', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88403' },
+			Z2K2: readJSON( './test/features/v1/test_data/Z88403.json' )
+		} );
+		const userDefinedIf = readJSON( './test/features/v1/test_data/user-defined-type.json' );
+		userDefinedIf.Z1802K2 = 'Z88403';
+		test(
+			'good user-defined type',
+			userDefinedIf,
+			readJSON( './test/features/v1/test_data/Z88403-expected.json' ),
+			null
+		);
+	}
+
+	{
+		cannedResponses.setWiki( 'Z88401', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88401' },
+			Z2K2: readJSON( './test/features/v1/test_data/Z88401.json' )
+		} );
+		cannedResponses.setWiki( 'Z88402', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88402' },
+			Z2K2: readJSON( './test/features/v1/test_data/Z88402.json' )
+		} );
+		cannedResponses.setWiki( 'Z88404', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88403' },
+			Z2K2: readJSON( './test/features/v1/test_data/Z88403-bad.json' )
+		} );
+		const userDefinedIf = readJSON( './test/features/v1/test_data/user-defined-type.json' );
+		userDefinedIf.Z1802K2 = 'Z88404';
+		const expectedErrorString = fs.readFileSync( './test/features/v1/test_data/user_defined_type_validation_error.txt', { encoding: 'utf8' } ).replace( /\s*$/, '' );
+		const expectedError = readJSON( './test/features/v1/test_data/generic_type_validation.json' );
+		expectedError.Z5K1.Z506K1 = expectedErrorString;
+		test(
+			'bad user-defined type',
+			userDefinedIf,
+			null,
+			expectedError
+		);
+	}
+
 } );
