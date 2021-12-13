@@ -5,7 +5,7 @@ const { execute } = require( './execute.js' );
 const { createSchema } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
-const { Z10ToArray } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
 
 const validators = new Map();
 
@@ -31,7 +31,7 @@ function getSchemaValidator( Z1 ) {
 }
 
 function createValidatorZ7( Z8, ...Z1s ) {
-	const argumentDeclarations = Z10ToArray( Z8.Z8K1 );
+	const argumentDeclarations = convertZListToArray( Z8.Z8K1 );
 	if ( argumentDeclarations.length !== Z1s.length ) {
 		// TODO(T2926668): Call BUILTIN_FUNCTION_CALL_VALIDATOR_ on result to
 		// avoid argument mismatches.
@@ -77,7 +77,7 @@ async function runTypeValidator( Z1, typeZObject, resolver ) {
 	try {
 		// TODO(T296681): Catch errors when async functions reject.
 		const result = await runValidationFunction( validatorZid.Z9K1, resolver, Z1 );
-		return Z10ToArray( result.Z22K1 );
+		return convertZListToArray( result.Z22K1 );
 	} catch ( err ) {
 		console.error( err );
 		return [

@@ -4,7 +4,7 @@ const { Composition, Evaluated, Implementation } = require( './implementation.js
 const { containsError, containsValue, isRefOrString } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
-const { makeResultEnvelope, Z10ToArray } = require( '../function-schemata/javascript/src/utils.js' );
+const { makeResultEnvelope, convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
 
 let execute = null;
 
@@ -150,7 +150,7 @@ class Frame extends BaseFrame {
 		}
 		if ( doValidate ) {
 			const actualResult = await validateAsType( argument, resolver );
-			if ( Z10ToArray( actualResult.Z22K1 ).length > 0 ) {
+			if ( convertZListToArray( actualResult.Z22K1 ).length > 0 ) {
 				// TODO(T296676): Include Z5 information from validator in this error.
 				return ArgumentState.ERROR(
 					normalError(
@@ -212,7 +212,7 @@ class Frame extends BaseFrame {
 					const declaredType = newDict.declaredType;
 					const declaredResult = await validateAsType(
 						argument, resolver, declaredType );
-					if ( Z10ToArray( declaredResult.Z22K1 ).length > 0 ) {
+					if ( convertZListToArray( declaredResult.Z22K1 ).length > 0 ) {
 						// TODO(T296676): Include Z5 information from validator in this error.
 						boundValue = ArgumentState.ERROR(
 							normalError(
@@ -253,7 +253,7 @@ async function getArgumentStates( zobject, evaluatorUri, resolver, scope ) {
 	const foundKeys = new Set( Object.keys( zobject ) );
 	foundKeys.delete( 'Z1K1' );
 	foundKeys.delete( 'Z7K1' );
-	for ( const Z17 of Z10ToArray( Z8K1 ) ) {
+	for ( const Z17 of convertZListToArray( Z8K1 ) ) {
 		const argumentDict = {};
 		const argumentName = ( await mutate( Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		argumentDict.name = argumentName;
@@ -310,7 +310,7 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 		const Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		const returnType = ( await mutate( Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		const returnTypeValidation = await validateAsType( result.Z22K1, resolver, returnType );
-		if ( Z10ToArray( returnTypeValidation.Z22K1 ).length > 0 ) {
+		if ( convertZListToArray( returnTypeValidation.Z22K1 ).length > 0 ) {
 			// TODO(T296676): Include Z5 information from validator in this error.
 			return makeResultEnvelope(
 				null,

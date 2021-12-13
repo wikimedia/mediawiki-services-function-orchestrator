@@ -93,7 +93,7 @@ function abstractRecursive( Z10 ) {
 		return Z10.Z6K1;
 	}
 	const result = {};
-	const arrayOfZ22 = utils.Z10ToArray( Z10 );
+	const arrayOfZ22 = utils.convertZListToArray( Z10 );
 	for ( const Z22 of arrayOfZ22 ) {
 		const Z39 = Z22.Z22K1;
 		result[ Z39.Z39K1.Z6K1 ] = abstractRecursive( Z22.Z22K2 );
@@ -185,7 +185,7 @@ function BUILTIN_STRING_TO_CHARS_( Z6 ) {
 }
 
 function charsToStringInternal( Z10 ) {
-	const Z10Array = utils.Z10ToArray( Z10 );
+	const Z10Array = utils.convertZListToArray( Z10 );
 	const result = [];
 	for ( const Z86 of Z10Array ) {
 		result.push( Z86.Z6K1 || Z86.Z86K1.Z6K1 );
@@ -255,7 +255,7 @@ function BUILTIN_EMPTY_VALIDATOR_( Z1 ) {
  * @return {Object} a Z10/List of Z5/Error.
  */
 function arrayValidator( Z10, key, identity ) {
-	const keys = utils.Z10ToArray( Z10 ).map( key );
+	const keys = utils.convertZListToArray( Z10 ).map( key );
 	const messages = [];
 
 	let previous = 0;
@@ -303,7 +303,7 @@ function BUILTIN_FUNCTION_VALIDATOR_( Z99 ) {
 
 function BUILTIN_Z4_TYPE_VALIDATOR_( Z99 ) {
 	const Z1 = Z99.Z99K1;
-	const errors = utils.Z10ToArray(
+	const errors = utils.convertZListToArray(
 		arrayValidator(
 			Z1.Z4K2,
 			( x ) => x.Z3K2.Z6K1,
@@ -393,7 +393,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, evaluatorUri, resolver, sc
 async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, evaluatorUri, resolver, scope ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
-	const Z11s = utils.Z10ToArray( Z1.Z12K1 );
+	const Z11s = utils.convertZListToArray( Z1.Z12K1 );
 	const languages = await Promise.all( Z11s.map( async ( Z11 ) => await mutate(
 		Z11,
 		[ 'Z11K1', 'Z60K1', 'Z6K1' ],
@@ -419,7 +419,7 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, evaluatorUri, resolver
 function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_( Z99 ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
-	const Z31s = utils.Z10ToArray( Z1.Z32K1 );
+	const Z31s = utils.convertZListToArray( Z1.Z32K1 );
 	const languages = Z31s.map( ( Z31 ) => Z31.Z31K1.Z60K1.Z6K1 );
 
 	const seen = new Set();
