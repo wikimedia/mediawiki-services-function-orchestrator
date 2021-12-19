@@ -819,7 +819,7 @@ builtinReferences.set( 'Z812', createZ8(
 builtinReferences.set( 'Z813', createZ8(
 	'Z813',
 	[
-		createArgument( 'Z10', 'Z813K1' )
+		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z813K1' )
 	], 'Z1', 'Z913'
 ) );
 builtinReferences.set( 'Z821', createZ8(
