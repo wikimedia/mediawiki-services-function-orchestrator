@@ -275,20 +275,46 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z811 with reference to Z911',
+		'function call (short form) for Z811/Head with non-empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z811.json' ) },
 		{ Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
 	);
 
 	testFunctionCall(
-		'function call for Z911 (head)',
+		'function call (short form) for Z811/Head with non-empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z811_full_Z881.json' ) },
+		{ Z1K1: 'Z6', Z6K1: 'i met a traveler from an antique land' }
+	);
+
+	testFunctionCall(
+		'function call (short form) for Z811/Head with empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z811_empty_Z881.json' ) },
+		null,
+		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no head.' } }
+	);
+
+	testFunctionCall(
+		'function call for Z911 (head) with non-empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z911.json' ) },
 		{ Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
 	);
 
 	testFunctionCall(
+		'function call for Z811/Head with reference to Z911 and non-empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z911_full_Z881.json' ) },
+		{ Z1K1: 'Z6', Z6K1: 'i met a traveler from an antique land' }
+	);
+
+	testFunctionCall(
 		'function call for Z911 (head) with empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z911_empty.json' ) },
+		null,
+		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no head.' } }
+	);
+
+	testFunctionCall(
+		'function call (short form) for Z811/Head with reference to Z911 and empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z911_empty_Z881.json' ) },
 		null,
 		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no head.' } }
 	);

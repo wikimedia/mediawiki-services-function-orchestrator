@@ -122,7 +122,11 @@ function BUILTIN_HEAD_( Z10 ) {
 				[ 'An empty list has no head.' ] ) );
 	}
 
-	return makeResultEnvelope( Z10.Z10K1, null );
+	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
+		return makeResultEnvelope( Z10.Z10K1, null );
+	}
+
+	return makeResultEnvelope( Z10.K1, null );
 }
 
 function BUILTIN_TAIL_( Z10 ) {
@@ -804,7 +808,7 @@ builtinReferences.set( 'Z810', createZ8(
 builtinReferences.set( 'Z811', createZ8(
 	'Z811',
 	[
-		createArgument( 'Z10', 'Z811K1' )
+		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z811K1' )
 	], 'Z1', 'Z911'
 ) );
 builtinReferences.set( 'Z812', createZ8(
@@ -816,6 +820,7 @@ builtinReferences.set( 'Z812', createZ8(
 builtinReferences.set( 'Z813', createZ8(
 	'Z813',
 	[
+		// TODO(T298054): Update argument validation for built-in list functions to exclude Z10s
 		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z813K1' )
 	], 'Z1', 'Z913'
 ) );
