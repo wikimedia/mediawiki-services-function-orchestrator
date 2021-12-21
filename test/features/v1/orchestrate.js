@@ -325,20 +325,44 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z813 with reference to Z913',
+		'function call (short form) for Z813/Empty with an empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z813_empty_Z10.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
 	);
 
 	testFunctionCall(
-		'function call for Z913 (empty) with an empty Z10',
+		'function call (short form) for Z813/Empty with an empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z813_empty_Z881.json' ) },
+		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
+	);
+
+	testFunctionCall(
+		'function call (short form) for Z813/Empty with a non-empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z813_full_Z881.json' ) },
+		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
+	);
+
+	testFunctionCall(
+		'function call for Z813/Empty with reference to Z913 and an empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z913_empty_Z10.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
 	);
 
 	testFunctionCall(
-		'function call for Z913 (empty) with a full Z10',
+		'function call for Z813/Empty with reference to Z913 and an empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z913_empty_Z881.json' ) },
+		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
+	);
+
+	testFunctionCall(
+		'function call for Z813/Empty with reference to Z913 and a non-empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z913_full_Z10.json' ) },
+		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
+	);
+
+	testFunctionCall(
+		'function call for Z813/Empty with reference to Z913 and an non-empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z913_full_Z881.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
 	);
 
