@@ -6,7 +6,7 @@ const { arrayToZ10, makeResultEnvelope } = require( '../function-schemata/javasc
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
-const { containsError, isError, isFunctionCall, isNothing, makePair } = require( './utils.js' );
+const { containsError, isError, isFunctionCall, isNothing, makeResultEnvelopeAndMaybeCanonicalise } = require( './utils.js' );
 const { ReferenceResolver } = require( './db.js' );
 
 /**
@@ -67,9 +67,13 @@ async function orchestrate( input ) {
 	let currentPair;
 
 	if ( isError( zobject ) ) {
-		currentPair = makePair( null, zobject, /* canonicalize= */true );
+		currentPair = makeResultEnvelopeAndMaybeCanonicalise(
+			null, zobject, /* canonicalize= */true
+		);
 	} else {
-		currentPair = makePair( zobject, null, /* canonicalize= */true );
+		currentPair = makeResultEnvelopeAndMaybeCanonicalise(
+			zobject, null, /* canonicalize= */true
+		);
 	}
 
 	// TODO(T286752): Receiving the evaluator and wiki URIs as parameters

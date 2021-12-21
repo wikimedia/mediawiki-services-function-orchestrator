@@ -183,7 +183,9 @@ function Z23( canonical = false ) {
 
 // TODO(T282891): Replace uses of this with upstream makeResultEnvelope
 // (which doesn't handle the third parameter)
-function makePair( goodResult = null, badResult = null, canonical = false ) {
+function makeResultEnvelopeAndMaybeCanonicalise(
+	goodResult = null, badResult = null, canonical = false
+) {
 	let Z1K1;
 	if ( canonical ) {
 		Z1K1 = 'Z22';
@@ -288,7 +290,7 @@ module.exports = {
 	isReference,
 	isType,
 	makeBoolean,
-	makePair,
+	makeResultEnvelopeAndMaybeCanonicalise,
 	traverseZ10,
 	Z23
 };

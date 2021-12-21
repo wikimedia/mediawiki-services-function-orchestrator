@@ -45,7 +45,7 @@ describe( 'orchestration endpoint', function () {
 					assert.contentType( res, 'application/json' );
 					assert.deepEqual(
 						res.body,
-						utils.makePair( output, error, /* canonical= */ true ),
+						utils.makeResultEnvelopeAndMaybeCanonicalise( output, error, /* canonical= */ true ),
 						name
 					);
 				} );

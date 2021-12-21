@@ -99,7 +99,7 @@ describe( 'orchestrate', function () {
 			assert.deepEqual( thrownError, null );
 			assert.deepEqual(
 				result,
-				utils.makePair( output, error, /* canonical= */ true ),
+				utils.makeResultEnvelopeAndMaybeCanonicalise( output, error, /* canonical= */ true ),
 				name
 			);
 		} );
