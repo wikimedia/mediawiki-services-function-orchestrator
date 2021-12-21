@@ -114,7 +114,7 @@ function BUILTIN_CONS_( Z1, Z10 ) {
 }
 
 function BUILTIN_HEAD_( Z10 ) {
-	if ( utils.isEmpty( Z10 ) ) {
+	if ( utils.isEmptyZList( Z10 ) ) {
 		return makeResultEnvelope(
 			null,
 			normalError(
@@ -126,7 +126,7 @@ function BUILTIN_HEAD_( Z10 ) {
 }
 
 function BUILTIN_TAIL_( Z10 ) {
-	if ( utils.isEmpty( Z10 ) ) {
+	if ( utils.isEmptyZList( Z10 ) ) {
 		return makeResultEnvelope(
 			null,
 			normalError(
@@ -139,7 +139,7 @@ function BUILTIN_TAIL_( Z10 ) {
 
 function BUILTIN_EMPTY_( Z10 ) {
 	let result;
-	if ( utils.isEmpty( Z10 ) ) {
+	if ( utils.isEmptyZList( Z10 ) ) {
 		result = makeTrue();
 	} else {
 		result = makeFalse();
