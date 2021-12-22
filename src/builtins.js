@@ -138,7 +138,11 @@ function BUILTIN_TAIL_( Z10 ) {
 				[ 'An empty list has no tail.' ] ) );
 	}
 
-	return makeResultEnvelope( Z10.Z10K2, null );
+	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
+		return makeResultEnvelope( Z10.Z10K2, null );
+	}
+
+	return makeResultEnvelope( Z10.K2, null );
 }
 
 function BUILTIN_EMPTY_( Z10 ) {
@@ -814,7 +818,7 @@ builtinReferences.set( 'Z811', createZ8(
 builtinReferences.set( 'Z812', createZ8(
 	'Z812',
 	[
-		createArgument( 'Z10', 'Z812K1' )
+		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z812K1' )
 	], 'Z1', 'Z912'
 ) );
 builtinReferences.set( 'Z813', createZ8(

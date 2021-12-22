@@ -313,14 +313,14 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call (short form) for Z811/Head with reference to Z911 and empty Z881',
+		'function call for Z811/Head with reference to Z911 and empty Z881',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z911_empty_Z881.json' ) },
 		null,
 		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no head.' } }
 	);
 
 	testFunctionCall(
-		'function call for Z812 with reference to Z912',
+		'function call (short form) for Z812/Head with non-empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z812.json' ) },
 		{
 			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
@@ -332,7 +332,26 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z912 (tail)',
+		'function call (short form) for Z812/Tail with non-empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z812_full_Z881.json' ) },
+		{
+			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
+			Z10K1: { Z1K1: 'Z6', Z6K1: 'who said two vast and trunkless legs of stone' },
+			Z10K2: {
+				Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' }
+			}
+		}
+	);
+
+	testFunctionCall(
+		'function call (short form) for Z812/Tail with empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z812_empty_Z881.json' ) },
+		null,
+		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no tail.' } }
+	);
+
+	testFunctionCall(
+		'function call for Z812/Tail with reference to Z912 and non-empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z912.json' ) },
 		{
 			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
@@ -344,8 +363,27 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z912 (tail) with empty Z10',
+		'function call for Z812/Tail with reference to Z912 and non-empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z912_full_Z881.json' ) },
+		{
+			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
+			Z10K1: { Z1K1: 'Z6', Z6K1: 'who said two vast and trunkless legs of stone' },
+			Z10K2: {
+				Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' }
+			}
+		}
+	);
+
+	testFunctionCall(
+		'function call for Z812/Tail with reference to Z912 and empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z912_empty.json' ) },
+		null,
+		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no tail.' } }
+	);
+
+	testFunctionCall(
+		'function call for Z812/Tail with reference to Z912 and empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z912_empty_Z881.json' ) },
 		null,
 		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no tail.' } }
 	);
