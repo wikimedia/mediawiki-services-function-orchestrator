@@ -263,15 +263,39 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z810 with reference to Z910',
+		'function call (short form) for Z810/Cons onto empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z810.json' ) },
 		readJSON( './test/features/v1/test_data/Z910_expected.json' )
 	);
 
 	testFunctionCall(
-		'function call for Z910 (cons)',
+		'function call (short form) for Z810/Cons onto empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z810_empty_Z881.json' ) },
+		readJSON( './test/features/v1/test_data/Z910_empty_Z881_expected.json' )
+	);
+
+	testFunctionCall(
+		'function call (short form) for Z810/Cons onto non-empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z810_full_Z881.json' ) },
+		readJSON( './test/features/v1/test_data/Z910_full_Z881_expected.json' )
+	);
+
+	testFunctionCall(
+		'function call for Z910/Cons onto empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z910.json' ) },
 		readJSON( './test/features/v1/test_data/Z910_expected.json' )
+	);
+
+	testFunctionCall(
+		'function call for Z910/Cons onto empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z910_empty_Z881.json' ) },
+		readJSON( './test/features/v1/test_data/Z910_empty_Z881_expected.json' )
+	);
+
+	testFunctionCall(
+		'function call for Z910/Cons onto non-empty Z881',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z910_full_Z881.json' ) },
+		readJSON( './test/features/v1/test_data/Z910_full_Z881_expected.json' )
 	);
 
 	testFunctionCall(
@@ -320,7 +344,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call (short form) for Z812/Head with non-empty Z10',
+		'function call (short form) for Z812/Tail with non-empty Z10',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z812.json' ) },
 		{
 			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },

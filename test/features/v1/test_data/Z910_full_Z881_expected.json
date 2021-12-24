@@ -1,0 +1,36 @@
+{
+	"Z1K1": {
+		"Z1K1": "Z9",
+		"Z9K1": "Z10"
+	},
+	"Z10K1": {
+		"Z1K1": "Z6",
+		"Z6K1": "Just cutting in line."
+	},
+	"Z10K2": {
+		"Z1K1": {
+			"Z1K1": "Z9",
+			"Z9K1": "Z10"
+		},
+		"Z10K1": {
+			"Z1K1": "Z6",
+			"Z6K1": "i met a traveler from an antique land"
+		},
+		"Z10K2": {
+			"Z1K1": {
+				"Z1K1": "Z9",
+				"Z9K1": "Z10"
+			},
+			"Z10K1": {
+				"Z1K1": "Z6",
+				"Z6K1": "who said two vast and trunkless legs of stone"
+			},
+			"Z10K2": {
+				"Z1K1": {
+					"Z1K1": "Z9",
+					"Z9K1": "Z10"
+				}
+			}
+		}
+	}
+}

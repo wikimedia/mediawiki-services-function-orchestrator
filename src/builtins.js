@@ -108,8 +108,14 @@ function BUILTIN_ABSTRACT_( Z10 ) {
 }
 
 function BUILTIN_CONS_( Z1, Z10 ) {
-	const result = utils.arrayToZ10( [ Z1 ] );
-	result.Z10K2 = Z10;
+	let result;
+	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
+		result = utils.arrayToZ10( [ Z1 ] );
+		result.Z10K2 = Z10;
+	} else {
+		result = utils.convertArrayToZList( [ Z1 ] );
+		result.K2 = Z10;
+	}
 	return makeResultEnvelope( result, null );
 }
 
@@ -806,7 +812,7 @@ builtinReferences.set( 'Z810', createZ8(
 	'Z810',
 	[
 		createArgument( 'Z1', 'Z810K1' ),
-		createArgument( 'Z10', 'Z810K2' )
+		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z810K2' )
 	], 'Z1', 'Z910'
 ) );
 builtinReferences.set( 'Z811', createZ8(
