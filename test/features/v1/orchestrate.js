@@ -358,13 +358,7 @@ describe( 'orchestration endpoint', function () {
 	testFunctionCall(
 		'function call (short form) for Z812/Tail with non-empty Z881',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z812_full_Z881.json' ) },
-		{
-			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
-			Z10K1: { Z1K1: 'Z6', Z6K1: 'who said two vast and trunkless legs of stone' },
-			Z10K2: {
-				Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' }
-			}
-		}
+		readJSON( './test/features/v1/test_data/Z912_full_Z881_expected.json' )
 	);
 
 	testFunctionCall(
@@ -389,13 +383,7 @@ describe( 'orchestration endpoint', function () {
 	testFunctionCall(
 		'function call for Z812/Tail with reference to Z912 and non-empty Z881',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z912_full_Z881.json' ) },
-		{
-			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
-			Z10K1: { Z1K1: 'Z6', Z6K1: 'who said two vast and trunkless legs of stone' },
-			Z10K2: {
-				Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' }
-			}
-		}
+		readJSON( './test/features/v1/test_data/Z912_full_Z881_expected.json' )
 	);
 
 	testFunctionCall(
