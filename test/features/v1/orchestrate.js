@@ -485,8 +485,14 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z886 with reference to Z986',
+		'function call for Z886 (short form)',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z886.json' ) },
+		{ Z1K1: 'Z6', Z6K1: 'mus' }
+	);
+
+	testFunctionCall(
+		'function call for Z886 (short form) with Z881 input',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z886_with_Z881.json' ) },
 		{ Z1K1: 'Z6', Z6K1: 'mus' }
 	);
 
@@ -497,8 +503,20 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
+		'function call for Z986 (code points to string) with Z881 input',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z986_with_Z881.json' ) },
+		{ Z1K1: 'Z6', Z6K1: 'mus' }
+	);
+
+	testFunctionCall(
 		'function call for Z986 (code points to string) with combining characters',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z986_emoji.json' ) },
+		readJSON( './test/features/v1/test_data/Z986_emoji_expected.json' )
+	);
+
+	testFunctionCall(
+		'function call for Z986 (code points to string) with combining characters, with Z881 input',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z986_emoji_with_Z881.json' ) },
 		readJSON( './test/features/v1/test_data/Z986_emoji_expected.json' )
 	);
 
