@@ -467,15 +467,27 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z868 with reference to Z968',
+		'function call for Z868',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z868.json' ) },
 		readJSON( './test/features/v1/test_data/Z968_expected.json' )
+	);
+
+	testFunctionCall(
+		'function call for Z868 with Z881 output spec',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z868.json' ) },
+		readJSON( './test/features/v1/test_data/Z968_expected_with_Z881.json' )
 	);
 
 	testFunctionCall(
 		'function call for Z968 (string to code points)',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z968.json' ) },
 		readJSON( './test/features/v1/test_data/Z968_expected.json' )
+	);
+
+	testFunctionCall(
+		'function call for Z968 (string to code points) with Z881 output spec',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z968.json' ) },
+		readJSON( './test/features/v1/test_data/Z968_expected_with_Z881.json' )
 	);
 
 	testFunctionCall(

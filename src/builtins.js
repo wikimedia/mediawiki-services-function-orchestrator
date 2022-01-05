@@ -191,7 +191,7 @@ function stringToCharsInternal( characterArray ) {
 			Z86K1: { Z1K1: 'Z6', Z6K1: character }
 		} );
 	}
-	return utils.arrayToZ10( Z86Array );
+	return utils.convertArrayToZList( Z86Array );
 }
 
 function BUILTIN_STRING_TO_CHARS_( Z6 ) {
