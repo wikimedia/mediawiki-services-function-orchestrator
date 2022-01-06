@@ -162,6 +162,23 @@ describe( 'orchestrate', function () {
 	);
 
 	{
+		cannedResponses.setWiki( 'Z10122', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10122' },
+			Z2K2: readJSON( './test/features/v1/test_data/Z10122.json' )
+		} );
+		const theFunctionCall = readJSON( './test/features/v1/test_data/composition-returns-type.json' );
+		const returnedType = readJSON( './test/features/v1/test_data/type-returned-by-composition.json' );
+		theFunctionCall.Z7K1.Z8K4[ 0 ].Z14K2.Z801K1 = returnedType;
+		test(
+			'composition returns type',
+			theFunctionCall,
+			returnedType,
+			null
+		);
+	}
+
+	{
 		cannedResponses.setWiki( 'Z12422', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12422' },
