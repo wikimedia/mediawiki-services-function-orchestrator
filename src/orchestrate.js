@@ -2,7 +2,7 @@
 
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
-const { arrayToZ10, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertArrayToZList, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
 const { validate } = require( './validation.js' );
@@ -25,7 +25,7 @@ async function maybeValidate( zobject, doValidate, resolver ) {
 		const errors = await validate( zobject, resolver );
 		if ( errors.length > 0 ) {
 			// TODO (T296681): Wrap errors in a Z5.
-			return makeResultEnvelope( null, arrayToZ10( errors ) );
+			return makeResultEnvelope( null, await convertArrayToZList( errors ) );
 		}
 	}
 	return makeResultEnvelope( zobject, null );
@@ -87,7 +87,7 @@ async function orchestrate( input, implementationSelector = null ) {
 	const doValidate = typeof input.doValidate === 'boolean' ? input.doValidate : true;
 
 	const callTuples = [
-		[ normalize, [], 'normalize' ],
+		[ normalize, [ /* generically= */true ], 'normalize' ],
 		// TODO (T296685): Dereference top-level object if it is a Z9?
 		[ Z7OrError, [], 'Z7OrError' ],
 		[ maybeValidate, [ doValidate, resolver ], 'maybeValidate' ],

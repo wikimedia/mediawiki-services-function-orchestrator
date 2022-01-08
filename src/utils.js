@@ -8,7 +8,8 @@ const {
 	validatesAsUnit,
 	ZObjectKeyFactory
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { isUserDefined, makeUnit } = require( '../function-schemata/javascript/src/utils' );
+const { isUserDefined, getHead, getTail, makeUnit } = require( '../function-schemata/javascript/src/utils' );
+
 const normalFactory = SchemaFactory.NORMAL();
 const Z6Validator = normalFactory.create( 'Z6_literal' );
 const Z9Validator = normalFactory.create( 'Z9_literal' );
@@ -41,7 +42,6 @@ async function createSchema( Z1 ) {
 		}
 		return normalFactory.create( Z1K1.Z9K1 );
 	}
-
 	const result = await normalFactory.createUserDefined( [ Z1K1 ] );
 	const key = ( await ZObjectKeyFactory.create( Z1K1 ) ).asString();
 	return result.get( key );
@@ -176,34 +176,36 @@ function generateError( errorString = 'An unknown error occurred' ) {
 		},
 		Z5K2: {
 			Z1K1: {
-				Z1K1: 'Z9',
-				Z9K1: 'Z10'
+				Z1K1: 'Z7',
+				Z7K1: 'Z881',
+				Z881K1: 'Z6'
 			},
-			Z10K1: {
+			K1: {
 				Z1K1: {
 					Z1K1: 'Z9',
 					Z9K1: 'Z6'
 				},
 				Z6K1: errorString
 			},
-			Z10K2: {
+			K2: {
 				Z1K1: {
-					Z1K1: 'Z9',
-					Z9K1: 'Z10'
+					Z1K1: 'Z7',
+					Z7K1: 'Z881',
+					Z881K1: 'Z6'
 				}
 			}
 		}
 	};
 }
 
-async function traverseZ10( Z10, callback ) {
-	let tail = Z10;
+async function traverseZList( ZList, callback ) {
+	let tail = ZList;
 	if ( tail === undefined ) {
 		return;
 	}
-	while ( tail.Z10K1 !== undefined ) {
+	while ( getHead( tail ) !== undefined ) {
 		await callback( tail );
-		tail = tail.Z10K2;
+		tail = getTail( tail );
 	}
 }
 
@@ -271,5 +273,5 @@ module.exports = {
 	makeResultEnvelopeAndMaybeCanonicalise,
 	quoteZObject,
 	returnOnFirstError,
-	traverseZ10
+	traverseZList
 };

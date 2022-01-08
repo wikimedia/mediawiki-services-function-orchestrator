@@ -4,16 +4,16 @@ const { ReferenceResolver } = require( './db.js' );
 const parse = require( './parse.js' );
 const orchestrate = require( './orchestrate.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
+const { convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
 
-function parseNormalizedArray( zobject, refs = [] ) {
-	const head = zobject.Z10K1;
-	const tail = zobject.Z10K2;
-
-	if ( tail ) {
-		return parseNormalizedArray( tail, [ ...refs, head.Z9K1 ] );
-	} else {
-		return refs;
+async function resolveListOfReferences( listOfReferences, resolver ) {
+	const ZIDs = convertZListToArray( listOfReferences ).map( ( Z9 ) => ( Z9.Z9K1 ) );
+	const resolved = await resolver.dereference( ZIDs );
+	const result = [];
+	for ( const ZID of ZIDs ) {
+		result.push( resolved[ ZID ] );
 	}
+	return result;
 }
 
 async function getTestResults( data ) {
@@ -29,57 +29,55 @@ async function getTestResults( data ) {
 	const resolver = new ReferenceResolver( wikiUri );
 
 	// Get ZFunction object
-	const zFunction = zfunction.match( /^Z\d+$/ ) ? ( await resolver.dereference( [ zfunction ] ) )[ zfunction ] : ( await normalize( JSON.parse( zfunction ) ) ).Z22K1;
+	const zFunction = zfunction.match( /^Z\d+$/ ) ? ( await resolver.dereference( [ zfunction ] ) )[ zfunction ] : ( await normalize( JSON.parse( zfunction ), /* generically= */true ) ).Z22K1;
 
 	// Get ZImplementation objects
 	// If list of implementations is provided, get those.
 	// Otherwise, fetch all associated with ZFunction
-	const implementations = zimplementations &&
-		JSON.parse( zimplementations ).filter( ( item ) => !!item ).length ?
-		await Promise.all(
+	let implementations;
+	if ( zimplementations && JSON.parse( zimplementations ).filter( ( item ) => !!item ).length ) {
+		implementations = await Promise.all(
 			// Parse the list of implementations
 			JSON.parse( zimplementations ).map(
 				async ( impl ) => {
-					// If it's an object, normalize it
 					if ( typeof impl === 'object' ) {
-						return ( await normalize( impl ) ).Z22K1;
-						// If it's a string, dereference it
+						// If it's an object, normalize it
+						return ( await normalize( impl ), /* generically= */true ).Z22K1;
 					} else {
+						// If it's a string, dereference it
 						return resolver.dereference( [ impl ] ).then( ( res ) => res[ impl ] );
 					}
 				}
 			)
-		) :
-	// Get the list of ZImplementations, then dereference them
-		await Promise.all(
-			parseNormalizedArray( zFunction.Z2K2.Z8K4 ).map(
-				( zImplementationId ) => resolver.dereference( [ zImplementationId ] )
-					.then( ( res ) => res[ zImplementationId ] )
-			) );
+		);
+	} else {
+		// Get the list of ZImplementations, then dereference them
+		implementations = await resolveListOfReferences( zFunction.Z2K2.Z8K4, resolver );
+	}
+
 	// Get ZTester objects
 	// If list of testers is provided, get those.
 	// Otherwise, fetch all associated with ZFunction
-	const testers = ztesters && JSON.parse( ztesters ).filter( ( item ) => !!item ).length ?
-		await Promise.all(
+	let testers;
+	if ( ztesters && JSON.parse( ztesters ).filter( ( item ) => !!item ).length ) {
+		testers = await Promise.all(
 			// Parse the list of testers
 			JSON.parse( ztesters ).map(
 				async ( tester ) => {
-					// If it's an object, normalize it
 					if ( typeof tester === 'object' ) {
-						return ( await normalize( tester ) ).Z22K1;
+						// If it's an object, normalize it
+						return ( await normalize( tester, /* generically= */true ) ).Z22K1;
 						// If it's a string, dereference it
 					} else {
 						return resolver.dereference( [ tester ] ).then( ( res ) => res[ tester ] );
 					}
 				}
 			)
-		) :
-	// Get the list of ZTesters, then dereference them
-		await Promise.all(
-			parseNormalizedArray( zFunction.Z2K2.Z8K3 ).map(
-				( zTesterId ) => resolver.dereference( [ zTesterId ] )
-					.then( ( res ) => res[ zTesterId ] )
-			) );
+		);
+	} else {
+		// Get the list of ZTesters, then dereference them
+		testers = await resolveListOfReferences( zFunction.Z2K2.Z8K3, resolver );
+	}
 
 	async function performTest(
 		zFunction,
@@ -106,7 +104,7 @@ async function getTestResults( data ) {
 				evaluatorUri,
 				wikiUri,
 				doValidate
-			} )
+			} ), /* generically= */true
 		) ).Z22K1;
 		const testResult = testResponse.Z22K1;
 

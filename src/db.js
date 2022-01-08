@@ -51,7 +51,7 @@ class ReferenceResolver {
 
 			await Promise.all( [ ...unresolved ].map( async ( ZID ) => {
 				const zobject = JSON.parse( result[ ZID ].wikilambda_fetch );
-				const normalized = await normalize( zobject );
+				const normalized = await normalize( zobject, /* generically= */true );
 				if ( containsError( normalized ) ) {
 					dereferenced[ ZID ] = normalized.Z22K2;
 				} else {
@@ -60,7 +60,6 @@ class ReferenceResolver {
 				this.referenceMap.set( ZID, dereferenced[ ZID ] );
 			} ) );
 		}
-
 		return dereferenced;
 	}
 

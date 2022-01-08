@@ -54,7 +54,6 @@ describe( 'performTest', function () {
 
 		rest.post( 'http://theevaluator', ( req, res, ctx ) => {
 			const ZID = req.body.Z7K1.Z8K5.Z9K1;
-			console.log( 'ZID', ZID );
 			return res( ctx.status( 200 ), ctx.json( cannedResponses.getEvaluator( ZID ) ) );
 		} ),
 
