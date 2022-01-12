@@ -75,7 +75,7 @@ describe( 'orchestrate', function () {
 		return mockServiceWorker.resetHandlers();
 	} );
 
-	const test = function ( name, zobject, output = null, error = null ) {
+	const test = function ( name, zobject, output = null, error = null, implementationSelector = null ) {
 		const input = {
 			zobject: zobject,
 			wikiUri: 'http://thewiki',
@@ -92,7 +92,7 @@ describe( 'orchestrate', function () {
 			let result = {};
 			let thrownError = null;
 			try {
-				result = await orchestrate( input );
+				result = await orchestrate( input, implementationSelector );
 			} catch ( err ) {
 				thrownError = err;
 			}
@@ -539,6 +539,21 @@ describe( 'orchestrate', function () {
 			userDefinedIf,
 			null,
 			expectedError
+		);
+	}
+
+	{
+		class SecondImplementationSelector {
+			select( implementations ) {
+				return implementations[ 1 ];
+			}
+		}
+		test(
+			'multiple implementations',
+			readJSON( './test/features/v1/test_data/multiple-implementations.json' ),
+			makeTrue(),
+			null,
+			new SecondImplementationSelector()
 		);
 	}
 

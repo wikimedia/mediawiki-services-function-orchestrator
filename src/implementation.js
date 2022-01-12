@@ -3,19 +3,21 @@
 const Bluebird = require( 'bluebird' );
 const builtins = require( './builtins.js' );
 const fetch = require( 'node-fetch' );
-const { containsError } = require( './utils.js' );
+const { containsError, traverseZ10 } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
+const { arrayToZ10 } = require( '../function-schemata/javascript/src/utils.js' );
 
 fetch.Promise = Bluebird;
 
 class Implementation {
 
-	constructor() {
+	constructor( Z14 ) {
 		this.resolver_ = null;
 		this.scope_ = null;
 		this.evaluatorUri_ = null;
 		this.lazyVariables_ = new Set();
 		this.lazyReturn_ = false;
+		this.Z14_ = Z14;
 	}
 
 	hasLazyVariable( variableName ) {
@@ -57,22 +59,22 @@ class Implementation {
 			const lazyVariables = builtins.getLazyVariables( ZID );
 			const lazyReturn = builtins.getLazyReturn( ZID );
 			// eslint-disable-next-line no-use-before-define
-			return new BuiltIn( builtin, lazyVariables, lazyReturn );
+			return new BuiltIn( Z14, builtin, lazyVariables, lazyReturn );
 		}
 		if ( Z14.Z14K2 !== undefined ) {
 			// eslint-disable-next-line no-use-before-define
-			return new Composition( Z14.Z14K2 );
+			return new Composition( Z14 );
 		}
 		// eslint-disable-next-line no-use-before-define
-		return new Evaluated();
+		return new Evaluated( Z14 );
 	}
 
 }
 
 class BuiltIn extends Implementation {
 
-	constructor( functor, lazyVariables, lazyReturn ) {
-		super();
+	constructor( Z14, functor, lazyVariables, lazyReturn ) {
+		super( Z14 );
 		for ( const variable of lazyVariables ) {
 			this.lazyVariables_.add( variable );
 		}
@@ -123,6 +125,17 @@ class Evaluated extends Implementation {
 		const Z7 = {};
 		Z7.Z1K1 = zobject.Z1K1;
 		Z7.Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_ ) ).Z22K1;
+		Z7.Z7K1.Z8K4 = arrayToZ10( [ this.Z14_ ] );
+
+		const implementation = this;
+
+		// Implementation may need to be dereferenced.
+		await traverseZ10( Z7.Z7K1.Z8K4, async function ( tail ) {
+			if ( tail.Z10K1.Z14K3 !== undefined ) {
+				await mutate( tail, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.evaluatorUri_, implementation.resolver_, implementation.scope_ );
+			}
+		} );
+
 		// Return type may be a function call and must be resolved to allow for serialization.
 		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.evaluatorUri_, this.resolver_, this.scope_, true );
 		if ( containsError( returnTypeEnvelope ) ) {
@@ -152,9 +165,9 @@ class Evaluated extends Implementation {
 
 class Composition extends Implementation {
 
-	constructor( composition ) {
-		super();
-		this.composition_ = { ...composition };
+	constructor( Z14 ) {
+		super( Z14 );
+		this.composition_ = { ...Z14.Z14K2 };
 	}
 
 	async execute() {
