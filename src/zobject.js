@@ -44,7 +44,11 @@ async function mutate( zobject, keys, evaluatorUri, resolver, scope = null ) {
 			continue;
 		}
 		if ( isGenericType( nextObject ) ) {
-			const Z4 = ( await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
+			const executionResult = await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope );
+			if ( containsError( executionResult ) ) {
+				return executionResult;
+			}
+			const Z4 = executionResult.Z22K1;
 			if ( !isType( Z4 ) ) {
 				return makeResultEnvelope(
 					null,

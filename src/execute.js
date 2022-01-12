@@ -1,6 +1,7 @@
 'use strict';
 
-const { Composition, Evaluated, Implementation } = require( './implementation.js' );
+const { Composition, Implementation } = require( './implementation.js' );
+const { RandomImplementationSelector } = require( './implementationSelector.js' );
 const { containsError, containsValue, isRefOrString, traverseZ10 } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
@@ -329,17 +330,6 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 	return result;
 }
 
-function selectImplementation( implementations ) {
-	// TODO(T296677): Implement heuristics to decide which implementation to
-	// use. Implicitly, current heuristic is to use a builtin if available;
-	// otherwise, choose a random implementation and return that.
-	const builtin = implementations.find( ( impl ) => Boolean( impl.Z14K4 ) );
-	if ( builtin !== undefined ) {
-		return builtin;
-	}
-	return implementations[ Math.floor( Math.random() * implementations.length ) ];
-}
-
 /**
  * Accepts a function call, retrieves the appropriate implementation, and tries
  * to execute with supplied arguments.
@@ -349,9 +339,12 @@ function selectImplementation( implementations ) {
  * @param {ReferenceResolver} resolver handles resolution of Z9s
  * @param {Scope} oldScope current variable bindings
  * @param {boolean} doValidate whether to validate types of arguments and return value
+ * @param {ImplementationSelector} implementationSelector
  * @return {Object} result of executing function call
  */
-execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doValidate = true ) {
+execute = async function (
+	zobject, evaluatorUri, resolver, oldScope = null, doValidate = true,
+	implementationSelector = null ) {
 	const scope = new Frame( oldScope );
 
 	// Retrieve argument declarations and instantiations.
@@ -389,7 +382,10 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 		);
 	}
 
-	const implementationZObject = selectImplementation( implementations );
+	if ( implementationSelector === null ) {
+		implementationSelector = new RandomImplementationSelector();
+	}
+	const implementationZObject = implementationSelector.select( implementations );
 	const implementation = Implementation.create( implementationZObject );
 
 	if ( implementation === null ) {
@@ -400,15 +396,6 @@ execute = async function ( zobject, evaluatorUri, resolver, oldScope = null, doV
 				[ 'Could not create an implementation for ' + zobject.Z7K1.Z8K5.Z9K1 + '.' ]
 			)
 		);
-	}
-
-	// Check corner case where evaluated function must be dereferenced.
-	if ( implementation instanceof Evaluated ) {
-		await traverseZ10( Z8K4, async function ( tail ) {
-			if ( tail.Z10K1.Z14K3 !== undefined ) {
-				await mutate( tail, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], evaluatorUri, resolver, scope );
-			}
-		} );
 	}
 
 	const argumentInstantiations = [];

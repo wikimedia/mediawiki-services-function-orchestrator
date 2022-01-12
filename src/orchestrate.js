@@ -55,9 +55,10 @@ async function Z7OrError( zobject ) {
  * results of function evaluation or the relevant error(s).
  *
  * @param {string} input the input for a function call
+ * @param {ImplementationSelector} implementationSelector
  * @return {Object} a Z22 containing the result of function evaluation or a Z5
  */
-async function orchestrate( input ) {
+async function orchestrate( input, implementationSelector = null ) {
 
 	let zobject = input.zobject;
 	if ( zobject === undefined ) {
@@ -89,7 +90,7 @@ async function orchestrate( input ) {
 		// TODO(T296685): Dereference top-level object if it is a Z9?
 		[ Z7OrError, [], 'Z7OrError' ],
 		[ maybeValidate, [ doValidate, resolver ], 'maybeValidate' ],
-		[ execute, [ evaluatorUri, resolver ], 'execute' ]
+		[ execute, [ evaluatorUri, resolver, /* oldScope= */null, /* doValidate= */true, /* implementationSelector= */implementationSelector ], 'execute' ]
 	];
 
 	for ( const callTuple of callTuples ) {
