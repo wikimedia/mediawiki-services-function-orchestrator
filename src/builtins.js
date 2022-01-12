@@ -5,6 +5,7 @@ const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { createSchema, isReference, isType, makeBoolean, traverseZ10 } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const { makeResultEnvelope, makeTrue, makeFalse } = require( '../function-schemata/javascript/src/utils.js' );
+const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
 const { mutate } = require( './zobject.js' );
 
 /**
@@ -232,6 +233,16 @@ function BUILTIN_UNQUOTE_( Z99 ) {
 	return makeResultEnvelope( Z99.Z99K1, null );
 }
 
+function makeValidatorResultEnvelope( Z1, errors ) {
+	if ( errors.length === 0 ) {
+		return makeResultEnvelope( Z1, null );
+	} else if ( errors.length === 1 ) {
+		return makeResultEnvelope( null, errors[ 0 ] );
+	} else {
+		return makeResultEnvelope( null, ErrorFormatter.createZErrorList( errors ) );
+	}
+}
+
 async function BUILTIN_SCHEMA_VALIDATOR_(
 	quotedObject, quotedType, evaluatorUri, resolver, scope ) {
 	// TODO(T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
@@ -253,16 +264,12 @@ async function BUILTIN_SCHEMA_VALIDATOR_(
 	} else {
 		errors = [ theStatus.getZ5() ];
 	}
-	return makeResultEnvelope( utils.arrayToZ10( errors ), null );
+
+	return makeValidatorResultEnvelope( Z1, errors );
 }
 
 function BUILTIN_EMPTY_VALIDATOR_( Z1 ) {
-	return makeResultEnvelope( {
-		Z1K1: {
-			Z1K1: 'Z9',
-			Z9K1: 'Z10'
-		}
-	}, null );
+	return makeResultEnvelope( Z1, null );
 }
 
 /**
@@ -306,33 +313,31 @@ function arrayValidator( Z10, key, identity ) {
 		}
 	}
 
-	return makeResultEnvelope(
-		utils.arrayToZ10(
-			messages.map( ( message ) =>
-				normalError( [ error.array_element_not_well_formed ], [ message ] )
-			)
-		), null );
+	return messages.map(
+		( message ) => normalError( [ error.array_element_not_well_formed ], [ message ] )
+	);
 }
 
 function BUILTIN_FUNCTION_VALIDATOR_( Z99 ) {
 	const Z1 = Z99.Z99K1;
-	return arrayValidator(
+	const errors = arrayValidator(
 		Z1.Z8K1,
 		( x ) => x.Z17K2.Z6K1,
 		Z1.Z8K5.Z9K1
 	);
+
+	return makeValidatorResultEnvelope( Z99, errors );
 }
 
 function BUILTIN_Z4_TYPE_VALIDATOR_( Z99 ) {
 	const Z1 = Z99.Z99K1;
-	const errors = utils.convertZListToArray(
-		arrayValidator(
-			Z1.Z4K2,
-			( x ) => x.Z3K2.Z6K1,
-			Z1.Z4K1.Z9K1
-		)
+	const errors = arrayValidator(
+		Z1.Z4K2,
+		( x ) => x.Z3K2.Z6K1,
+		Z1.Z4K1.Z9K1
 	);
-	return makeResultEnvelope( utils.arrayToZ10( errors ), null );
+
+	return makeValidatorResultEnvelope( Z99, errors );
 }
 
 async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
@@ -399,7 +404,8 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, evaluatorUri, resolver, scope ) {
 	const errors = [];
 	await BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_( Z99, errors, evaluatorUri, resolver, scope );
-	return makeResultEnvelope( utils.arrayToZ10( errors ), null );
+
+	return makeValidatorResultEnvelope( Z99, errors );
 }
 
 async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, evaluatorUri, resolver, scope ) {
@@ -425,7 +431,7 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, evaluatorUri, resolver
 		seen.add( languages[ i ] );
 	}
 
-	return makeResultEnvelope( utils.arrayToZ10( errors ), null );
+	return makeValidatorResultEnvelope( Z99, errors );
 }
 
 function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_( Z99 ) {
@@ -448,16 +454,18 @@ function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_( Z99 ) {
 		seen.add( languages[ i ] );
 	}
 
-	return makeResultEnvelope( utils.arrayToZ10( errors ), null );
+	return makeValidatorResultEnvelope( Z99, errors );
 }
 
 function BUILTIN_ERROR_TYPE_VALIDATOR_( Z99 ) {
 	const Z1 = Z99.Z99K1;
-	return arrayValidator(
+	const errors = arrayValidator(
 		Z1.Z50K1,
 		( x ) => x.Z3K2.Z6K1,
 		Z1.Z8K5.Z9K1
 	);
+
+	return makeValidatorResultEnvelope( Z99, errors );
 }
 
 function Z3For( typeZ4, nameZ6 ) {
@@ -926,7 +934,7 @@ builtinReferences.set( 'Z831', createZ8(
 			builtinReferences.set( `Z${id + 100}`, createZ8(
 				`Z${id + 100}`,
 				[ createArgument( 'Z1', `Z${id + 100}K1` ) ],
-				'Z10',
+				`Z${id}`,
 				`Z${id + 200}`
 			) );
 		} );

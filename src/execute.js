@@ -150,7 +150,7 @@ class Frame extends BaseFrame {
 		}
 		if ( doValidate ) {
 			const actualResult = await validateAsType( argument, resolver );
-			if ( convertZListToArray( actualResult.Z22K1 ).length > 0 ) {
+			if ( containsError( actualResult ) ) {
 				// TODO(T296676): Include Z5 information from validator in this error.
 				return ArgumentState.ERROR(
 					normalError(
@@ -212,7 +212,7 @@ class Frame extends BaseFrame {
 					const declaredType = newDict.declaredType;
 					const declaredResult = await validateAsType(
 						argument, resolver, declaredType );
-					if ( convertZListToArray( declaredResult.Z22K1 ).length > 0 ) {
+					if ( containsError( declaredResult ) ) {
 						// TODO(T296676): Include Z5 information from validator in this error.
 						boundValue = ArgumentState.ERROR(
 							normalError(
@@ -310,7 +310,7 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 		const Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		const returnType = ( await mutate( Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		const returnTypeValidation = await validateAsType( result.Z22K1, resolver, returnType );
-		if ( convertZListToArray( returnTypeValidation.Z22K1 ).length > 0 ) {
+		if ( containsError( returnTypeValidation ) ) {
 			// TODO(T296676): Include Z5 information from validator in this error.
 			return makeResultEnvelope(
 				null,

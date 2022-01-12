@@ -2,10 +2,10 @@
 
 const traverse = require( 'json-schema-traverse' );
 const { execute } = require( './execute.js' );
-const { createSchema } = require( './utils.js' );
+const { containsError, createSchema } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
-const { convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToArray, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 
 const validators = new Map();
 
@@ -78,16 +78,13 @@ async function runTypeValidator( Z1, typeZObject, resolver ) {
 
 	try {
 		// TODO(T296681): Catch errors when async functions reject.
-		const result = await runValidationFunction( validatorZid.Z9K1, resolver, Z1 );
-		return convertZListToArray( result.Z22K1 );
+		return await runValidationFunction( validatorZid.Z9K1, resolver, Z1 );
 	} catch ( err ) {
 		console.error( err );
-		return [
-			normalError(
-				[ error.zid_not_found ],
-				[ `Builtin validator "${validatorZid.Z9K1}" not found for "${typeZObject.Z2K1.Z6K1}"` ]
-			)
-		];
+		return makeResultEnvelope( null, normalError(
+			[ error.zid_not_found ],
+			[ `Builtin validator "${validatorZid.Z9K1}" not found for "${typeZObject.Z2K1.Z6K1}"` ]
+		) );
 	}
 }
 
@@ -126,7 +123,7 @@ async function getContainedTypeZObjects( zobject, resolver ) {
 async function validate( zobject, resolver ) {
 
 	const errors = [];
-	const validatorPromises = [];
+	const typeValidatorPromises = [];
 	const ZObjectTypes = await getContainedTypeZObjects( zobject, resolver );
 
 	traverse( zobject, { allKeys: true }, ( Z1 ) => {
@@ -161,16 +158,26 @@ async function validate( zobject, resolver ) {
 				)
 			);
 		} else {
-			validatorPromises.push(
+			typeValidatorPromises.push(
 				runTypeValidator( Z1, ZObjectTypes[ typeKey.asString() ], resolver )
 			);
 		}
 	} );
 
-	const validatorErrors = await Promise.all( validatorPromises );
-	validatorErrors.forEach( ( typeErrors ) =>
-		errors.push.apply( errors, typeErrors )
-	);
+	const typeValidatorResults = await Promise.all( typeValidatorPromises );
+
+	typeValidatorResults
+		.filter( containsError )
+		.forEach( ( result ) => {
+			const error = result.Z22K2;
+
+			// if this is a Z509/Multiple errors it will be flattened
+			if ( error.Z5K1.Z9K1 === 'Z509' ) {
+				errors.push.apply( errors, convertZListToArray( error.Z5K2 ) );
+			} else {
+				errors.push( error );
+			}
+		} );
 
 	return errors;
 }
