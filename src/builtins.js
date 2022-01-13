@@ -809,7 +809,7 @@ builtinReferences.set( 'Z805', createZ8(
 	'Z805',
 	[
 		createArgument( 'Z1', 'Z805K1' )
-	], 'Z1', 'Z905'
+	], normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z22' } ).Z22K1, 'Z905'
 ) );
 builtinReferences.set( 'Z808', createZ8(
 	'Z808',
@@ -822,7 +822,7 @@ builtinReferences.set( 'Z810', createZ8(
 	[
 		createArgument( 'Z1', 'Z810K1' ),
 		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z810K2' )
-	], 'Z1', 'Z910'
+	], normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z910'
 ) );
 builtinReferences.set( 'Z811', createZ8(
 	'Z811',
@@ -834,14 +834,14 @@ builtinReferences.set( 'Z812', createZ8(
 	'Z812',
 	[
 		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z812K1' )
-	], 'Z1', 'Z912'
+	], normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z912'
 ) );
 builtinReferences.set( 'Z813', createZ8(
 	'Z813',
 	[
 		// TODO(T298054): Update argument validation for built-in list functions to exclude Z10s
 		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z813K1' )
-	], 'Z1', 'Z913'
+	], 'Z40', 'Z913'
 ) );
 builtinReferences.set( 'Z821', createZ8(
 	'Z821',
@@ -860,20 +860,20 @@ builtinReferences.set( 'Z844', createZ8(
 	[
 		createArgument( 'Z1', 'Z844K1' ),
 		createArgument( 'Z1', 'Z844K2' )
-	], 'Z1', 'Z944'
+	], 'Z40', 'Z944'
 ) );
 builtinReferences.set( 'Z866', createZ8(
 	'Z866',
 	[
 		createArgument( 'Z1', 'Z866K1' ),
 		createArgument( 'Z1', 'Z866K2' )
-	], 'Z1', 'Z966'
+	], 'Z40', 'Z966'
 ) );
 builtinReferences.set( 'Z868', createZ8(
 	'Z868',
 	[
 		createArgument( 'Z6', 'Z868K1' )
-	], 'Z1', 'Z968'
+	], normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' } ).Z22K1, 'Z968'
 ) );
 builtinReferences.set( 'Z881', createZ8(
 	'Z881',
@@ -898,21 +898,21 @@ builtinReferences.set( 'Z883', createZ8(
 builtinReferences.set( 'Z886', createZ8(
 	'Z886',
 	[
-		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z886K1' )
-	], 'Z1', 'Z986'
+		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' } ).Z22K1, 'Z886K1' )
+	], 'Z6', 'Z986'
 ) );
 builtinReferences.set( 'Z888', createZ8(
 	'Z888',
 	[
 		createArgument( 'Z86', 'Z888K1' ),
 		createArgument( 'Z86', 'Z888K2' )
-	], 'Z1', 'Z988'
+	], 'Z40', 'Z988'
 ) );
 builtinReferences.set( 'Z899', createZ8(
 	'Z899',
 	[
 		createArgument( 'Z99', 'Z899K1' )
-	], 'Z1', 'Z999'
+	], 'Z9', 'Z999'
 ) );
 builtinReferences.set( 'Z831', createZ8(
 	'Z831',
