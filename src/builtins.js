@@ -22,6 +22,67 @@ function isTrue( Z40 ) {
 	return Z40.Z40K1.Z9K1 === makeTrue().Z40K1.Z9K1;
 }
 
+function Z3For( typeZ4, nameZ6 ) {
+	return {
+		Z1K1: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z3'
+		},
+		Z3K1: typeZ4,
+		Z3K2: nameZ6,
+		Z3K3: {
+			Z1K1: {
+				Z1K1: 'Z9',
+				Z9K1: 'Z12'
+			},
+			Z12K1: {
+				Z1K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z10'
+				}
+			}
+		}
+	};
+}
+
+function Z9For( typeZID ) {
+	return {
+		Z1K1: 'Z9',
+		Z9K1: typeZID
+	};
+}
+
+/**
+ * Wraps English label in a Z12/Multilingual String object.
+ *
+ * @param {string} name The English label.
+ * @return {Object} a Z12/Multilingual String containing a single Z11 wrapping the label
+ */
+function Z12For( name ) {
+	return {
+		Z1K1: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z12'
+		},
+		Z12K1: utils.arrayToZ10( [
+			{
+				Z1K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z11'
+				},
+				Z11K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z1002'
+				},
+				Z11K2: {
+					Z1K1: 'Z6',
+					Z6K1: name
+				}
+			}
+		] )
+	};
+}
+
 /**
  * BUILTINS
  */
@@ -61,15 +122,18 @@ function reifyRecursive( Z1 ) {
 			Z6K1: Z1
 		};
 	}
+	const pairType = {
+		Z1K1: Z9For( 'Z7' ),
+		Z7K1: Z9For( 'Z882' ),
+		Z882K1: Z9For( 'Z39' ),
+		Z882K2: Z9For( 'Z1' )
+	};
 	const result = [];
 	for ( const key of Object.keys( Z1 ) ) {
 		const value = reifyRecursive( Z1[ key ] );
 		result.push( {
-			Z1K1: {
-				Z1K1: 'Z9',
-				Z9K1: 'Z22'
-			},
-			Z22K1: {
+			Z1K1: pairType,
+			K1: {
 				Z1K1: {
 					Z1K1: 'Z9',
 					Z9K1: 'Z39'
@@ -79,10 +143,10 @@ function reifyRecursive( Z1 ) {
 					Z6K1: key
 				}
 			},
-			Z22K2: value
+			K2: value
 		} );
 	}
-	return utils.arrayToZ10( result );
+	return utils.convertArrayToZList( result );
 }
 
 function BUILTIN_REIFY_( Z1 ) {
@@ -468,67 +532,6 @@ function BUILTIN_ERROR_TYPE_VALIDATOR_( Z99 ) {
 	return makeValidatorResultEnvelope( Z99, errors );
 }
 
-function Z3For( typeZ4, nameZ6 ) {
-	return {
-		Z1K1: {
-			Z1K1: 'Z9',
-			Z9K1: 'Z3'
-		},
-		Z3K1: typeZ4,
-		Z3K2: nameZ6,
-		Z3K3: {
-			Z1K1: {
-				Z1K1: 'Z9',
-				Z9K1: 'Z12'
-			},
-			Z12K1: {
-				Z1K1: {
-					Z1K1: 'Z9',
-					Z9K1: 'Z10'
-				}
-			}
-		}
-	};
-}
-
-function Z9For( typeZID ) {
-	return {
-		Z1K1: 'Z9',
-		Z9K1: typeZID
-	};
-}
-
-/**
- * Wraps English label in a Z12/Multilingual String object.
- *
- * @param {string} name The English label.
- * @return {Object} a Z12/Multilingual String containing a single Z11 wrapping the label
- */
-function Z12For( name ) {
-	return {
-		Z1K1: {
-			Z1K1: 'Z9',
-			Z9K1: 'Z12'
-		},
-		Z12K1: utils.arrayToZ10( [
-			{
-				Z1K1: {
-					Z1K1: 'Z9',
-					Z9K1: 'Z11'
-				},
-				Z11K1: {
-					Z1K1: 'Z9',
-					Z9K1: 'Z1002'
-				},
-				Z11K2: {
-					Z1K1: 'Z6',
-					Z6K1: name
-				}
-			}
-		] )
-	};
-}
-
 function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
 	const itsMe = {
 		Z1K1: {
@@ -809,7 +812,9 @@ builtinReferences.set( 'Z805', createZ8(
 	'Z805',
 	[
 		createArgument( 'Z1', 'Z805K1' )
-	], normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z22' } ).Z22K1, 'Z905'
+	],
+	normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } } ).Z22K1,
+	'Z905'
 ) );
 builtinReferences.set( 'Z808', createZ8(
 	'Z808',
