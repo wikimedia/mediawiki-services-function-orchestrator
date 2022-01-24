@@ -116,7 +116,7 @@ function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
 }
 
 function reifyRecursive( Z1 ) {
-	if ( typeof Z1 === 'string' ) {
+	if ( utils.isString( Z1 ) ) {
 		return {
 			Z1K1: 'Z6',
 			Z6K1: Z1
@@ -153,23 +153,23 @@ function BUILTIN_REIFY_( Z1 ) {
 	return makeResultEnvelope( reifyRecursive( Z1 ), null );
 }
 
-function abstractRecursive( Z10 ) {
-	if ( Z10.Z1K1 === 'Z6' ) {
-		return Z10.Z6K1;
+function abstractRecursive( ZList ) {
+	if ( ZList.Z1K1 === 'Z6' ) {
+		return ZList.Z6K1;
 	}
 	const result = {};
-	const arrayOfZ22 = utils.convertZListToArray( Z10 );
-	for ( const Z22 of arrayOfZ22 ) {
-		const Z39 = Z22.Z22K1;
-		result[ Z39.Z39K1.Z6K1 ] = abstractRecursive( Z22.Z22K2 );
+	const arrayOfPairs = utils.convertZListToArray( ZList );
+	for ( const pair of arrayOfPairs ) {
+		const Z39 = pair.K1;
+		result[ Z39.Z39K1.Z6K1 ] = abstractRecursive( pair.K2 );
 	}
 	return result;
 }
 
-function BUILTIN_ABSTRACT_( Z10 ) {
+function BUILTIN_ABSTRACT_( ZList ) {
 	// TODO(T296666): Validate that List is a reified list, i.e. that all
 	// elements are Pairs(Key, ZObject).
-	return makeResultEnvelope( abstractRecursive( Z10 ), null );
+	return makeResultEnvelope( abstractRecursive( ZList ), null );
 }
 
 function BUILTIN_CONS_( Z1, Z10 ) {
@@ -819,7 +819,9 @@ builtinReferences.set( 'Z805', createZ8(
 builtinReferences.set( 'Z808', createZ8(
 	'Z808',
 	[
-		createArgument( 'Z1', 'Z808K1' )
+		createArgument(
+			normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } } ).Z22K1,
+			'Z808K1' )
 	], 'Z1', 'Z908'
 ) );
 builtinReferences.set( 'Z810', createZ8(
