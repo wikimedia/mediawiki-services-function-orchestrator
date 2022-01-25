@@ -173,7 +173,7 @@ async function validate( zobject, resolver ) {
 
 			// if this is a Z509/Multiple errors it will be flattened
 			if ( error.Z5K1.Z9K1 === 'Z509' ) {
-				errors.push.apply( errors, convertZListToArray( error.Z5K2 ) );
+				errors.push.apply( errors, convertZListToArray( error.Z5K2.K1 ) );
 			} else {
 				errors.push( error );
 			}
