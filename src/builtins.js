@@ -283,6 +283,10 @@ function BUILTIN_CHARS_TO_STRING_( Z10 ) {
 	);
 }
 
+function BUILTIN_TRIGGER_METADATA_( Z5 ) {
+	return makeResultEnvelope( null, Z5 );
+}
+
 function BUILTIN_SAME_( Z86_1, Z86_2 ) {
 	let result;
 	if ( Z86_1.Z86K1.Z6K1 === Z86_2.Z86K1.Z6K1 ) {
@@ -522,14 +526,7 @@ function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_( Z99 ) {
 }
 
 function BUILTIN_ERROR_TYPE_VALIDATOR_( Z99 ) {
-	const Z1 = Z99.Z99K1;
-	const errors = arrayValidator(
-		Z1.Z50K1,
-		( x ) => x.Z3K2.Z6K1,
-		Z1.Z8K5.Z9K1
-	);
-
-	return makeValidatorResultEnvelope( Z99, errors );
+	return makeValidatorResultEnvelope( Z99, [] );
 }
 
 function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
@@ -642,6 +639,7 @@ builtinFunctions.set( 'Z910', BUILTIN_CONS_ );
 builtinFunctions.set( 'Z911', BUILTIN_HEAD_ );
 builtinFunctions.set( 'Z912', BUILTIN_TAIL_ );
 builtinFunctions.set( 'Z913', BUILTIN_EMPTY_ );
+builtinFunctions.set( 'Z920', BUILTIN_TRIGGER_METADATA_ );
 builtinFunctions.set( 'Z921', BUILTIN_FIRST_ );
 builtinFunctions.set( 'Z922', BUILTIN_SECOND_ );
 builtinFunctions.set( 'Z931', BUILTIN_SCHEMA_VALIDATOR_ );
@@ -849,6 +847,12 @@ builtinReferences.set( 'Z813', createZ8(
 		// TODO(T298054): Update argument validation for built-in list functions to exclude Z10s
 		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z813K1' )
 	], 'Z40', 'Z913'
+) );
+builtinReferences.set( 'Z820', createZ8(
+	'Z820',
+	[
+		createArgument( 'Z5', 'Z820K1' )
+	], 'Z1', 'Z920'
 ) );
 builtinReferences.set( 'Z821', createZ8(
 	'Z821',

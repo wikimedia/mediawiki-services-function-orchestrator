@@ -1,0 +1,9 @@
+[
+	{
+		"Z1K1": "Z5",
+		"Z5K1": {
+			"Z1K1": "Z506",
+			"Z506K1": "Invalid argument type: expected Z5, got Z6"
+		}
+	}
+]
