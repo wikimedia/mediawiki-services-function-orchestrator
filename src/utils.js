@@ -1,7 +1,7 @@
 'use strict';
 
 const { SchemaFactory, ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
-const { isUserDefined } = require( '../function-schemata/javascript/src/utils' );
+const { isUserDefined, makeUnit } = require( '../function-schemata/javascript/src/utils' );
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z1Validator = normalFactory.create( 'Z1' );
@@ -173,14 +173,6 @@ function containsValue( pair ) {
 	return isZObject( pair.Z22K1 ) && !( isNothing( pair.Z22K1 ) );
 }
 
-// TODO(T282891): Replace with function-schemata version.
-function Z23( canonical = false ) {
-	if ( canonical ) {
-		return 'Z23';
-	}
-	return { Z1K1: 'Z9', Z9K1: 'Z23' };
-}
-
 // TODO(T282891): Replace uses of this with upstream makeResultEnvelope
 // (which doesn't handle the third parameter)
 function makeResultEnvelopeAndMaybeCanonicalise(
@@ -197,8 +189,8 @@ function makeResultEnvelopeAndMaybeCanonicalise(
 	}
 	return {
 		Z1K1: Z1K1,
-		Z22K1: goodResult === null ? Z23( canonical ) : goodResult,
-		Z22K2: badResult === null ? Z23( canonical ) : badResult
+		Z22K1: goodResult === null ? makeUnit( canonical ) : goodResult,
+		Z22K2: badResult === null ? makeUnit( canonical ) : badResult
 	};
 }
 
@@ -291,6 +283,5 @@ module.exports = {
 	isType,
 	makeBoolean,
 	makeResultEnvelopeAndMaybeCanonicalise,
-	traverseZ10,
-	Z23
+	traverseZ10
 };
