@@ -263,7 +263,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call (short form) for Z810/Cons onto empty Z10',
+		'function call (short form) for Z810/Cons onto empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z810.json' ) },
 		readJSON( './test/features/v1/test_data/Z910_expected.json' )
 	);
@@ -281,7 +281,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z910/Cons onto empty Z10',
+		'function call for Z910/Cons onto empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z910.json' ) },
 		readJSON( './test/features/v1/test_data/Z910_expected.json' )
 	);
@@ -299,8 +299,14 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call (short form) for Z811/Head with non-empty Z10',
+		'function call (short form) for Z811/Head with non-empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z811.json' ) },
+		{ Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
+	);
+
+	testFunctionCall(
+		'function call (short form) for Z811/Head with non-empty Z10',
+		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z811_Z10_explicit.json' ) },
 		{ Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
 	);
 
@@ -318,7 +324,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z911 (head) with non-empty Z10',
+		'function call for Z911 (head) with non-empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z911.json' ) },
 		{ Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
 	);
@@ -330,7 +336,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z911 (head) with empty Z10',
+		'function call for Z911 (head) with empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z911_empty.json' ) },
 		null,
 		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no head.' } }
@@ -344,7 +350,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call (short form) for Z812/Tail with non-empty Z10',
+		'function call (short form) for Z812/Tail with non-empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z812.json' ) },
 		{
 			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
@@ -369,7 +375,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z812/Tail with reference to Z912 and non-empty Z10',
+		'function call for Z812/Tail with reference to Z912 and non-empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z912.json' ) },
 		{
 			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' },
@@ -387,7 +393,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z812/Tail with reference to Z912 and empty Z10',
+		'function call for Z812/Tail with reference to Z912 and empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z912_empty.json' ) },
 		null,
 		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no tail.' } }
@@ -401,7 +407,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call (short form) for Z813/Empty with an empty Z10',
+		'function call (short form) for Z813/Empty with an empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z813_empty_Z10.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
 	);
@@ -419,7 +425,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z813/Empty with reference to Z913 and an empty Z10',
+		'function call for Z813/Empty with reference to Z913 and an empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z913_empty_Z10.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
 	);
@@ -431,7 +437,7 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z813/Empty with reference to Z913 and a non-empty Z10',
+		'function call for Z813/Empty with reference to Z913 and a non-empty List',
 		{ doValidate: false, zobject: readJSON( './test/features/v1/test_data/Z913_full_Z10.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
 	);
