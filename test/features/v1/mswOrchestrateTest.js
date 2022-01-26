@@ -557,4 +557,27 @@ describe( 'orchestrate', function () {
 		);
 	}
 
+	{
+		const callToThrow = readJSON( './test/features/v1/test_data/throw.json' );
+		const expected = callToThrow.Z820K1;
+		test(
+			'throw throws Z5s',
+			callToThrow,
+			null,
+			expected
+		);
+	}
+
+	{
+		const callToThrow = readJSON( './test/features/v1/test_data/throw.json' );
+		const expected = readJSON( './test/features/v1/test_data/throw_z6_expected.json' );
+		callToThrow.Z820K1 = 'I am a string and not an error';
+		test(
+			'throw does not throw Z6s',
+			callToThrow,
+			null,
+			expected
+		);
+	}
+
 } );
