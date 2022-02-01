@@ -78,7 +78,7 @@ function createSchema( Z1 ) {
 	return result.get( key );
 }
 
-// TODO(T296659): Use validatesAs* from function-schemata instead of is*.
+// TODO (T296659): Use validatesAs* from function-schemata instead of is*.
 /**
  * Validates a ZObject.
  *
@@ -96,7 +96,7 @@ function isZObject( Z1 ) {
  * @return {bool} whether Z1 can validate as an Error
  */
 function isError( Z1 ) {
-	// TODO(T287921): Assay that Z1 validates as Z5 but not as Z9 or Z18.
+	// TODO (T287921): Assay that Z1 validates as Z5 but not as Z9 or Z18.
 	try {
 		return Z1.Z1K1 === 'Z5' || Z1.Z1K1.Z9K1 === 'Z5';
 	} catch ( error ) {
@@ -111,7 +111,7 @@ function isError( Z1 ) {
  * @return {bool} whether Z1 can validate as a generic type instantiation
  */
 function isGenericType( Z1 ) {
-	// TODO(T296658): Use the GENERIC schema.
+	// TODO (T296658): Use the GENERIC schema.
 	try {
 		if ( !isFunctionCall( Z1.Z1K1 ) ) {
 			return false;
@@ -144,7 +144,7 @@ function isArgumentReference( Z1 ) {
 /**
  * Determines whether argument is a Z23.
  *
- * TODO(T285433): Replace Z23 with Z21.
+ * TODO (T285433): Replace Z23 with Z21.
  *
  * @param {Object} Z1 a ZObject
  * @return {bool} true if Z1 validates as Z23
@@ -173,7 +173,7 @@ function containsValue( pair ) {
 	return isZObject( pair.Z22K1 ) && !( isNothing( pair.Z22K1 ) );
 }
 
-// TODO(T282891): Replace uses of this with upstream makeResultEnvelope
+// TODO (T282891): Replace uses of this with upstream makeResultEnvelope
 // (which doesn't handle the third parameter)
 function makeResultEnvelopeAndMaybeCanonicalise(
 	goodResult = null, badResult = null, canonical = false
@@ -228,7 +228,7 @@ function makeBoolean( truthy = false, canonical = false ) {
 	return zobject;
 }
 
-// TODO(T292650): This needs to generate an actual error instead of Z6s.
+// TODO (T292650): This needs to generate an actual error instead of Z6s.
 function generateError( errorString = 'An unknown error occurred' ) {
 	return {
 		Z1K1: {

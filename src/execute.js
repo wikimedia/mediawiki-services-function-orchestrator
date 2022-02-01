@@ -57,14 +57,14 @@ class EmptyFrame extends BaseFrame {
 	async retrieveArgument( argumentName ) {
 		return ArgumentState.ERROR(
 			normalError(
-				// TODO(T287919): Reconsider error type.
+				// TODO (T287919): Reconsider error type.
 				[ error.invalid_key ],
 				[ 'No argument called ' + argumentName + ' in scope.' ] ) );
 	}
 }
 
 async function validateAsType( Z1, resolver, typeZObject = null ) {
-	// TODO(T294275): Retrieve Z2s for generic Z4s and call runValidationFunction
+	// TODO (T294275): Retrieve Z2s for generic Z4s and call runValidationFunction
 	// here; this Z8 here is a nasty hack.
 	const Z8Reference = 'Z831';
 
@@ -72,7 +72,7 @@ async function validateAsType( Z1, resolver, typeZObject = null ) {
 		typeZObject = Z1.Z1K1;
 	}
 
-	// TODO(T292787): Make this more elegant--should be possible to avoid
+	// TODO (T292787): Make this more elegant--should be possible to avoid
 	// passing strings in the first place.
 	if ( typeof typeZObject === 'string' || typeZObject instanceof String ) {
 		typeZObject = { Z1K1: 'Z9', Z9K1: typeZObject };
@@ -133,7 +133,7 @@ class Frame extends BaseFrame {
 	}
 
 	async processArgument( argumentDict, evaluatorUri, resolver, doValidate ) {
-		// TODO(T296675): "doValidate" is a heavy-handed hack to avoid infinite
+		// TODO (T296675): "doValidate" is a heavy-handed hack to avoid infinite
 		// recursion. Better solutions include
 		//  -   validating directly with schemata if the type is built-in,
 		//      otherwise using a Function;
@@ -152,7 +152,7 @@ class Frame extends BaseFrame {
 		if ( doValidate ) {
 			const actualResult = await validateAsType( argument, resolver );
 			if ( containsError( actualResult ) ) {
-				// TODO(T296676): Include Z5 information from validator in this error.
+				// TODO (T296676): Include Z5 information from validator in this error.
 				return ArgumentState.ERROR(
 					normalError(
 						[ error.argument_type_mismatch ],
@@ -214,7 +214,7 @@ class Frame extends BaseFrame {
 					const declaredResult = await validateAsType(
 						argument, resolver, declaredType );
 					if ( containsError( declaredResult ) ) {
-						// TODO(T296676): Include Z5 information from validator in this error.
+						// TODO (T296676): Include Z5 information from validator in this error.
 						boundValue = ArgumentState.ERROR(
 							normalError(
 								[ error.argument_type_mismatch ],
@@ -222,7 +222,7 @@ class Frame extends BaseFrame {
 					}
 				}
 			} else {
-				// TODO(T296676): Throw error here, since this shouldn't happen.
+				// TODO (T296676): Throw error here, since this shouldn't happen.
 			}
 		}
 		if ( doSetBoundValue ) {
@@ -258,7 +258,7 @@ async function getArgumentStates( zobject, evaluatorUri, resolver, scope ) {
 		const argumentDict = {};
 		const argumentName = ( await mutate( Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		argumentDict.name = argumentName;
-		// TODO(T292787): This is flaky to rely on; find a better way to determine type.
+		// TODO (T292787): This is flaky to rely on; find a better way to determine type.
 		const declaredType = ( await mutate( Z17, [ 'Z17K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		argumentDict.declaredType = declaredType;
 		let key = argumentName;
@@ -312,7 +312,7 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 		const returnType = ( await mutate( Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		const returnTypeValidation = await validateAsType( result.Z22K1, resolver, returnType );
 		if ( containsError( returnTypeValidation ) ) {
-			// TODO(T296676): Include Z5 information from validator in this error.
+			// TODO (T296676): Include Z5 information from validator in this error.
 			return makeResultEnvelope(
 				null,
 				normalError(
@@ -367,7 +367,7 @@ execute = async function (
 	const Z8K4 = ( await mutate( zobject, [ 'Z7K1', 'Z8K4' ], evaluatorUri, resolver, scope ) ).Z22K1;
 	const implementations = [];
 	await traverseZ10( Z8K4, async function ( tail ) {
-		// TODO(T296679): Write test making sure that Z14s are resolved.
+		// TODO (T296679): Write test making sure that Z14s are resolved.
 		const Z10K1 = ( await mutate( tail, [ 'Z10K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		implementations.push( Z10K1 );
 	} );

@@ -102,7 +102,7 @@ function BUILTIN_IF_( antecedent, trueConsequent, falseConsequent ) {
 }
 
 function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
-	// TODO(T296667): Add test for error case.
+	// TODO (T296667): Add test for error case.
 	let goodResult = null, badResult = null;
 	const key = Z39.Z39K1.Z6K1;
 	if ( Z1[ key ] === undefined ) {
@@ -167,7 +167,7 @@ function abstractRecursive( ZList ) {
 }
 
 function BUILTIN_ABSTRACT_( ZList ) {
-	// TODO(T296666): Validate that List is a reified list, i.e. that all
+	// TODO (T296666): Validate that List is a reified list, i.e. that all
 	// elements are Pairs(Key, ZObject).
 	return makeResultEnvelope( abstractRecursive( ZList ), null );
 }
@@ -273,7 +273,7 @@ function charsToStringInternal( Z10 ) {
 }
 
 function BUILTIN_CHARS_TO_STRING_( Z10 ) {
-	// TODO(T294482): Validate input is a List(Z86).
+	// TODO (T294482): Validate input is a List(Z86).
 	return makeResultEnvelope(
 		{
 			Z1K1: 'Z6',
@@ -313,18 +313,18 @@ function makeValidatorResultEnvelope( Z1, errors ) {
 
 async function BUILTIN_SCHEMA_VALIDATOR_(
 	quotedObject, quotedType, evaluatorUri, resolver, scope ) {
-	// TODO(T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
+	// TODO (T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
 	const Z1 = quotedObject.Z99K1;
 	const Z4 = quotedType.Z99K1;
 
 	// Ensure all internal type references are resolved.
-	// TODO(T297904): Also need to resolve generic types.
+	// TODO (T297904): Also need to resolve generic types.
 	await traverseZ10( Z4.Z4K2, async function ( Z3Tail ) {
 		await mutate( Z3Tail, [ 'Z10K1', 'Z3K1' ], evaluatorUri, resolver, scope );
 	} );
 	const theSchema = createSchema( { Z1K1: Z4 } );
 
-	// TODO(T294289): Return validationStatus Z5s as Z22K2.
+	// TODO (T294289): Return validationStatus Z5s as Z22K2.
 	const theStatus = theSchema.validateStatus( Z1 );
 	let errors;
 	if ( theStatus.isValid() ) {
@@ -428,8 +428,8 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 
 	const keysToSkip = new Set( [ 'Z1K1', 'Z7K1' ] );
 
-	// TODO(T296668): Also check declared arguments that are absent from the Z7.
-	// TODO(T296668): Also check local keys.
+	// TODO (T296668): Also check declared arguments that are absent from the Z7.
+	// TODO (T296668): Also check local keys.
 	for ( const key of Object.keys( Z1 ) ) {
 		if ( keysToSkip.has( key ) ) {
 			continue;
@@ -446,7 +446,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 		}
 		const type = Z1[ key ].Z1K1.Z9K1 || Z1[ key ].Z1K1;
 		let declaredType = argumentDict.declaredType;
-		// TODO(T296669): Fix type semantics below; do something when declaredType is a Z4.
+		// TODO (T296669): Fix type semantics below; do something when declaredType is a Z4.
 		if ( isType( declaredType ) ) {
 			continue;
 		}
@@ -456,7 +456,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 
 		// Type mismatches for Z7, Z9, and Z18 will be caught at runtime.
 		const skippableTypes = new Set( [ 'Z18', 'Z9', 'Z7' ] );
-		// TODO(T296669): More intricate subtype semantics once we have generic
+		// TODO (T296669): More intricate subtype semantics once we have generic
 		// types (just checking for Z1 is not sufficient).
 		if ( !( declaredType === type || declaredType === 'Z1' || skippableTypes.has( type ) ) ) {
 			errors.push(
@@ -844,7 +844,7 @@ builtinReferences.set( 'Z812', createZ8(
 builtinReferences.set( 'Z813', createZ8(
 	'Z813',
 	[
-		// TODO(T298054): Update argument validation for built-in list functions to exclude Z10s
+		// TODO (T298054): Update argument validation for built-in list functions to exclude Z10s
 		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z813K1' )
 	], 'Z40', 'Z913'
 ) );

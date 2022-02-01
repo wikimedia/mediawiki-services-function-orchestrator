@@ -23,7 +23,7 @@ async function maybeValidate( zobject, doValidate, resolver ) {
 	if ( doValidate ) {
 		const errors = await validate( zobject, resolver );
 		if ( errors.length > 0 ) {
-			// TODO(T296681): Wrap errors in a Z5.
+			// TODO (T296681): Wrap errors in a Z5.
 			return makeResultEnvelope( null, arrayToZ10( errors ) );
 		}
 	}
@@ -77,7 +77,7 @@ async function orchestrate( input, implementationSelector = null ) {
 		);
 	}
 
-	// TODO(T286752): Receiving the evaluator and wiki URIs as parameters
+	// TODO (T286752): Receiving the evaluator and wiki URIs as parameters
 	// (especially a GET param!) is no good. Find a way to share config among
 	// services.
 	const evaluatorUri = input.evaluatorUri || null;
@@ -87,14 +87,14 @@ async function orchestrate( input, implementationSelector = null ) {
 
 	const callTuples = [
 		[ normalize, [], 'normalize' ],
-		// TODO(T296685): Dereference top-level object if it is a Z9?
+		// TODO (T296685): Dereference top-level object if it is a Z9?
 		[ Z7OrError, [], 'Z7OrError' ],
 		[ maybeValidate, [ doValidate, resolver ], 'maybeValidate' ],
 		[ execute, [ evaluatorUri, resolver, /* oldScope= */null, /* doValidate= */true, /* implementationSelector= */implementationSelector ], 'execute' ]
 	];
 
 	for ( const callTuple of callTuples ) {
-		// TODO(T287986): isNothing check is redundant once validation returns
+		// TODO (T287986): isNothing check is redundant once validation returns
 		// correct type.
 		if ( containsError( currentPair ) || isNothing( currentPair.Z22K1 ) ) {
 			break;

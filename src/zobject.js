@@ -24,7 +24,7 @@ async function mutate( zobject, keys, evaluatorUri, resolver, scope = null ) {
 			nextObject = dereferenced.argumentDict.argument;
 			continue;
 		}
-		// TODO(T296686): isUserDefined call here is only an
+		// TODO (T296686): isUserDefined call here is only an
 		// optimization/testing expedient; it would be better to pre-populate
 		// the cache with builtin types.
 		if ( isReference( nextObject ) && isUserDefined( nextObject.Z9K1 ) ) {

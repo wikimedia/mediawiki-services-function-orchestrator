@@ -35,7 +35,7 @@ function getSchemaValidator( Z1 ) {
 function createValidatorZ7( Z8, ...Z1s ) {
 	const argumentDeclarations = convertZListToArray( Z8.Z8K1 );
 	if ( argumentDeclarations.length !== Z1s.length ) {
-		// TODO(T2926668): Call BUILTIN_FUNCTION_CALL_VALIDATOR_ on result to
+		// TODO (T2926668): Call BUILTIN_FUNCTION_CALL_VALIDATOR_ on result to
 		// avoid argument mismatches.
 	}
 	const result = {
@@ -77,7 +77,7 @@ async function runTypeValidator( Z1, typeZObject, resolver ) {
 	const validatorZid = typeZObject.Z2K2.Z4K3;
 
 	try {
-		// TODO(T296681): Catch errors when async functions reject.
+		// TODO (T296681): Catch errors when async functions reject.
 		return await runValidationFunction( validatorZid.Z9K1, resolver, Z1 );
 	} catch ( err ) {
 		console.error( err );
@@ -102,7 +102,7 @@ async function getContainedTypeZObjects( zobject, resolver ) {
 	traverse( zobject, { allKeys: true }, function ( Z1 ) {
 		const typeKey = ZObjectKeyFactory.create( Z1.Z1K1 );
 		const key = typeKey.asString();
-		// TODO(T297717): We should add other types to the set, not just builtins.
+		// TODO (T297717): We should add other types to the set, not just builtins.
 		if ( typeKey.type() === 'SimpleTypeKey' ) {
 			containedTypes.add( key );
 		}
@@ -146,14 +146,14 @@ async function validate( zobject, resolver ) {
 			return;
 		}
 		if ( ZObjectTypes[ typeKey.asString() ] === undefined ) {
-			// TODO(T297717): We should add other types to the set, not just builtins.
+			// TODO (T297717): We should add other types to the set, not just builtins.
 			return;
 		}
 		if ( !schemaValidator.validate( Z1 ) ) {
 			errors.push(
 				normalError(
 					[ error.not_wellformed ],
-					// TODO(T296676): Return validator Z5 errors.
+					// TODO (T296676): Return validator Z5 errors.
 					[ 'Could not validate object: ' + JSON.stringify( Z1 ) ]
 				)
 			);
