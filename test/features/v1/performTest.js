@@ -13,7 +13,7 @@ class Canned {
 	}
 
 	reset() {
-		// TODO: Read this and data on wiki from central location, maybe
+		// TODO(T300651): Read this and data on wiki from central location, maybe
 		// function-schemata.
 		this.dict_ = {
 			wiki: readJSON( 'test/features/v1/test_data/wikilambda_fetch.json' ),
