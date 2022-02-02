@@ -20,8 +20,11 @@ const { ReferenceResolver } = require( './db.js' );
  * @return {Object} a Z22
  */
 async function maybeValidate( zobject, doValidate, resolver ) {
+	const zobjectCopy = {};
+	zobjectCopy.Z1K1 = zobject.Z1K1;
+	zobjectCopy.Z7K1 = zobject.Z7K1;
 	if ( doValidate ) {
-		const errors = await validate( zobject, resolver );
+		const errors = await validate( zobjectCopy, resolver );
 		if ( errors.length > 0 ) {
 			// TODO (T296681): Wrap errors in a Z5.
 			return makeResultEnvelope( null, arrayToZ10( errors ) );

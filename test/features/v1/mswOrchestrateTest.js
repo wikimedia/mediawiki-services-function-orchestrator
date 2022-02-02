@@ -543,6 +543,25 @@ describe( 'orchestrate', function () {
 	}
 
 	{
+		const Z10006 = readJSON( './test/features/v1/test_data/Z10006.json' );
+		cannedResponses.setWiki( 'Z10006', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10006' },
+			Z2K2: Z10006
+		} );
+		const userDefinedEcho = readJSON( './test/features/v1/test_data/user-defined-type-as-reference.json' );
+		const typeOnly = readJSON( './test/features/v1/test_data/type-only.json' );
+		userDefinedEcho.Z1903K1 = typeOnly;
+		const expected = { ...typeOnly };
+		expected.Z1K1 = Z10006;
+		test(
+			'reference to user-defined type',
+			userDefinedEcho,
+			expected
+		);
+	}
+
+	{
 		class SecondImplementationSelector {
 			select( implementations ) {
 				return implementations[ 1 ];
@@ -570,8 +589,8 @@ describe( 'orchestrate', function () {
 
 	{
 		const callToThrow = readJSON( './test/features/v1/test_data/throw.json' );
+		callToThrow.Z820K1 = "I am a string and not an error plz don't throw meeee I will break";
 		const expected = readJSON( './test/features/v1/test_data/throw_z6_expected.json' );
-		callToThrow.Z820K1 = 'I am a string and not an error';
 		test(
 			'throw does not throw Z6s',
 			callToThrow,
