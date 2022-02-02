@@ -149,14 +149,9 @@ async function validate( zobject, resolver ) {
 			// TODO (T297717): We should add other types to the set, not just builtins.
 			return;
 		}
-		if ( !schemaValidator.validate( Z1 ) ) {
-			errors.push(
-				normalError(
-					[ error.not_wellformed ],
-					// TODO (T296676): Return validator Z5 errors.
-					[ 'Could not validate object: ' + JSON.stringify( Z1 ) ]
-				)
-			);
+		const theStatus = schemaValidator.validateStatus( Z1 );
+		if ( !theStatus.isValid() ) {
+			errors.push( theStatus.getZ5() );
 		} else {
 			typeValidatorPromises.push(
 				runTypeValidator( Z1, ZObjectTypes[ typeKey.asString() ], resolver )
