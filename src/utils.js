@@ -1,36 +1,17 @@
 'use strict';
 
-const { SchemaFactory, ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
+const {
+	SchemaFactory,
+	validatesAsZObject,
+	validatesAsFunctionCall,
+	validatesAsReference,
+	validatesAsUnit,
+	ZObjectKeyFactory
+} = require( '../function-schemata/javascript/src/schema.js' );
 const { isUserDefined, makeUnit } = require( '../function-schemata/javascript/src/utils' );
-
 const normalFactory = SchemaFactory.NORMAL();
-const Z1Validator = normalFactory.create( 'Z1' );
-const Z4Validator = normalFactory.create( 'Z4_literal' );
 const Z6Validator = normalFactory.create( 'Z6_literal' );
-const Z7Validator = normalFactory.create( 'Z7_backend_literal' );
 const Z9Validator = normalFactory.create( 'Z9_literal' );
-const Z18Validator = normalFactory.create( 'Z18_literal' );
-const Z23Validator = normalFactory.create( 'Z23' ); // Z23 is always literal
-
-/**
- * Validates a ZObject against the Type schema.
- *
- * @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validated as a Type
- */
-function isType( Z1 ) {
-	return Z4Validator.validate( Z1 );
-}
-
-/**
- * Determines whether argument is a Z9.
- *
- * @param {Object} Z1 a ZObject
- * @return {bool} true if Z1 validates as Z9
- */
-function isReference( Z1 ) {
-	return Z9Validator.validate( Z1 );
-}
 
 /**
  * Determines whether argument is a Z6 or Z9. These two types' Z1K1s are
@@ -40,46 +21,27 @@ function isReference( Z1 ) {
  * @param {Object} Z1 a ZObject
  * @return {bool} true if Z1 validates as either Z6 or Z7
  */
-function isRefOrString( Z1 ) {
-	return Z6Validator.validate( Z1 ) || Z9Validator.validate( Z1 );
+async function isRefOrString( Z1 ) {
+	return (
+		( await Z6Validator.validate( Z1 ) ) ||
+        ( await Z9Validator.validate( Z1 ) ) );
 }
 
-/**
- * Validates a ZObject against the Function Call schema.
- *
- * @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validated as a Function Call
- */
-function isFunctionCall( Z1 ) {
-	return Z7Validator.validate( Z1 );
-}
-
-function createSchema( Z1 ) {
-	if ( isRefOrString( Z1 ) ) {
+async function createSchema( Z1 ) {
+	if ( await isRefOrString( Z1 ) ) {
 		return normalFactory.create( Z1.Z1K1 );
 	}
 	const Z1K1 = Z1.Z1K1;
-	if ( isReference( Z1K1 ) ) {
+	if ( ( await validatesAsReference( Z1K1 ) ).isValid() ) {
 		if ( isUserDefined( Z1K1.Z9K1 ) ) {
 			throw new Error( `Tried to create schema for unrecognized ZID ${Z1K1.Z9K1}` );
 		}
 		return normalFactory.create( Z1K1.Z9K1 );
 	}
 
-	const result = normalFactory.createUserDefined( [ Z1K1 ] );
-	const key = ZObjectKeyFactory.create( Z1K1 ).asString();
+	const result = await normalFactory.createUserDefined( [ Z1K1 ] );
+	const key = ( await ZObjectKeyFactory.create( Z1K1 ) ).asString();
 	return result.get( key );
-}
-
-// TODO (T296659): Use validatesAs* from function-schemata instead of is*.
-/**
- * Validates a ZObject.
- *
- * @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validate as a Z1
- */
-function isZObject( Z1 ) {
-	return Z1Validator.validate( Z1 );
 }
 
 /**
@@ -103,10 +65,10 @@ function isError( Z1 ) {
  * @param {Object} Z1 object to be validated
  * @return {bool} whether Z1 can validate as a generic type instantiation
  */
-function isGenericType( Z1 ) {
+async function isGenericType( Z1 ) {
 	// TODO (T296658): Use the GENERIC schema.
 	try {
-		if ( !isFunctionCall( Z1.Z1K1 ) ) {
+		if ( !( await validatesAsFunctionCall( Z1.Z1K1 ) ).isValid() ) {
 			return false;
 		}
 		const localKeyRegex = /K[1-9]\d*$/;
@@ -125,28 +87,6 @@ function isGenericType( Z1 ) {
 }
 
 /**
- * Determines whether argument is a Z18.
- *
- * @param {Object} Z1 a ZObject
- * @return {bool} true if Z1 validates as Z18
- */
-function isArgumentReference( Z1 ) {
-	return Z18Validator.validate( Z1 );
-}
-
-/**
- * Determines whether argument is a Z23.
- *
- * TODO (T285433): Replace Z23 with Z21.
- *
- * @param {Object} Z1 a ZObject
- * @return {bool} true if Z1 validates as Z23
- */
-function isNothing( Z1 ) {
-	return Z23Validator.validate( Z1 ) || Z1 === 'Z23';
-}
-
-/**
  * Determines whether a pair contains an error.
  *
  * @param {Object} pair a Z22
@@ -162,8 +102,11 @@ function containsError( pair ) {
  * @param {Object} pair a Z22
  * @return {bool} true if Z22K2 is not the Unit; false otherwise
  */
-function containsValue( pair ) {
-	return isZObject( pair.Z22K1 ) && !( isNothing( pair.Z22K1 ) );
+async function containsValue( pair ) {
+	return (
+		( await validatesAsZObject( pair.Z22K1 ) ).isValid() &&
+        !( ( await validatesAsUnit( pair.Z22K1 ) ).isValid() )
+	);
 }
 
 // TODO (T282891): Replace uses of this with upstream makeResultEnvelope
@@ -266,14 +209,9 @@ module.exports = {
 	containsValue,
 	createSchema,
 	generateError,
-	isArgumentReference,
 	isError,
-	isFunctionCall,
 	isGenericType,
-	isNothing,
 	isRefOrString,
-	isReference,
-	isType,
 	makeBoolean,
 	makeResultEnvelopeAndMaybeCanonicalise,
 	traverseZ10

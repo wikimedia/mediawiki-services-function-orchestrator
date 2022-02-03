@@ -39,10 +39,10 @@ async function getTestResults( data ) {
 		await Promise.all(
 			// Parse the list of implementations
 			JSON.parse( zimplementations ).map(
-				( impl ) => {
+				async ( impl ) => {
 					// If it's an object, normalize it
 					if ( typeof impl === 'object' ) {
-						return normalize( impl ).Z22K1;
+						return ( await normalize( impl ) ).Z22K1;
 						// If it's a string, dereference it
 					} else {
 						return resolver.dereference( [ impl ] ).then( ( res ) => res[ impl ] );
@@ -63,10 +63,10 @@ async function getTestResults( data ) {
 		await Promise.all(
 			// Parse the list of testers
 			JSON.parse( ztesters ).map(
-				( tester ) => {
+				async ( tester ) => {
 					// If it's an object, normalize it
 					if ( typeof tester === 'object' ) {
-						return normalize( tester ).Z22K1;
+						return ( await normalize( tester ) ).Z22K1;
 						// If it's a string, dereference it
 					} else {
 						return resolver.dereference( [ tester ] ).then( ( res ) => res[ tester ] );
@@ -100,14 +100,14 @@ async function getTestResults( data ) {
 		test.Z7K1 = zFunction.Z2K2;
 		test.Z7K1.Z8K4 = [ implementation ];
 
-		const testResponse = normalize(
+		const testResponse = ( await normalize(
 			await orchestrate( {
 				zobject: test,
 				evaluatorUri,
 				wikiUri,
 				doValidate
 			} )
-		).Z22K1;
+		) ).Z22K1;
 		const testResult = testResponse.Z22K1;
 
 		if ( testResult === 'Z23' || testResult.Z9K1 === 'Z23' ) {

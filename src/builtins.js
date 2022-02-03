@@ -2,10 +2,14 @@
 
 const utils = require( '../function-schemata/javascript/src/utils' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
-const { createSchema, isReference, isType, makeBoolean, traverseZ10 } = require( './utils.js' );
+const { createSchema, makeBoolean, traverseZ10 } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const { makeResultEnvelope, makeTrue, makeFalse } = require( '../function-schemata/javascript/src/utils.js' );
 const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
+const {
+	validatesAsType,
+	validatesAsReference
+} = require( '../function-schemata/javascript/src/schema.js' );
 const { mutate } = require( './zobject.js' );
 
 /**
@@ -115,7 +119,7 @@ function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
 	return makeResultEnvelope( goodResult, badResult );
 }
 
-function reifyRecursive( Z1 ) {
+async function reifyRecursive( Z1 ) {
 	if ( utils.isString( Z1 ) ) {
 		return {
 			Z1K1: 'Z6',
@@ -130,7 +134,7 @@ function reifyRecursive( Z1 ) {
 	};
 	const result = [];
 	for ( const key of Object.keys( Z1 ) ) {
-		const value = reifyRecursive( Z1[ key ] );
+		const value = await reifyRecursive( Z1[ key ] );
 		result.push( {
 			Z1K1: pairType,
 			K1: {
@@ -146,11 +150,11 @@ function reifyRecursive( Z1 ) {
 			K2: value
 		} );
 	}
-	return utils.convertArrayToZList( result );
+	return await utils.convertArrayToZList( result );
 }
 
-function BUILTIN_REIFY_( Z1 ) {
-	return makeResultEnvelope( reifyRecursive( Z1 ), null );
+async function BUILTIN_REIFY_( Z1 ) {
+	return makeResultEnvelope( await reifyRecursive( Z1 ), null );
 }
 
 function abstractRecursive( ZList ) {
@@ -172,13 +176,13 @@ function BUILTIN_ABSTRACT_( ZList ) {
 	return makeResultEnvelope( abstractRecursive( ZList ), null );
 }
 
-function BUILTIN_CONS_( Z1, Z10 ) {
+async function BUILTIN_CONS_( Z1, Z10 ) {
 	let result;
 	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
 		result = utils.arrayToZ10( [ Z1 ] );
 		result.Z10K2 = Z10;
 	} else {
-		result = utils.convertArrayToZList( [ Z1 ] );
+		result = await utils.convertArrayToZList( [ Z1 ] );
 		result.K2 = Z10;
 	}
 	return makeResultEnvelope( result, null );
@@ -248,7 +252,7 @@ function BUILTIN_EQUALS_STRING_( Z6_1, Z6_2 ) {
 	);
 }
 
-function stringToCharsInternal( characterArray ) {
+async function stringToCharsInternal( characterArray ) {
 	const Z86Array = [];
 	for ( const character of characterArray ) {
 		Z86Array.push( {
@@ -256,11 +260,13 @@ function stringToCharsInternal( characterArray ) {
 			Z86K1: { Z1K1: 'Z6', Z6K1: character }
 		} );
 	}
-	return utils.convertArrayToZList( Z86Array );
+	return await utils.convertArrayToZList( Z86Array );
 }
 
-function BUILTIN_STRING_TO_CHARS_( Z6 ) {
-	return makeResultEnvelope( stringToCharsInternal( Array.from( Z6.Z6K1 ) ), null );
+async function BUILTIN_STRING_TO_CHARS_( Z6 ) {
+	return makeResultEnvelope(
+		await stringToCharsInternal( Array.from( Z6.Z6K1 ) ),
+		null );
 }
 
 function charsToStringInternal( Z10 ) {
@@ -322,10 +328,10 @@ async function BUILTIN_SCHEMA_VALIDATOR_(
 	await traverseZ10( Z4.Z4K2, async function ( Z3Tail ) {
 		await mutate( Z3Tail, [ 'Z10K1', 'Z3K1' ], evaluatorUri, resolver, scope );
 	} );
-	const theSchema = createSchema( { Z1K1: Z4 } );
+	const theSchema = await createSchema( { Z1K1: Z4 } );
 
 	// TODO (T294289): Return validationStatus Z5s as Z22K2.
-	const theStatus = theSchema.validateStatus( Z1 );
+	const theStatus = await theSchema.validateStatus( Z1 );
 	let errors;
 	if ( theStatus.isValid() ) {
 		errors = [];
@@ -447,10 +453,10 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 		const type = Z1[ key ].Z1K1.Z9K1 || Z1[ key ].Z1K1;
 		let declaredType = argumentDict.declaredType;
 		// TODO (T296669): Fix type semantics below; do something when declaredType is a Z4.
-		if ( isType( declaredType ) ) {
+		if ( ( await validatesAsType( declaredType ) ).isValid() ) {
 			continue;
 		}
-		if ( isReference( declaredType ) ) {
+		if ( ( await validatesAsReference( declaredType ) ).isValid() ) {
 			declaredType = declaredType.Z9K1;
 		}
 
@@ -766,8 +772,8 @@ function createArgument( ZType, argumentName ) {
  * @param {string} builtinName ZID reference to builtin implementation
  * @return {Object} a Z8
  */
-function createZ8( identity, argumentList, returnType, builtinName ) {
-	return normalize( {
+async function createZ8( identity, argumentList, returnType, builtinName ) {
+	return ( await normalize( {
 		Z1K1: 'Z8',
 		Z8K1: argumentList,
 		Z8K2: returnType,
@@ -781,175 +787,194 @@ function createZ8( identity, argumentList, returnType, builtinName ) {
 			}
 		} ],
 		Z8K5: identity
-	} ).Z22K1;
+	} ) ).Z22K1;
 }
 
 const builtinReferences = new Map();
-builtinReferences.set( 'Z801', createZ8(
-	'Z801',
-	[
-		createArgument( 'Z1', 'Z801K1' )
-	], 'Z1', 'Z901' ) );
 
-builtinReferences.set( 'Z802', createZ8(
-	'Z802',
-	[
-		createArgument( 'Z40', 'Z802K1' ),
-		createArgument( 'Z1', 'Z802K2' ),
-		createArgument( 'Z1', 'Z802K3' )
-	], 'Z1', 'Z902'
-) );
-builtinReferences.set( 'Z803', createZ8(
-	'Z803',
-	[
-		createArgument( 'Z39', 'Z803K1' ),
-		createArgument( 'Z1', 'Z803K2' )
-	], 'Z1', 'Z903'
-) );
-builtinReferences.set( 'Z805', createZ8(
-	'Z805',
-	[
-		createArgument( 'Z1', 'Z805K1' )
-	],
-	normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } } ).Z22K1,
-	'Z905'
-) );
-builtinReferences.set( 'Z808', createZ8(
-	'Z808',
-	[
-		createArgument(
-			normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } } ).Z22K1,
-			'Z808K1' )
-	], 'Z1', 'Z908'
-) );
-builtinReferences.set( 'Z810', createZ8(
-	'Z810',
-	[
-		createArgument( 'Z1', 'Z810K1' ),
-		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z810K2' )
-	], normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z910'
-) );
-builtinReferences.set( 'Z811', createZ8(
-	'Z811',
-	[
-		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z811K1' )
-	], 'Z1', 'Z911'
-) );
-builtinReferences.set( 'Z812', createZ8(
-	'Z812',
-	[
-		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z812K1' )
-	], normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z912'
-) );
-builtinReferences.set( 'Z813', createZ8(
-	'Z813',
-	[
-		// TODO (T298054): Update argument validation for built-in list functions to exclude Z10s
-		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ).Z22K1, 'Z813K1' )
-	], 'Z40', 'Z913'
-) );
-builtinReferences.set( 'Z820', createZ8(
-	'Z820',
-	[
-		createArgument( 'Z5', 'Z820K1' )
-	], 'Z1', 'Z920'
-) );
-builtinReferences.set( 'Z821', createZ8(
-	'Z821',
-	[
-		createArgument( 'Z22', 'Z821K1' )
-	], 'Z1', 'Z921'
-) );
-builtinReferences.set( 'Z822', createZ8(
-	'Z822',
-	[
-		createArgument( 'Z22', 'Z822K1' )
-	], 'Z1', 'Z922'
-) );
-builtinReferences.set( 'Z844', createZ8(
-	'Z844',
-	[
-		createArgument( 'Z1', 'Z844K1' ),
-		createArgument( 'Z1', 'Z844K2' )
-	], 'Z40', 'Z944'
-) );
-builtinReferences.set( 'Z866', createZ8(
-	'Z866',
-	[
-		createArgument( 'Z1', 'Z866K1' ),
-		createArgument( 'Z1', 'Z866K2' )
-	], 'Z40', 'Z966'
-) );
-builtinReferences.set( 'Z868', createZ8(
-	'Z868',
-	[
-		createArgument( 'Z6', 'Z868K1' )
-	], normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' } ).Z22K1, 'Z968'
-) );
-builtinReferences.set( 'Z881', createZ8(
-	'Z881',
-	[
-		createArgument( 'Z4', 'Z881K1' )
-	], 'Z4', 'Z981'
-) );
-builtinReferences.set( 'Z882', createZ8(
-	'Z882',
-	[
-		createArgument( 'Z4', 'Z882K1' ),
-		createArgument( 'Z4', 'Z882K2' )
-	], 'Z4', 'Z982'
-) );
-builtinReferences.set( 'Z883', createZ8(
-	'Z883',
-	[
-		createArgument( 'Z4', 'Z883K1' ),
-		createArgument( 'Z4', 'Z883K2' )
-	], 'Z4', 'Z983'
-) );
-builtinReferences.set( 'Z886', createZ8(
-	'Z886',
-	[
-		createArgument( normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' } ).Z22K1, 'Z886K1' )
-	], 'Z6', 'Z986'
-) );
-builtinReferences.set( 'Z888', createZ8(
-	'Z888',
-	[
-		createArgument( 'Z86', 'Z888K1' ),
-		createArgument( 'Z86', 'Z888K2' )
-	], 'Z40', 'Z988'
-) );
-builtinReferences.set( 'Z899', createZ8(
-	'Z899',
-	[
-		createArgument( 'Z99', 'Z899K1' )
-	], 'Z9', 'Z999'
-) );
-builtinReferences.set( 'Z831', createZ8(
-	'Z831',
-	[
-		createArgument( 'Z99', 'Z831K1' ),
-		createArgument( 'Z99', 'Z831K2' )
-	], 'Z10', 'Z931'
-) );
+( async function populateBuiltinReferences() {
+	// TODO (T300993): Wrap all calls to builtinReferences.set in Promises and
+	// execute them in parallel with Promise.all.
+	builtinReferences.set( 'Z801', await createZ8(
+		'Z801',
+		[
+			createArgument( 'Z1', 'Z801K1' )
+		], 'Z1', 'Z901' ) );
 
-( function setValidatorsReferences() {
+	builtinReferences.set( 'Z802', await createZ8(
+		'Z802',
+		[
+			createArgument( 'Z40', 'Z802K1' ),
+			createArgument( 'Z1', 'Z802K2' ),
+			createArgument( 'Z1', 'Z802K3' )
+		], 'Z1', 'Z902'
+	) );
+	builtinReferences.set( 'Z803', await createZ8(
+		'Z803',
+		[
+			createArgument( 'Z39', 'Z803K1' ),
+			createArgument( 'Z1', 'Z803K2' )
+		], 'Z1', 'Z903'
+	) );
+	builtinReferences.set( 'Z805', await createZ8(
+		'Z805',
+		[
+			createArgument( 'Z1', 'Z805K1' )
+		],
+		( await normalize(
+			{ Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } }
+		) ).Z22K1,
+		'Z905'
+	) );
+	builtinReferences.set( 'Z808', await createZ8(
+		'Z808',
+		[
+			createArgument(
+				( await normalize(
+					{ Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } } )
+				).Z22K1,
+				'Z808K1' )
+		], 'Z1', 'Z908'
+	) );
+	builtinReferences.set( 'Z810', await createZ8(
+		'Z810',
+		[
+			createArgument( 'Z1', 'Z810K1' ),
+			createArgument(
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ) ).Z22K1,
+				'Z810K2' )
+		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ) ).Z22K1, 'Z910'
+	) );
+	builtinReferences.set( 'Z811', await createZ8(
+		'Z811',
+		[
+			createArgument(
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ) ).Z22K1,
+				'Z811K1' )
+		], 'Z1', 'Z911'
+	) );
+	builtinReferences.set( 'Z812', await createZ8(
+		'Z812',
+		[
+			createArgument(
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ) ).Z22K1,
+				'Z812K1' )
+		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ) ).Z22K1, 'Z912'
+	) );
+	builtinReferences.set( 'Z813', await createZ8(
+		'Z813',
+		[
+			// TODO (T298054): Update argument validation for built-in list
+			// functions to exclude Z10s
+			createArgument(
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' } ) ).Z22K1,
+				'Z813K1' )
+		], 'Z40', 'Z913'
+	) );
+	builtinReferences.set( 'Z820', await createZ8(
+		'Z820',
+		[
+			createArgument( 'Z5', 'Z820K1' )
+		], 'Z1', 'Z920'
+	) );
+	builtinReferences.set( 'Z821', await createZ8(
+		'Z821',
+		[
+			createArgument( 'Z22', 'Z821K1' )
+		], 'Z1', 'Z921'
+	) );
+	builtinReferences.set( 'Z822', await createZ8(
+		'Z822',
+		[
+			createArgument( 'Z22', 'Z822K1' )
+		], 'Z1', 'Z922'
+	) );
+	builtinReferences.set( 'Z844', await createZ8(
+		'Z844',
+		[
+			createArgument( 'Z1', 'Z844K1' ),
+			createArgument( 'Z1', 'Z844K2' )
+		], 'Z40', 'Z944'
+	) );
+	builtinReferences.set( 'Z866', await createZ8(
+		'Z866',
+		[
+			createArgument( 'Z1', 'Z866K1' ),
+			createArgument( 'Z1', 'Z866K2' )
+		], 'Z40', 'Z966'
+	) );
+	builtinReferences.set( 'Z868', await createZ8(
+		'Z868',
+		[
+			createArgument( 'Z6', 'Z868K1' )
+		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' } ) ).Z22K1, 'Z968'
+	) );
+	builtinReferences.set( 'Z881', await createZ8(
+		'Z881',
+		[
+			createArgument( 'Z4', 'Z881K1' )
+		], 'Z4', 'Z981'
+	) );
+	builtinReferences.set( 'Z882', await createZ8(
+		'Z882',
+		[
+			createArgument( 'Z4', 'Z882K1' ),
+			createArgument( 'Z4', 'Z882K2' )
+		], 'Z4', 'Z982'
+	) );
+	builtinReferences.set( 'Z883', await createZ8(
+		'Z883',
+		[
+			createArgument( 'Z4', 'Z883K1' ),
+			createArgument( 'Z4', 'Z883K2' )
+		], 'Z4', 'Z983'
+	) );
+	builtinReferences.set( 'Z886', await createZ8(
+		'Z886',
+		[
+			createArgument( ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' } ) ).Z22K1, 'Z886K1' )
+		], 'Z6', 'Z986'
+	) );
+	builtinReferences.set( 'Z888', await createZ8(
+		'Z888',
+		[
+			createArgument( 'Z86', 'Z888K1' ),
+			createArgument( 'Z86', 'Z888K2' )
+		], 'Z40', 'Z988'
+	) );
+	builtinReferences.set( 'Z899', await createZ8(
+		'Z899',
+		[
+			createArgument( 'Z99', 'Z899K1' )
+		], 'Z9', 'Z999'
+	) );
+	builtinReferences.set( 'Z831', await createZ8(
+		'Z831',
+		[
+			createArgument( 'Z99', 'Z831K1' ),
+			createArgument( 'Z99', 'Z831K2' )
+		], 'Z10', 'Z931'
+	) );
+}() ).then();
+
+( async function setValidatorsReferences() {
 	const CORE_TYPES = [
 		'Z1', 'Z2', 'Z3', 'Z4', 'Z5', 'Z6', 'Z7', 'Z8', 'Z9', 'Z10', 'Z11', 'Z12', 'Z13', 'Z14', 'Z16', 'Z17', 'Z18',
 		'Z20', 'Z21', 'Z22', 'Z23', 'Z39', 'Z40', 'Z41', 'Z42', 'Z50', 'Z60', 'Z61', 'Z70', 'Z80', 'Z86', 'Z99'
 	];
 
-	CORE_TYPES
+	const promises = CORE_TYPES
 		.map( ( zid ) => Number( zid.replace( 'Z', '' ) ) )
-		.forEach( ( id ) => {
-			builtinReferences.set( `Z${id + 100}`, createZ8(
+		.map( async ( id ) => {
+			builtinReferences.set( `Z${id + 100}`, await createZ8(
 				`Z${id + 100}`,
 				[ createArgument( 'Z1', `Z${id + 100}K1` ) ],
 				`Z${id}`,
 				`Z${id + 200}`
 			) );
 		} );
-}() );
+	await Promise.all( promises );
+}() ).then();
 
 /**
  * Creates a Z8 corresponding to a bulitin function.

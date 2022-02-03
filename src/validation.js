@@ -15,18 +15,18 @@ const validators = new Map();
  * @param {Object} Z1 the type ZObject
  * @return {Schema} a fully-initialized Schema or null if unsupported.
  */
-function getSchemaValidator( Z1 ) {
+async function getSchemaValidator( Z1 ) {
 	const result = {
 		typeKey: null,
 		schemaValidator: null
 	};
-	result.typeKey = ZObjectKeyFactory.create( Z1.Z1K1 );
+	result.typeKey = await ZObjectKeyFactory.create( Z1.Z1K1 );
 	if ( result.typeKey.type() === 'GenericTypeKey' ) {
 		return result;
 	}
 	const keyString = result.typeKey.asString();
 	if ( !validators.has( keyString ) ) {
-		validators.set( keyString, createSchema( Z1 ) );
+		validators.set( keyString, await createSchema( Z1 ) );
 	}
 	result.schemaValidator = validators.get( keyString );
 	return result;
@@ -99,14 +99,18 @@ async function runTypeValidator( Z1, typeZObject, resolver ) {
 async function getContainedTypeZObjects( zobject, resolver ) {
 	const containedTypes = new Set();
 
+	const promises = [];
 	traverse( zobject, { allKeys: true }, function ( Z1 ) {
-		const typeKey = ZObjectKeyFactory.create( Z1.Z1K1 );
-		const key = typeKey.asString();
-		// TODO (T297717): We should add other types to the set, not just builtins.
-		if ( typeKey.type() === 'SimpleTypeKey' ) {
-			containedTypes.add( key );
-		}
+		promises.push( ( async function () {
+			const typeKey = await ZObjectKeyFactory.create( Z1.Z1K1 );
+			const key = typeKey.asString();
+			// TODO (T297717): We should add other types to the set, not just builtins.
+			if ( typeKey.type() === 'SimpleTypeKey' ) {
+				containedTypes.add( key );
+			}
+		} )() );
 	} );
+	await Promise.all( promises );
 
 	const result = await resolver.dereference( containedTypes );
 	return result;
@@ -123,42 +127,46 @@ async function getContainedTypeZObjects( zobject, resolver ) {
 async function validate( zobject, resolver ) {
 
 	const errors = [];
-	const typeValidatorPromises = [];
 	const ZObjectTypes = await getContainedTypeZObjects( zobject, resolver );
+	const traversalPromises = [];
+	const typeValidatorPromises = [];
 
-	traverse( zobject, { allKeys: true }, ( Z1 ) => {
-		let validatorTuple;
-		try {
-			validatorTuple = getSchemaValidator( Z1 );
-		} catch ( error ) {
-			console.error( 'Attempting to validate Z1', Z1, 'produced error', error );
-			errors.push(
-				normalError(
-					[ error.zid_not_found ],
-					[ error.message ] ) );
-			return;
-		}
-		const {
-			typeKey,
-			schemaValidator
-		} = validatorTuple;
-		if ( schemaValidator === null ) {
-			return;
-		}
-		if ( ZObjectTypes[ typeKey.asString() ] === undefined ) {
-			// TODO (T297717): We should add other types to the set, not just builtins.
-			return;
-		}
-		const theStatus = schemaValidator.validateStatus( Z1 );
-		if ( !theStatus.isValid() ) {
-			errors.push( theStatus.getZ5() );
-		} else {
-			typeValidatorPromises.push(
-				runTypeValidator( Z1, ZObjectTypes[ typeKey.asString() ], resolver )
-			);
-		}
+	await traverse( zobject, { allKeys: true }, ( Z1 ) => {
+		traversalPromises.push( ( async function () {
+			let validatorTuple;
+			try {
+				validatorTuple = await getSchemaValidator( Z1 );
+			} catch ( error ) {
+				console.error( 'Attempting to validate Z1', Z1, 'produced error', error );
+				errors.push(
+					normalError(
+						[ error.zid_not_found ],
+						[ error.message ] ) );
+				return;
+			}
+			const {
+				typeKey,
+				schemaValidator
+			} = validatorTuple;
+			if ( schemaValidator === null ) {
+				return;
+			}
+			if ( ZObjectTypes[ typeKey.asString() ] === undefined ) {
+				// TODO (T297717): We should add other types to the set, not just builtins.
+				return;
+			}
+			const theStatus = await schemaValidator.validateStatus( Z1 );
+			if ( !theStatus.isValid() ) {
+				errors.push( theStatus.getZ5() );
+			} else {
+				typeValidatorPromises.push(
+					runTypeValidator( Z1, ZObjectTypes[ typeKey.asString() ], resolver )
+				);
+			}
+		} )() );
 	} );
 
+	await Promise.all( traversalPromises );
 	const typeValidatorResults = await Promise.all( typeValidatorPromises );
 
 	typeValidatorResults

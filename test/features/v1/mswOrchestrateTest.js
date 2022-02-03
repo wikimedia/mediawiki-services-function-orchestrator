@@ -3,7 +3,6 @@
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
 const fs = require( 'fs' );
-const normalize = require( '../../../function-schemata/javascript/src/normalize.js' );
 const { makeResultEnvelope, makeTrue, makeFalse } = require( '../../../function-schemata/javascript/src/utils.js' );
 const utils = require( '../../../src/utils.js' );
 const { rest } = require( 'msw' );
@@ -82,13 +81,13 @@ describe( 'orchestrate', function () {
 			evaluatorUri: 'http://theevaluator',
 			doValidate: true
 		};
-		if ( output !== null ) {
-			output = canonicalize( output ).Z22K1;
-		}
-		if ( error !== null ) {
-			error = canonicalize( error ).Z22K1;
-		}
 		it( 'orchestrate msw: ' + name, async () => {
+			if ( output !== null ) {
+				output = ( await canonicalize( output ) ).Z22K1;
+			}
+			if ( error !== null ) {
+				error = ( await canonicalize( error ) ).Z22K1;
+			}
 			let result = {};
 			let thrownError = null;
 			try {
@@ -409,7 +408,7 @@ describe( 'orchestrate', function () {
 					[]
 				]
 			},
-			normalize( [ makeTrue(), makeFalse(), makeFalse(), makeTrue() ] ).Z22K1,
+			[ makeTrue(), makeFalse(), makeFalse(), makeTrue() ],
 			null
 		);
 	}

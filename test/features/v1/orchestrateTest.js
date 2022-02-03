@@ -26,29 +26,27 @@ describe( 'orchestration endpoint', function () {
 	after( () => server.stop() );
 
 	const testFunctionCall = function ( name, input, output = null, error = null ) {
-		if ( output !== null ) {
-			output = canonicalize( output ).Z22K1;
-		}
-		if ( error !== null ) {
-			error = canonicalize( error ).Z22K1;
-		}
-		it( 'orchestration endpoint: ' + name, function () {
-			return preq.post( {
+		it( 'orchestration endpoint: ' + name, async function () {
+			if ( output !== null ) {
+				output = ( await canonicalize( output ) ).Z22K1;
+			}
+			if ( error !== null ) {
+				error = ( await canonicalize( error ) ).Z22K1;
+			}
+			const result = await preq.post( {
 				uri: uri,
 				headers: {
 					'content-type': 'application/json'
 				},
 				body: typeof input === 'string' ? { doValidate: false, zobject: input } : input
-			} )
-				.then( function ( res ) {
-					assert.status( res, 200 );
-					assert.contentType( res, 'application/json' );
-					assert.deepEqual(
-						res.body,
-						utils.makeResultEnvelopeAndMaybeCanonicalise( output, error, /* canonical= */ true ),
-						name
-					);
-				} );
+			} );
+			assert.status( result, 200 );
+			assert.contentType( result, 'application/json' );
+			assert.deepEqual(
+				result.body,
+				utils.makeResultEnvelopeAndMaybeCanonicalise( output, error, /* canonical= */ true ),
+				name
+			);
 		} );
 	};
 

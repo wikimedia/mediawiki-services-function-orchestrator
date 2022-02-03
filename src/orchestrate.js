@@ -3,10 +3,14 @@
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
 const { arrayToZ10, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const {
+	validatesAsFunctionCall,
+	validatesAsUnit
+} = require( '../function-schemata/javascript/src/schema.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
-const { containsError, isError, isFunctionCall, isNothing, makeResultEnvelopeAndMaybeCanonicalise } = require( './utils.js' );
+const { containsError, isError, makeResultEnvelopeAndMaybeCanonicalise } = require( './utils.js' );
 const { ReferenceResolver } = require( './db.js' );
 
 /**
@@ -41,7 +45,7 @@ async function maybeValidate( zobject, doValidate, resolver ) {
  * @return {Object} a Z22 as described above
  */
 async function Z7OrError( zobject ) {
-	if ( isFunctionCall( zobject ) ) {
+	if ( ( await validatesAsFunctionCall( zobject ) ).isValid() ) {
 		return makeResultEnvelope( zobject, null );
 	}
 	return makeResultEnvelope(
@@ -97,9 +101,11 @@ async function orchestrate( input, implementationSelector = null ) {
 	];
 
 	for ( const callTuple of callTuples ) {
-		// TODO (T287986): isNothing check is redundant once validation returns
+		// TODO (T287986): validatesAsUnit check is redundant once validation returns
 		// correct type.
-		if ( containsError( currentPair ) || isNothing( currentPair.Z22K1 ) ) {
+		if (
+			containsError( currentPair ) ||
+            ( await validatesAsUnit( currentPair.Z22K1 ) ).isValid() ) {
 			break;
 		}
 		console.log( 'calling function', callTuple[ 2 ], 'on currentPair:', currentPair );
@@ -109,7 +115,7 @@ async function orchestrate( input, implementationSelector = null ) {
 		currentPair = await callable( ...[ zobject, ...args ] );
 	}
 
-	const canonicalized = canonicalize( currentPair );
+	const canonicalized = await canonicalize( currentPair );
 
 	if ( containsError( canonicalized ) ) {
 		// If canonicalization fails, return normalized form instead.

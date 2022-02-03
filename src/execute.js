@@ -94,7 +94,7 @@ async function resolveTypes( Z1, evaluatorUri, resolver, scope ) {
 	const objectQueue = [ Z1 ];
 	while ( objectQueue.length > 0 ) {
 		const nextObject = objectQueue.shift();
-		if ( isRefOrString( nextObject ) ) {
+		if ( await isRefOrString( nextObject ) ) {
 			continue;
 		}
 		const typeEnvelope = await mutate(
@@ -297,7 +297,7 @@ async function getArgumentStates( zobject, evaluatorUri, resolver, scope ) {
  */
 async function validateReturnType( result, zobject, evaluatorUri, resolver, scope ) {
 	// eslint-disable-next-line no-bitwise
-	const thebits = ( containsValue( result ) << 1 ) | containsError( result );
+	const thebits = ( ( await containsValue( result ) ) << 1 ) | containsError( result );
 
 	if ( thebits === 0 ) {
 		// Neither value nor error.
