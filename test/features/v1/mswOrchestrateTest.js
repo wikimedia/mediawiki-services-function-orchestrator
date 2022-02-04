@@ -29,8 +29,11 @@ class Canned {
 		this.dict_.wiki[ key ] = value;
 	}
 
-	setEvaluator( key, value ) {
-		this.dict_.evaluator[ key ] = value;
+	setEvaluator( key, value, statusCode = 200 ) {
+		this.dict_.evaluator[ key ] = {
+			statusCode: statusCode,
+			value: value
+		};
 	}
 
 	getWiki( key ) {
@@ -60,7 +63,8 @@ describe( 'orchestrate', function () {
 
 		rest.post( 'http://theevaluator', ( req, res, ctx ) => {
 			const ZID = req.body.Z7K1.Z8K5.Z9K1;
-			return res( ctx.status( 200 ), ctx.json( cannedResponses.getEvaluator( ZID ) ) );
+			const { statusCode, value } = cannedResponses.getEvaluator( ZID );
+			return res( ctx.status( statusCode ), ctx.json( value ) );
 		} ),
 
 		// Silently forward GET requests to the API running at :6254.
@@ -260,6 +264,22 @@ describe( 'orchestrate', function () {
 			readJSON( './test/features/v1/test_data/evaluated.json' ),
 			{ Z1K1: 'Z6', Z6K1: '13' },
 			null
+		);
+	}
+
+	{
+		cannedResponses.setEvaluator( 'Z420420', 'naw', 500 );
+		test(
+			'failed evaluated function call',
+			readJSON( './test/features/v1/test_data/evaluated-failed.json' ),
+			null,
+			{
+				Z1K1: 'Z5',
+				Z5K1: {
+					Z1K1: 'Z507',
+					Z507K1: 'Function evaluation failed with status 500: "naw"'
+				}
+			}
 		);
 	}
 

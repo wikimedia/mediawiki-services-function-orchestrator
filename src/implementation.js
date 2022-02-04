@@ -5,7 +5,8 @@ const builtins = require( './builtins.js' );
 const fetch = require( 'node-fetch' );
 const { containsError, traverseZ10 } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
-const { arrayToZ10 } = require( '../function-schemata/javascript/src/utils.js' );
+const { arrayToZ10, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 
 fetch.Promise = Bluebird;
 
@@ -145,20 +146,24 @@ class Evaluated extends Implementation {
 		for ( const argumentDict of argumentList ) {
 			Z7[ argumentDict.name ] = argumentDict.argument;
 		}
-		return fetch(
-			this.evaluatorUri_,
-			{
+		const fetchedResult = await fetch(
+			this.evaluatorUri_, {
 				method: 'POST',
 				body: JSON.stringify( Z7 ),
 				headers: { 'Content-Type': 'application/json' }
-			} )
-			.then( ( result ) => {
-				return result.json();
-			} )
-			.catch( ( problem ) => {
-				// TODO (T296683): Create an error here.
-				return problem;
-			} );
+			}
+		);
+		if ( fetchedResult.ok ) {
+			// Assume the evaluator is returning Z22s.
+			return await fetchedResult.json();
+		}
+		const statusCode = fetchedResult.status;
+		const errorText = await fetchedResult.text();
+		return makeResultEnvelope(
+			null,
+			normalError(
+				[ error.error_in_evaluation ],
+				[ `Function evaluation failed with status ${statusCode}: ${errorText}` ] ) );
 	}
 
 }
