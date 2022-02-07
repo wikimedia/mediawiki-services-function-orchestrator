@@ -562,17 +562,17 @@ describe( 'orchestrate', function () {
 	}
 
 	{
-		const Z10006 = readJSON( './test/features/v1/test_data/Z10006.json' );
-		cannedResponses.setWiki( 'Z10006', {
+		const Z10005 = readJSON( './test/features/v1/test_data/Z10005.json' );
+		cannedResponses.setWiki( 'Z10005', {
 			Z1K1: 'Z2',
-			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10006' },
-			Z2K2: Z10006
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10005' },
+			Z2K2: Z10005
 		} );
 		const userDefinedEcho = readJSON( './test/features/v1/test_data/user-defined-type-as-reference.json' );
 		const typeOnly = readJSON( './test/features/v1/test_data/type-only.json' );
 		userDefinedEcho.Z1903K1 = typeOnly;
 		const expected = { ...typeOnly };
-		expected.Z1K1 = Z10006;
+		expected.Z1K1 = Z10005;
 		test(
 			'reference to user-defined type',
 			userDefinedEcho,
