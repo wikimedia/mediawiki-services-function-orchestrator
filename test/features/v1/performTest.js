@@ -4,7 +4,7 @@ const assert = require( '../../utils/assert.js' );
 const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
 const performTest = require( '../../../src/performTest.js' );
-const { readJSON } = require( '../../utils/read-json.js' );
+const { readJSON, readZObjectsFromDirectory } = require( '../../utils/read-json.js' );
 
 class Canned {
 
@@ -13,10 +13,8 @@ class Canned {
 	}
 
 	reset() {
-		// TODO (T300651): Read this and data on wiki from central location, maybe
-		// function-schemata.
 		this.dict_ = {
-			wiki: readJSON( 'test/features/v1/test_data/wikilambda_fetch.json' ),
+			wiki: readZObjectsFromDirectory( 'function-schemata/data/definitions/' ),
 			evaluator: readJSON( 'test/features/v1/test_data/evaluator_result.json' )
 		};
 	}

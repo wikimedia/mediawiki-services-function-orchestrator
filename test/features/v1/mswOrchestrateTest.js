@@ -8,7 +8,7 @@ const utils = require( '../../../src/utils.js' );
 const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
-const { readJSON } = require( '../../utils/read-json.js' );
+const { readJSON, readZObjectsFromDirectory } = require( '../../utils/read-json.js' );
 
 class Canned {
 
@@ -17,10 +17,8 @@ class Canned {
 	}
 
 	reset() {
-		// TODO (T300651): Read this and data on wiki from central location, maybe
-		// function-schemata.
 		this.dict_ = {
-			wiki: readJSON( 'test/features/v1/test_data/wikilambda_fetch.json' ),
+			wiki: readZObjectsFromDirectory( 'function-schemata/data/definitions/' ),
 			evaluator: {}
 		};
 	}
