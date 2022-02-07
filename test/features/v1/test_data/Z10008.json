@@ -1,0 +1,12 @@
+{
+	"Z1K1": "Z14",
+	"Z14K1": "Z10006",
+	"Z14K3": {
+		"Z1K1": "Z16",
+		"Z16K1": {
+			"Z1K1": "Z61",
+			"Z61K1": "javascript"
+		},
+		"Z16K2": "function Z10006( Z10006K1 ) {\n\treturn Z10006K1.split('').reverse().join('');\n}"
+	}
+}

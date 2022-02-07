@@ -72,6 +72,24 @@ describe( 'performTest', function () {
 	} );
 
 	it( 'performs a test and validation, and returns the result.', async () => {
+		cannedResponses.setWiki( 'Z10006', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10006' },
+			Z2K2: readJSON( 'test/features/v1/test_data/Z10006.json' )
+		} );
+
+		cannedResponses.setWiki( 'Z10008', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10008' },
+			Z2K2: readJSON( 'test/features/v1/test_data/Z10008.json' )
+		} );
+
+		cannedResponses.setWiki( 'Z10011', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10011' },
+			Z2K2: readJSON( 'test/features/v1/test_data/Z10011.json' )
+		} );
+
 		const result = await performTest( JSON.stringify( {
 			zfunction: 'Z10006',
 			zimplementations: '[]',
