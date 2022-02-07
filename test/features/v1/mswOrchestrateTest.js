@@ -465,10 +465,13 @@ describe( 'orchestrate', function () {
 		} );
 		const genericPair = readJSON( './test/features/v1/test_data/generic-pair.json' );
 		genericPair.Z1802K2 = 'Z88203';
+		const expected = readJSON( './test/features/v1/test_data/Z88203-expanded.json' );
+		const Z831 = readJSON( './test/features/v1/test_data/Z831.json' );
+		expected.Z1K1.Z4K3 = Z831;
 		test(
 			'generic pair',
 			genericPair,
-			readJSON( './test/features/v1/test_data/Z88203-expanded.json' ),
+			expected,
 			null
 		);
 	}
@@ -496,10 +499,13 @@ describe( 'orchestrate', function () {
 		} );
 		const genericMap = readJSON( './test/features/v1/test_data/generic-map.json' );
 		genericMap.Z1802K2 = 'Z88303';
+		const expected = readJSON( './test/features/v1/test_data/Z88303-expanded.json' );
+		const Z831 = readJSON( './test/features/v1/test_data/Z831.json' );
+		expected.Z1K1.Z4K3 = Z831;
 		test(
 			'generic map',
 			genericMap,
-			readJSON( './test/features/v1/test_data/Z88303-expanded.json' ),
+			expected,
 			null
 		);
 	}
@@ -522,10 +528,13 @@ describe( 'orchestrate', function () {
 		} );
 		const userDefinedIf = readJSON( './test/features/v1/test_data/user-defined-type.json' );
 		userDefinedIf.Z1802K2 = 'Z88403';
+		const expected = readJSON( './test/features/v1/test_data/Z88403-expected.json' );
+		const Z831 = readJSON( './test/features/v1/test_data/Z831.json' );
+		expected.Z1K1.Z4K3 = Z831;
 		test(
 			'good user-defined type',
 			userDefinedIf,
-			readJSON( './test/features/v1/test_data/Z88403-expected.json' ),
+			expected,
 			null
 		);
 	}
@@ -571,6 +580,7 @@ describe( 'orchestrate', function () {
 		userDefinedEcho.Z1903K1 = typeOnly;
 		const expected = { ...typeOnly };
 		expected.Z1K1 = Z10005;
+		expected.Z1K1.Z4K3 = readJSON( './test/features/v1/test_data/Z831.json' );
 		test(
 			'reference to user-defined type',
 			userDefinedEcho,

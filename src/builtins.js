@@ -559,7 +559,7 @@ function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
 		] ),
 		Z4K3: {
 			Z1K1: 'Z9',
-			Z9K1: 'Z110'
+			Z9K1: 'Z831'
 		}
 	};
 	return makeResultEnvelope( Z4, null );
@@ -590,7 +590,7 @@ function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 		] ),
 		Z4K3: {
 			Z1K1: 'Z9',
-			Z9K1: 'Z110'
+			Z9K1: 'Z831'
 		}
 	};
 	return makeResultEnvelope( Z4, null );
@@ -628,7 +628,7 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, evaluatorUri, reso
 		] ),
 		Z4K3: {
 			Z1K1: 'Z9',
-			Z9K1: 'Z110'
+			Z9K1: 'Z831'
 		}
 	};
 	return makeResultEnvelope( Z4, null );

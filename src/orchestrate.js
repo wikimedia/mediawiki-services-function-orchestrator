@@ -3,14 +3,11 @@
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
 const { arrayToZ10, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
-const {
-	validatesAsFunctionCall,
-	validatesAsUnit
-} = require( '../function-schemata/javascript/src/schema.js' );
+const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
-const { containsError, isError, makeResultEnvelopeAndMaybeCanonicalise } = require( './utils.js' );
+const { containsError, isError, makeResultEnvelopeAndMaybeCanonicalise, returnOnFirstError } = require( './utils.js' );
 const { ReferenceResolver } = require( './db.js' );
 
 /**
@@ -100,20 +97,11 @@ async function orchestrate( input, implementationSelector = null ) {
 		[ execute, [ evaluatorUri, resolver, /* oldScope= */null, /* doValidate= */true, /* implementationSelector= */implementationSelector ], 'execute' ]
 	];
 
-	for ( const callTuple of callTuples ) {
-		// TODO (T287986): validatesAsUnit check is redundant once validation returns
-		// correct type.
-		if (
-			containsError( currentPair ) ||
-            ( await validatesAsUnit( currentPair.Z22K1 ) ).isValid() ) {
-			break;
+	currentPair = await returnOnFirstError(
+		currentPair, callTuples, /* callback= */ async function ( currentPair, callTuple ) {
+			console.debug( 'calling function', callTuple[ 2 ], 'on currentPair:', currentPair );
 		}
-		console.log( 'calling function', callTuple[ 2 ], 'on currentPair:', currentPair );
-		const callable = callTuple[ 0 ];
-		const args = callTuple[ 1 ];
-		const zobject = currentPair.Z22K1;
-		currentPair = await callable( ...[ zobject, ...args ] );
-	}
+	);
 
 	const canonicalized = await canonicalize( currentPair );
 

@@ -24,7 +24,8 @@ const Z9Validator = normalFactory.create( 'Z9_literal' );
 async function isRefOrString( Z1 ) {
 	return (
 		( await Z6Validator.validate( Z1 ) ) ||
-        ( await Z9Validator.validate( Z1 ) ) );
+		( await Z9Validator.validate( Z1 ) )
+	);
 }
 
 async function createSchema( Z1 ) {
@@ -105,7 +106,7 @@ function containsError( pair ) {
 async function containsValue( pair ) {
 	return (
 		( await validatesAsZObject( pair.Z22K1 ) ).isValid() &&
-        !( ( await validatesAsUnit( pair.Z22K1 ) ).isValid() )
+		!( ( await validatesAsUnit( pair.Z22K1 ) ).isValid() )
 	);
 }
 
@@ -204,6 +205,48 @@ async function traverseZ10( Z10, callback ) {
 	}
 }
 
+/**
+ * Runs several functions in sequence; returns first one whose Z22K2 is an error.
+ *
+ * @param {Object} Z22 a Z22/ResultEnvelope
+ * @param {Array} callTuples an array whose elements are also arrays of the form
+ *  [ function, argument list, name ]
+ *  every function accepts Z22 as its first argument and will be called with the
+ *  result of the previous function (starting with input Z22). If the resulting Z22
+ *  contains an error (Z22K2), this function returns immediately; otherwise, it
+ *  calls the next function with the output of the previous.
+ * @param {Function} callback optional callback to be called on every element of
+ *  callTuples; arguments are of the form ( current Z22, current call tuple)
+ * @param {boolean} addZ22 whether to inject Z22.Z22K1 as first argument to callables
+ * @return {Object} a Z22
+ */
+async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = true ) {
+	let currentPair = Z22;
+	for ( const callTuple of callTuples ) {
+		// TODO (T296681): validatesAsUnit check is redundant once validation returns
+		// correct type.
+		if (
+			containsError( currentPair ) ||
+			( await validatesAsUnit( currentPair.Z22K1 ) ).isValid()
+		) {
+			break;
+		}
+		if ( callback !== null ) {
+			await callback( currentPair, callTuple );
+		}
+		const callable = callTuple[ 0 ];
+		const args = [];
+		if ( addZ22 ) {
+			args.push( currentPair.Z22K1 );
+		}
+		for ( const arg of callTuple[ 1 ] ) {
+			args.push( arg );
+		}
+		currentPair = await callable( ...args );
+	}
+	return currentPair;
+}
+
 module.exports = {
 	containsError,
 	containsValue,
@@ -214,5 +257,6 @@ module.exports = {
 	isRefOrString,
 	makeBoolean,
 	makeResultEnvelopeAndMaybeCanonicalise,
+	returnOnFirstError,
 	traverseZ10
 };

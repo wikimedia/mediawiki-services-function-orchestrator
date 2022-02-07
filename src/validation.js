@@ -2,6 +2,7 @@
 
 const traverse = require( 'json-schema-traverse' );
 const { execute } = require( './execute.js' );
+const { mutate } = require( './zobject.js' );
 const { containsError, createSchema } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
@@ -58,32 +59,33 @@ function createValidatorZ7( Z8, ...Z1s ) {
 	return result;
 }
 
-async function runValidationFunction( Z8Reference, resolver, ...Z1s ) {
-	const dereferenced = await resolver.dereference( [ Z8Reference ] );
-	const validatorZ8 = dereferenced[ Z8Reference ].Z2K2;
-	const validatorZ7 = createValidatorZ7( validatorZ8, ...Z1s );
-	return await execute( validatorZ7, null, resolver, null, /* doValidate= */ false );
+async function runValidationFunction( Z8, evaluatorUri, resolver, scope, ...Z1s ) {
+	const validatorZ7 = createValidatorZ7( Z8, ...Z1s );
+	return await execute( validatorZ7, evaluatorUri, resolver, scope, /* doValidate= */ false );
 }
 
 /**
  * Validates the Z1/Object against its type validator and returns an array of Z5/Error.
  *
  * @param {Object} Z1 the Z1/Object
- * @param {Object} typeZObject the type ZObject
+ * @param {Object} Z4 the type ZObject
+ * @param {string} evaluatorUri URI of native code evaluator service
  * @param {ReferenceResolver} resolver used to resolve references
+ * @param {Scope} scope current variable bindings
  * @return {Array} an array of Z5/Error
  */
-async function runTypeValidator( Z1, typeZObject, resolver ) {
-	const validatorZid = typeZObject.Z2K2.Z4K3;
+async function runTypeValidator( Z1, Z4, evaluatorUri, resolver, scope ) {
+	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], evaluatorUri, resolver, scope ) ).Z22K1;
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.
-		return await runValidationFunction( validatorZid.Z9K1, resolver, Z1 );
+		return await runValidationFunction(
+			validationFunction, evaluatorUri, resolver, scope, Z1, Z4 );
 	} catch ( err ) {
 		console.error( err );
 		return makeResultEnvelope( null, normalError(
 			[ error.zid_not_found ],
-			[ `Builtin validator "${validatorZid.Z9K1}" not found for "${typeZObject.Z2K1.Z6K1}"` ]
+			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
 		) );
 	}
 }
@@ -160,7 +162,9 @@ async function validate( zobject, resolver ) {
 				errors.push( theStatus.getZ5() );
 			} else {
 				typeValidatorPromises.push(
-					runTypeValidator( Z1, ZObjectTypes[ typeKey.asString() ], resolver )
+					runTypeValidator(
+						Z1, ZObjectTypes[ typeKey.asString() ].Z2K2, /* evaluatorUri= */null,
+						resolver, /* scope= */null )
 				);
 			}
 		} )() );

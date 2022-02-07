@@ -2,10 +2,11 @@
 
 const { Composition, Implementation } = require( './implementation.js' );
 const { RandomImplementationSelector } = require( './implementationSelector.js' );
-const { containsError, containsValue, isRefOrString, traverseZ10 } = require( './utils.js' );
+const { containsError, containsValue, isRefOrString, returnOnFirstError, traverseZ10 } = require( './utils.js' );
 const { mutate } = require( './zobject.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { makeResultEnvelope, convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
+const { validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
 
 let execute = null;
 
@@ -63,22 +64,51 @@ class EmptyFrame extends BaseFrame {
 	}
 }
 
-async function validateAsType( Z1, resolver, typeZObject = null ) {
-	// TODO (T294275): Retrieve Z2s for generic Z4s and call runValidationFunction
-	// here; this Z8 here is a nasty hack.
-	const Z8Reference = 'Z831';
+async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = null ) {
+	const wrapInZ9 = ( ZID ) => {
+		return {
+			Z1K1: 'Z9',
+			Z9K1: ZID
+		};
+	};
+	const genericSchemaValidatorZID = 'Z831';
+	const genericValidatorZ8Reference = wrapInZ9( genericSchemaValidatorZID );
+	const genericValidatorZ8 = ( await mutate(
+		{ NOTAKEY: genericValidatorZ8Reference },
+		[ 'NOTAKEY' ],
+		evaluatorUri, resolver, scope ) ).Z22K1;
 
 	if ( typeZObject === null ) {
 		typeZObject = Z1.Z1K1;
 	}
-
 	// TODO (T292787): Make this more elegant--should be possible to avoid
 	// passing strings in the first place.
 	if ( typeof typeZObject === 'string' || typeZObject instanceof String ) {
-		typeZObject = { Z1K1: 'Z9', Z9K1: typeZObject };
+		typeZObject = wrapInZ9( typeZObject );
 	}
 	const { runValidationFunction } = require( './validation.js' );
-	return await runValidationFunction( Z8Reference, resolver, Z1, typeZObject );
+	const callTuples = [];
+	callTuples.push(
+		[
+			runValidationFunction,
+			[ genericValidatorZ8, evaluatorUri, resolver, scope, Z1, typeZObject ],
+			'runValidationFunction' ] );
+	// TODO (T301532): Find a more reliable way to signal that no additional
+	// validation needs to be run. Here we just make sure that we won't run the
+	// same function twice by comparing Z8K5 references.
+	const validatorZ8 = ( await mutate( typeZObject, [ 'Z4K3' ], evaluatorUri, resolver, scope ) ).Z22K1;
+	if (
+		( await validatesAsType( typeZObject ) ).isValid() &&
+		validatorZ8.Z8K5.Z9K1 !== genericValidatorZ8.Z8K5.Z9K1 ) {
+		const { runTypeValidator } = require( './validation.js' );
+		callTuples.push(
+			[
+				runTypeValidator,
+				[ Z1, typeZObject, evaluatorUri, resolver, scope ],
+				'runTypeValidator' ] );
+	}
+	const Z22 = makeResultEnvelope( Z1, null );
+	return await returnOnFirstError( Z22, callTuples, /* callback= */null, /* addZ22= */false );
 }
 
 /**
@@ -150,7 +180,8 @@ class Frame extends BaseFrame {
 			return typeError;
 		}
 		if ( doValidate ) {
-			const actualResult = await validateAsType( argument, resolver );
+			const actualResult = await validateAsType(
+				argument, evaluatorUri, resolver, this.lastFrame_ );
 			if ( containsError( actualResult ) ) {
 				// TODO (T296676): Include Z5 information from validator in this error.
 				return ArgumentState.ERROR(
@@ -212,7 +243,7 @@ class Frame extends BaseFrame {
 					const argument = newDict.argument;
 					const declaredType = newDict.declaredType;
 					const declaredResult = await validateAsType(
-						argument, resolver, declaredType );
+						argument, evaluatorUri, resolver, this.lastFrame_, declaredType );
 					if ( containsError( declaredResult ) ) {
 						// TODO (T296676): Include Z5 information from validator in this error.
 						boundValue = ArgumentState.ERROR(
@@ -310,7 +341,8 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 		// Value returned; validate its return type..
 		const Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
 		const returnType = ( await mutate( Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope ) ).Z22K1;
-		const returnTypeValidation = await validateAsType( result.Z22K1, resolver, returnType );
+		const returnTypeValidation = await validateAsType(
+			result.Z22K1, evaluatorUri, resolver, scope, returnType );
 		if ( containsError( returnTypeValidation ) ) {
 			// TODO (T296676): Include Z5 information from validator in this error.
 			return makeResultEnvelope(
