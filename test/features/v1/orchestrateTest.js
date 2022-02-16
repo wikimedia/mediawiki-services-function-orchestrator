@@ -590,4 +590,9 @@ describe( 'orchestration endpoint', function () {
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
 	);
 
+	testFunctionCall(
+		'function call for Z960 (language code to language)',
+		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z6_english.json' ) },
+		'Z1002'
+	);
 } );

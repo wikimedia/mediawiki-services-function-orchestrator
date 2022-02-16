@@ -11,6 +11,7 @@ const {
 	validatesAsReference
 } = require( '../function-schemata/javascript/src/schema.js' );
 const { mutate } = require( './zobject.js' );
+const fs = require( 'fs' );
 
 /**
  * HELPER FUNCTIONS
@@ -243,6 +244,34 @@ function BUILTIN_EQUALS_BOOLEAN_( Z40_1, Z40_2 ) {
 		makeBoolean( ( Z40_1.Z40K1.Z9K1 === Z40_2.Z40K1.Z9K1 ) ),
 		null
 	);
+}
+
+function getLanguageMap() {
+	// TODO (T302342): switch to using require maybe?
+	const path = 'function-schemata/data/definitions/naturalLanguages.json';
+	return JSON.parse( fs.readFileSync( path, { encoding: 'utf8' } ) );
+}
+
+function BUILTIN_LANGUAGE_CODE_TO_LANGUAGE_( Z6 ) {
+	const languages = getLanguageMap();
+	const languageCode = Z6.Z6K1;
+
+	let result = null;
+
+	if ( !( languageCode in languages ) ) {
+		result = normalError(
+			[ error.invalid_key ],
+			[ `Invalid language code: ${languageCode}` ]
+		);
+	} else {
+		const zid = languages[ languageCode ];
+		result = {
+			Z1K1: 'Z9',
+			Z9K1: zid
+		};
+	}
+
+	return makeResultEnvelope( result );
 }
 
 function BUILTIN_EQUALS_STRING_( Z6_1, Z6_2 ) {
@@ -650,6 +679,7 @@ builtinFunctions.set( 'Z921', BUILTIN_FIRST_ );
 builtinFunctions.set( 'Z922', BUILTIN_SECOND_ );
 builtinFunctions.set( 'Z931', BUILTIN_SCHEMA_VALIDATOR_ );
 builtinFunctions.set( 'Z944', BUILTIN_EQUALS_BOOLEAN_ );
+builtinFunctions.set( 'Z960', BUILTIN_LANGUAGE_CODE_TO_LANGUAGE_ );
 builtinFunctions.set( 'Z966', BUILTIN_EQUALS_STRING_ );
 builtinFunctions.set( 'Z968', BUILTIN_STRING_TO_CHARS_ );
 builtinFunctions.set( 'Z981', BUILTIN_GENERIC_LIST_TYPE_ );
@@ -895,6 +925,12 @@ const builtinReferences = new Map();
 			createArgument( 'Z1', 'Z844K1' ),
 			createArgument( 'Z1', 'Z844K2' )
 		], 'Z40', 'Z944'
+	) );
+	builtinReferences.set( 'Z860', await createZ8(
+		'Z860',
+		[
+			createArgument( 'Z6', 'Z860K1' )
+		], 'Z60', 'Z960'
 	) );
 	builtinReferences.set( 'Z866', await createZ8(
 		'Z866',
