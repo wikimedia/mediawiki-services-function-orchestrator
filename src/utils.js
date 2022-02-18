@@ -29,6 +29,8 @@ async function isRefOrString( Z1 ) {
 }
 
 async function createSchema( Z1 ) {
+	// TODO (T302032): Use function-schemata version of findIdentity to improve
+	// type inference here.
 	if ( await isRefOrString( Z1 ) ) {
 		return normalFactory.create( Z1.Z1K1 );
 	}

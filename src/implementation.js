@@ -4,7 +4,7 @@ const Bluebird = require( 'bluebird' );
 const builtins = require( './builtins.js' );
 const fetch = require( 'node-fetch' );
 const { containsError, traverseZ10 } = require( './utils.js' );
-const { mutate } = require( './zobject.js' );
+const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
 const { arrayToZ10, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 
@@ -176,9 +176,8 @@ class Composition extends Implementation {
 	}
 
 	async execute() {
-		return await mutate(
-			{ dummyKey: this.composition_ }, [ 'dummyKey' ],
-			this.evaluatorUri_, this.resolver_, this.scope_ );
+		return await resolveFunctionCallsAndReferences(
+			this.composition_, this.evaluatorUri_, this.resolver_, this.scope_ );
 	}
 
 }
