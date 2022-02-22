@@ -626,4 +626,24 @@ describe( 'orchestrate', function () {
 		);
 	}
 
+	{
+		cannedResponses.setWiki( 'Z100101', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z100101' },
+			Z2K2: 'just an ol string'
+		} );
+		test(
+			'referenced object is not correct type',
+			readJSON( './test/features/v1/test_data/bad-reference.json' ),
+			null,
+			{
+				Z1K1: 'Z5',
+				Z5K1: {
+					Z1K1: 'Z507',
+					Z507K1: 'Could not dereference Z8K1'
+				}
+			}
+		);
+	}
+
 } );

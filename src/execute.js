@@ -3,7 +3,7 @@
 const { Composition, Implementation } = require( './implementation.js' );
 const { RandomImplementationSelector } = require( './implementationSelector.js' );
 const { containsError, containsValue, isRefOrString, returnOnFirstError, traverseZ10 } = require( './utils.js' );
-const { mutate } = require( './zobject.js' );
+const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { makeResultEnvelope, convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
@@ -73,10 +73,8 @@ async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = 
 	};
 	const genericSchemaValidatorZID = 'Z831';
 	const genericValidatorZ8Reference = wrapInZ9( genericSchemaValidatorZID );
-	const genericValidatorZ8 = ( await mutate(
-		{ NOTAKEY: genericValidatorZ8Reference },
-		[ 'NOTAKEY' ],
-		evaluatorUri, resolver, scope ) ).Z22K1;
+	const genericValidatorZ8 = ( await resolveFunctionCallsAndReferences(
+		genericValidatorZ8Reference, evaluatorUri, resolver, scope ) ).Z22K1;
 
 	if ( typeZObject === null ) {
 		typeZObject = Z1.Z1K1;
@@ -170,7 +168,8 @@ class Frame extends BaseFrame {
 		//  -   validating directly with schemata in all the cases where
 		//      doValidate is currently false, otherwise using a Function;
 		//  -   caching and reusing the results of function calls
-		const argumentEnvelope = await mutate( argumentDict, [ 'argument' ], evaluatorUri, resolver, this.lastFrame_ );
+		const argumentEnvelope = await resolveFunctionCallsAndReferences(
+			argumentDict.argument, evaluatorUri, resolver, this.lastFrame_ );
 		if ( containsError( argumentEnvelope ) ) {
 			return ArgumentState.ERROR( argumentEnvelope.Z22K2 );
 		}
