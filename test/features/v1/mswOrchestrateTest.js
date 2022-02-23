@@ -162,6 +162,13 @@ describe( 'orchestrate', function () {
 		readJSON( './test/features/v1/test_data/invalid_call_return_value_not_of_declared_type_expected.json' )
 	);
 
+	test(
+		'argument value error: invalid value for Z883K1 / key type passed to Z883 / Typed Map',
+		readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883.json' ),
+		null,
+		readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883_expected.json' )
+	);
+
 	{
 		cannedResponses.setWiki( 'Z10122', {
 			Z1K1: 'Z2',

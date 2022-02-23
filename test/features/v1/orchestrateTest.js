@@ -501,6 +501,12 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
+		'function call for Z883 (short form)',
+		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z883.json' ) },
+		readJSON( './test/features/v1/test_data/Z883_expected.json' )
+	);
+
+	testFunctionCall(
 		'function call for Z886 (short form)',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z886.json' ) },
 		{ Z1K1: 'Z6', Z6K1: 'mus' }

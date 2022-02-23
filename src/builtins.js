@@ -626,6 +626,13 @@ function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 }
 
 async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, evaluatorUri, resolver, scope ) {
+	if ( keyType.Z9K1 !== 'Z6' ) {
+		const newError = normalError(
+			[ error.argument_value_error ],
+			[ 'Z883K1', keyType ]
+		);
+		return makeResultEnvelope( null, newError );
+	}
 	const { execute } = require( './execute.js' );
 	const itsMe = {
 		Z1K1: Z9For( 'Z7' ),
