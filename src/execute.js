@@ -184,11 +184,10 @@ class Frame extends BaseFrame {
 			const actualResult = await validateAsType(
 				argument, evaluatorUri, resolver, this.lastFrame_ );
 			if ( containsError( actualResult ) ) {
-				// TODO (T296676): Include Z5 information from validator in this error.
 				return ArgumentState.ERROR(
 					normalError(
-						[ error.argument_type_mismatch ],
-						[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as apparent type ' + JSON.stringify( argument.Z1K1 ) ] ) );
+						[ error.object_type_mismatch ],
+						[ argument.Z1K1, argument, actualResult.Z22K2 ] ) );
 			}
 		}
 		return ArgumentState.EVALUATED( {
@@ -246,11 +245,10 @@ class Frame extends BaseFrame {
 					const declaredResult = await validateAsType(
 						argument, evaluatorUri, resolver, this.lastFrame_, declaredType );
 					if ( containsError( declaredResult ) ) {
-						// TODO (T296676): Include Z5 information from validator in this error.
 						boundValue = ArgumentState.ERROR(
 							normalError(
 								[ error.argument_type_mismatch ],
-								[ 'Could not validate argument ' + JSON.stringify( argument ) + ' as declared type ' + JSON.stringify( declaredType ) ] ) );
+								[ declaredType, argument.Z1K1, argument, declaredResult.Z22K2 ] ) );
 					}
 				}
 			} else {
@@ -345,12 +343,11 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 		const returnTypeValidation = await validateAsType(
 			result.Z22K1, evaluatorUri, resolver, scope, returnType );
 		if ( containsError( returnTypeValidation ) ) {
-			// TODO (T296676): Include Z5 information from validator in this error.
 			return makeResultEnvelope(
 				null,
 				normalError(
-					[ error.argument_type_mismatch ],
-					[ 'Could not validate return value as type ' + JSON.stringify( returnType ) ] ) );
+					[ error.return_type_mismatch ],
+					[ returnType, result.Z22K1.Z1K1, result.Z22K1, returnTypeValidation.Z22K2 ] ) );
 		}
 	} else if ( thebits === 3 ) {
 		// Both value and error.

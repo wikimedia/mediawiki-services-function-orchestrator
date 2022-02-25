@@ -2,7 +2,6 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-const fs = require( 'fs' );
 const { makeResultEnvelope, makeTrue, makeFalse } = require( '../../../function-schemata/javascript/src/utils.js' );
 const utils = require( '../../../src/utils.js' );
 const { rest } = require( 'msw' );
@@ -237,15 +236,12 @@ describe( 'orchestrate', function () {
 			Z2K2: readJSON( './test/features/v1/test_data/Z10103-bad.json' )
 		} );
 		const genericIf = readJSON( './test/features/v1/test_data/generic-if.json' );
-		const expectedErrorString = fs.readFileSync( './test/features/v1/test_data/generic_list_validation_error.txt', { encoding: 'utf8' } ).replace( /\s*$/, '' );
-		const expectedError = readJSON( './test/features/v1/test_data/generic_type_validation.json' );
-		expectedError.Z5K1.Z506K1 = expectedErrorString;
 		genericIf.Z1802K2 = 'Z101030';
 		test(
 			'generic type validation error: bad list',
 			genericIf,
 			null,
-			expectedError
+			readJSON( './test/features/v1/test_data/bad_generic_list_expected.json' )
 		);
 	}
 
@@ -261,15 +257,12 @@ describe( 'orchestrate', function () {
 			Z2K2: readJSON( './test/features/v1/test_data/Z88203-bad.json' )
 		} );
 		const genericPair = readJSON( './test/features/v1/test_data/generic-pair.json' );
-		const expectedErrorString = fs.readFileSync( './test/features/v1/test_data/generic_pair_validation_error.txt', { encoding: 'utf8' } ).replace( /\s*$/, '' );
-		const expectedError = readJSON( './test/features/v1/test_data/generic_type_validation.json' );
-		expectedError.Z5K1.Z506K1 = expectedErrorString;
 		genericPair.Z1802K2 = 'Z882030';
 		test(
 			'generic type validation error: bad pair',
 			genericPair,
 			null,
-			expectedError
+			readJSON( './test/features/v1/test_data/bad_generic_pair_expected.json' )
 		);
 	}
 
@@ -575,14 +568,11 @@ describe( 'orchestrate', function () {
 		} );
 		const userDefinedIf = readJSON( './test/features/v1/test_data/user-defined-type.json' );
 		userDefinedIf.Z1802K2 = 'Z88404';
-		const expectedErrorString = fs.readFileSync( './test/features/v1/test_data/user_defined_type_validation_error.txt', { encoding: 'utf8' } ).replace( /\s*$/, '' );
-		const expectedError = readJSON( './test/features/v1/test_data/generic_type_validation.json' );
-		expectedError.Z5K1.Z506K1 = expectedErrorString;
 		test(
 			'bad user-defined type',
 			userDefinedIf,
 			null,
-			expectedError
+			readJSON( './test/features/v1/test_data/bad_user_defined_type_expected.json' )
 		);
 	}
 
