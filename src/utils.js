@@ -249,6 +249,16 @@ async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = tr
 	return currentPair;
 }
 
+function quoteZObject( ZObject ) {
+	return {
+		Z1K1: {
+			Z1K1: 'Z9',
+			Z9K1: 'Z99'
+		},
+		Z99K1: ZObject
+	};
+}
+
 module.exports = {
 	containsError,
 	containsValue,
@@ -259,6 +269,7 @@ module.exports = {
 	isRefOrString,
 	makeBoolean,
 	makeResultEnvelopeAndMaybeCanonicalise,
+	quoteZObject,
 	returnOnFirstError,
 	traverseZ10
 };

@@ -170,14 +170,18 @@ describe( 'orchestrate', function () {
 	);
 
 	{
+		const Z10122 = readJSON( './test/features/v1/test_data/Z10122.json' );
 		cannedResponses.setWiki( 'Z10122', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10122' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z10122.json' )
+			Z2K2: Z10122
 		} );
 		const theFunctionCall = readJSON( './test/features/v1/test_data/composition-returns-type.json' );
 		const returnedType = readJSON( './test/features/v1/test_data/type-returned-by-composition.json' );
-		theFunctionCall.Z7K1.Z8K4[ 0 ].Z14K2.Z801K1 = returnedType;
+		// Set the argument to the composition (which internally calls "echo").
+		theFunctionCall.Z7K1.Z8K4[ 0 ].Z14K2.Z801K1 = { ...returnedType };
+		// In the actual return value, the generic type will be expanded.
+		returnedType.Z4K1.Z7K1 = Z10122;
 		test(
 			'composition returns type',
 			theFunctionCall,
