@@ -1,12 +1,11 @@
 'use strict';
 
-const traverse = require( 'json-schema-traverse' );
 const { execute } = require( './execute.js' );
 const { mutate } = require( './zobject.js' );
 const { containsError, createSchema } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
-const { ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
-const { convertZListToArray, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { validatesAsFunctionCall, ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
+const { convertZListToArray, isString, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 
 const validators = new Map();
 
@@ -90,6 +89,28 @@ async function runTypeValidator( Z1, Z4, evaluatorUri, resolver, scope ) {
 	}
 }
 
+async function traverseInternal( ZObject, callback, promises ) {
+	if ( isString( ZObject ) ) {
+		return;
+	}
+	promises.push( callback( ZObject ) );
+	let keys;
+	if ( ( await validatesAsFunctionCall( ZObject ) ).isValid() ) {
+		keys = [ 'Z1K1', 'Z7K1' ];
+	} else {
+		keys = Object.keys( ZObject );
+	}
+	for ( const key of keys ) {
+		await traverseInternal( ZObject[ key ], callback, promises );
+	}
+}
+
+async function traverseOmittingFunctionCallInputs( ZObject, callback ) {
+	const promises = [];
+	await traverseInternal( ZObject, callback, promises );
+	await Promise.all( promises );
+}
+
 /**
  * Utility function that traverses the given ZObject to identify all of the types contained in it
  * and return their ZObjects. The ZObjects are fetched from the database.
@@ -102,7 +123,7 @@ async function getContainedTypeZObjects( zobject, resolver ) {
 	const containedTypes = new Set();
 
 	const promises = [];
-	traverse( zobject, { allKeys: true }, function ( Z1 ) {
+	await traverseOmittingFunctionCallInputs( zobject, function ( Z1 ) {
 		promises.push( ( async function () {
 			const typeKey = await ZObjectKeyFactory.create( Z1.Z1K1 );
 			const key = typeKey.asString();
@@ -133,7 +154,7 @@ async function validate( zobject, resolver ) {
 	const traversalPromises = [];
 	const typeValidatorPromises = [];
 
-	await traverse( zobject, { allKeys: true }, ( Z1 ) => {
+	await traverseOmittingFunctionCallInputs( zobject, ( Z1 ) => {
 		traversalPromises.push( ( async function () {
 			let validatorTuple;
 			try {

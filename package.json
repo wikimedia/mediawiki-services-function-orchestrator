@@ -39,7 +39,6 @@
 		"function-schemata": "file:./function-schemata",
 		"http-shutdown": "1.2.2",
 		"js-yaml": "3.14.1",
-		"json-schema-traverse": "1.0.0",
 		"node-fetch": "2.6.1",
 		"preq": "0.5.14",
 		"proxyquire": "2.1.3",

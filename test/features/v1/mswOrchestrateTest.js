@@ -169,6 +169,13 @@ describe( 'orchestrate', function () {
 		readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883_expected.json' )
 	);
 
+	test(
+		'input to composition type error: static validation is skipped',
+		readJSON( './test/features/v1/test_data/skips_static_validation.json' ),
+		null,
+		readJSON( './test/features/v1/test_data/skips_static_validation_expected.json' )
+	);
+
 	{
 		cannedResponses.setWiki( 'Z10122', {
 			Z1K1: 'Z2',
