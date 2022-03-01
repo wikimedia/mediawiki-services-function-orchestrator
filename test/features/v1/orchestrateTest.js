@@ -447,27 +447,27 @@ describe( 'orchestration endpoint', function () {
 	);
 
 	testFunctionCall(
-		'function call for Z821 with reference to Z921',
+		'function call for Z821 (first)',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z821.json' ) },
-		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' } }
+		'first element of pair'
 	);
 
 	testFunctionCall(
-		'function call for Z921 (first)',
+		'function call for Z821 (first) with reference to Z921',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z921.json' ) },
-		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z10' } }
+		'first element of pair'
 	);
 
 	testFunctionCall(
-		'function call for Z822 with reference to Z922',
+		'function call for Z822 (second)',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z822.json' ) },
-		{ Z1K1: 'Z9', Z9K1: 'Z10' }
+		'2nd element of pair'
 	);
 
 	testFunctionCall(
-		'function call for Z922 (second)',
+		'function call for Z822 (second) with reference to Z922',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z922.json' ) },
-		{ Z1K1: 'Z9', Z9K1: 'Z10' }
+		'2nd element of pair'
 	);
 
 	testFunctionCall(
