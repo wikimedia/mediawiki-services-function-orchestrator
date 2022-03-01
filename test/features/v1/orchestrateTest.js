@@ -38,7 +38,7 @@ describe( 'orchestration endpoint', function () {
 				headers: {
 					'content-type': 'application/json'
 				},
-				body: typeof input === 'string' ? { doValidate: false, zobject: input } : input
+				body: input
 			} );
 			assert.status( result, 200 );
 			assert.contentType( result, 'application/json' );
@@ -58,7 +58,7 @@ describe( 'orchestration endpoint', function () {
 					headers: {
 						'content-type': 'application/json'
 					},
-					body: typeof input === 'string' ? { doValidate: false, zobject: input } : input
+					body: { zobject: input }
 				} )
 				.then( function ( res ) {
 					assert.status( res, 200 );
@@ -71,12 +71,12 @@ describe( 'orchestration endpoint', function () {
 		} );
 	};
 
-	const test = function ( name, input, output = null, error = null ) {
-		return testFunctionCall( name, input, output, error );
+	const test = function ( name, zobject, output = null, error = null ) {
+		return testFunctionCall( name, { zobject }, output, error );
 	};
 
-	const testString = function ( name, input, output = null, error = null ) {
-		return testFunctionCall( name, input, output, error );
+	const testString = function ( name, zobject, output = null, error = null ) {
+		return testFunctionCall( name, { zobject }, output, error );
 	};
 
 	test(

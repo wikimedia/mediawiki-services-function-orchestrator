@@ -5,6 +5,9 @@ const sUtil = require( '../lib/util' );
 const orchestrate = require( '../src/orchestrate.js' );
 const getTestResults = require( '../src/performTest.js' );
 
+const evaluatorUri = process.env.FUNCTION_EVALUATOR_URL || null;
+const wikiUri = process.env.WIKI_API_URL || null;
+
 /**
  * The main router object
  */
@@ -12,11 +15,17 @@ const router = sUtil.router();
 
 /** ROUTE DECLARATIONS GO HERE */
 router.post( '/', async function ( req, res ) {
+	req.body.wikiUri = wikiUri;
+	req.body.evaluatorUri = evaluatorUri;
+
 	const input = await orchestrate( req.body );
 	res.json( input );
 } );
 
 router.get( '/test/:data', async function ( req, res ) {
+	req.params.data.wikiUri = wikiUri;
+	req.params.data.evaluatorUri = evaluatorUri;
+
 	const result = await getTestResults( req.params.data );
 	res.json( result );
 } );

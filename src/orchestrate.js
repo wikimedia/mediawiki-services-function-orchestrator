@@ -82,11 +82,9 @@ async function orchestrate( input, implementationSelector = null ) {
 		);
 	}
 
-	// TODO (T286752): Receiving the evaluator and wiki URIs as parameters
-	// (especially a GET param!) is no good. Find a way to share config among
-	// services.
 	const evaluatorUri = input.evaluatorUri || null;
 	const wikiUri = input.wikiUri || null;
+
 	const resolver = new ReferenceResolver( wikiUri );
 	const doValidate = typeof input.doValidate === 'boolean' ? input.doValidate : true;
 
