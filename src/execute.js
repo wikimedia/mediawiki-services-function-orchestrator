@@ -2,7 +2,7 @@
 
 const { Composition, Implementation } = require( './implementation.js' );
 const { RandomImplementationSelector } = require( './implementationSelector.js' );
-const { containsError, containsValue, isRefOrString, returnOnFirstError, traverseZ10 } = require( './utils.js' );
+const { containsError, containsValue, isRefOrString, quoteZObject, returnOnFirstError, traverseZ10 } = require( './utils.js' );
 const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { makeResultEnvelope, convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
@@ -89,7 +89,9 @@ async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = 
 	callTuples.push(
 		[
 			runValidationFunction,
-			[ genericValidatorZ8, evaluatorUri, resolver, scope, Z1, typeZObject ],
+			[
+				genericValidatorZ8, evaluatorUri, resolver, scope,
+				quoteZObject( Z1 ), quoteZObject( typeZObject ) ],
 			'runValidationFunction' ] );
 	// TODO (T301532): Find a more reliable way to signal that no additional
 	// validation needs to be run. Here we just make sure that we won't run the
@@ -98,10 +100,10 @@ async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = 
 	if (
 		( await validatesAsType( typeZObject ) ).isValid() &&
 		validatorZ8.Z8K5.Z9K1 !== genericValidatorZ8.Z8K5.Z9K1 ) {
-		const { runTypeValidator } = require( './validation.js' );
+		const { runTypeValidatorDynamic } = require( './validation.js' );
 		callTuples.push(
 			[
-				runTypeValidator,
+				runTypeValidatorDynamic,
 				[ Z1, typeZObject, evaluatorUri, resolver, scope ],
 				'runTypeValidator' ] );
 	}

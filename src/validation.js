@@ -2,7 +2,7 @@
 
 const { execute } = require( './execute.js' );
 const { mutate } = require( './zobject.js' );
-const { containsError, createSchema } = require( './utils.js' );
+const { containsError, createSchema, quoteZObject } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { validatesAsFunctionCall, ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
 const { convertZListToArray, isString, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
@@ -46,14 +46,7 @@ function createValidatorZ7( Z8, ...Z1s ) {
 		Z7K1: Z8
 	};
 	for ( const argument of argumentDeclarations ) {
-		const argumentValue = { ...Z1s.shift() };
-		result[ argument.Z17K2.Z6K1 ] = {
-			Z1K1: {
-				Z1K1: 'Z9',
-				Z9K1: 'Z99'
-			},
-			Z99K1: argumentValue
-		};
+		result[ argument.Z17K2.Z6K1 ] = { ...Z1s.shift() };
 	}
 	return result;
 }
@@ -74,6 +67,37 @@ async function runValidationFunction( Z8, evaluatorUri, resolver, scope, ...Z1s 
  * @return {Array} an array of Z5/Error
  */
 async function runTypeValidator( Z1, Z4, evaluatorUri, resolver, scope ) {
+	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], evaluatorUri, resolver, scope ) ).Z22K1;
+
+	try {
+		// TODO (T296681): Catch errors when async functions reject.
+		return await runValidationFunction(
+			validationFunction, evaluatorUri, resolver, scope, quoteZObject( Z1 ),
+			quoteZObject( Z4 ) );
+	} catch ( err ) {
+		console.error( err );
+		return makeResultEnvelope( null, normalError(
+			[ error.zid_not_found ],
+			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
+		) );
+	}
+}
+
+/**
+ * Dynamically validates the Z1/Object against its type validator and returns
+ * an array of Z5/Error.
+ *
+ * TODO (T302750): Find a better way to handle this than two separate "runTypeValidator"
+ * functions.
+ *
+ * @param {Object} Z1 the Z1/Object
+ * @param {Object} Z4 the type ZObject
+ * @param {string} evaluatorUri URI of native code evaluator service
+ * @param {ReferenceResolver} resolver used to resolve references
+ * @param {Scope} scope current variable bindings
+ * @return {Array} an array of Z5/Error
+ */
+async function runTypeValidatorDynamic( Z1, Z4, evaluatorUri, resolver, scope ) {
 	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], evaluatorUri, resolver, scope ) ).Z22K1;
 
 	try {
@@ -212,6 +236,7 @@ async function validate( zobject, resolver ) {
 
 module.exports = {
 	runTypeValidator,
+	runTypeValidatorDynamic,
 	runValidationFunction,
 	validate
 };
