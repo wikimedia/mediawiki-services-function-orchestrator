@@ -117,7 +117,7 @@ async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = 
  * @param {Object} Z1 object whose Z1K1s are to be resolved
  * @param {string} evaluatorUri URI of native code evaluator service
  * @param {ReferenceResolver} resolver handles resolution of Z9s
- * @param {Scope} scope current variable bindings
+ * @param {Frame} scope current variable bindings
  * @return {ArgumentState|null} error state or null if no error encountered
  */
 async function resolveTypes( Z1, evaluatorUri, resolver, scope ) {
@@ -271,7 +271,7 @@ class Frame extends BaseFrame {
  * @param {Object} zobject
  * @param {string} evaluatorUri URI of native code evaluator service
  * @param {ReferenceResolver} resolver handles resolution of Z9s
- * @param {Scope} scope current variable bindings
+ * @param {Frame} scope current variable bindings
  * @return {Array} list of objects containing argument names
  */
 async function getArgumentStates( zobject, evaluatorUri, resolver, scope ) {
@@ -324,7 +324,7 @@ async function getArgumentStates( zobject, evaluatorUri, resolver, scope ) {
  * @param {Object} zobject
  * @param {string} evaluatorUri URI of native code evaluator service
  * @param {ReferenceResolver} resolver handles resolution of Z9s
- * @param {Scope} scope current variable bindings
+ * @param {Frame} scope current variable bindings
  * @return {Object} zobject if validation succeeds; error tuple otherwise
  */
 async function validateReturnType( result, zobject, evaluatorUri, resolver, scope ) {
@@ -370,7 +370,7 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
  * @param {Object} zobject object describing a function call
  * @param {string} evaluatorUri URI of native code evaluator service
  * @param {ReferenceResolver} resolver handles resolution of Z9s
- * @param {Scope} oldScope current variable bindings
+ * @param {Frame} oldScope current variable bindings
  * @param {boolean} doValidate whether to validate types of arguments and return value
  * @param {ImplementationSelector} implementationSelector
  * @return {Object} result of executing function call
