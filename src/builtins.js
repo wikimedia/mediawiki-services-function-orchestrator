@@ -231,12 +231,12 @@ function BUILTIN_EMPTY_( Z10 ) {
 	return makeResultEnvelope( result, null );
 }
 
-function BUILTIN_FIRST_( Z22 ) {
-	return makeResultEnvelope( Z22.Z22K1, null );
+function BUILTIN_FIRST_( Z882 ) {
+	return makeResultEnvelope( Z882.K1, null );
 }
 
-function BUILTIN_SECOND_( Z22 ) {
-	return makeResultEnvelope( Z22.Z22K2, null );
+function BUILTIN_SECOND_( Z882 ) {
+	return makeResultEnvelope( Z882.K2, null );
 }
 
 function BUILTIN_EQUALS_BOOLEAN_( Z40_1, Z40_2 ) {
@@ -917,13 +917,17 @@ const builtinReferences = new Map();
 	builtinReferences.set( 'Z821', await createZ8(
 		'Z821',
 		[
-			createArgument( 'Z22', 'Z821K1' )
+			createArgument(
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z1', Z882K2: 'Z1' } ) ).Z22K1,
+				'Z821K1' )
 		], 'Z1', 'Z921'
 	) );
 	builtinReferences.set( 'Z822', await createZ8(
 		'Z822',
 		[
-			createArgument( 'Z22', 'Z822K1' )
+			createArgument(
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z1', Z882K2: 'Z1' } ) ).Z22K1,
+				'Z822K1' )
 		], 'Z1', 'Z922'
 	) );
 	builtinReferences.set( 'Z844', await createZ8(
