@@ -130,6 +130,50 @@ function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
 	return makeResultEnvelope( goodResult, badResult );
 }
 
+async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
+	const keyrefs = utils.convertZListToArray( Z39s );
+	const pairType = {
+		Z1K1: Z9For( 'Z7' ),
+		Z7K1: Z9For( 'Z882' ),
+		Z882K1: Z9For( 'Z39' ),
+		Z882K2: Z9For( 'Z1' )
+	};
+	const pairArray = [];
+	const missing = [];
+	for ( const keyref of keyrefs ) {
+		const key = keyref.Z39K1.Z6K1;
+		const value = Z1[ key ];
+		if ( value === undefined ) {
+			missing.push( key );
+		} else {
+			pairArray.push( {
+				Z1K1: pairType,
+				K1: keyref,
+				K2: value
+			} );
+		}
+	}
+	if ( missing.length > 0 ) {
+		const badResult = normalError(
+			[ error.error_in_evaluation ],
+			[ 'Object did not contain key(s): ' + missing ] );
+		return makeResultEnvelope( null, badResult );
+	} else {
+		const pairList = await utils.convertArrayToZList( pairArray );
+		const mapType = {
+			Z1K1: Z9For( 'Z7' ),
+			Z7K1: Z9For( 'Z883' ),
+			Z883K1: Z9For( 'Z39' ),
+			Z883K2: Z9For( 'Z1' )
+		};
+		const goodResult = {
+			Z1K1: mapType,
+			K1: pairList
+		};
+		return makeResultEnvelope( goodResult, null );
+	}
+}
+
 async function reifyRecursive( Z1 ) {
 	if ( utils.isString( Z1 ) ) {
 		return {
@@ -666,6 +710,7 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, evaluatorUri, reso
 		Z882K1: keyType,
 		Z882K2: valueType
 	};
+
 	const pairType = ( await execute( pairFunctionCall, null, resolver, null ) ).Z22K1;
 	const listFunctionCall = {
 		Z1K1: Z9For( 'Z7' ),
@@ -695,6 +740,7 @@ const builtinFunctions = new Map();
 builtinFunctions.set( 'Z901', BUILTIN_ECHO_ );
 builtinFunctions.set( 'Z902', BUILTIN_IF_ );
 builtinFunctions.set( 'Z903', BUILTIN_VALUE_BY_KEY_ );
+builtinFunctions.set( 'Z904', BUILTIN_VALUES_BY_KEYS_ );
 builtinFunctions.set( 'Z905', BUILTIN_REIFY_ );
 builtinFunctions.set( 'Z908', BUILTIN_ABSTRACT_ );
 builtinFunctions.set( 'Z910', BUILTIN_CONS_ );
@@ -885,6 +931,19 @@ const builtinReferences = new Map();
 			await createArgument( 'Z39', 'Z803K1' ),
 			await createArgument( 'Z1', 'Z803K2' )
 		], 'Z1', 'Z903'
+	) );
+	builtinReferences.set( 'Z804', await createZ8(
+		'Z804',
+		[
+			await createArgument(
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z39' } ) ).Z22K1,
+				'Z804K1' ),
+			await createArgument( 'Z1', 'Z804K2' )
+		],
+		( await normalize(
+			{ Z1K1: 'Z7', Z7K1: 'Z883', Z883K1: 'Z39', Z883K2: 'Z1' }
+		) ).Z22K1,
+		'Z904'
 	) );
 	builtinReferences.set( 'Z805', await createZ8(
 		'Z805',

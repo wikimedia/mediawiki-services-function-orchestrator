@@ -180,6 +180,13 @@ describe( 'orchestrate', function () {
 		readJSON( './test/features/v1/test_data/skips_static_validation_expected.json' )
 	);
 
+	test(
+		'input to Z804: missing keys',
+		readJSON( './test/features/v1/test_data/Z804_missing_keys.json' ),
+		null,
+		readJSON( './test/features/v1/test_data/Z804_missing_keys_expected.json' )
+	);
+
 	{
 		const Z10122 = readJSON( './test/features/v1/test_data/Z10122.json' );
 		cannedResponses.setWiki( 'Z10122', {
