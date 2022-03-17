@@ -626,7 +626,8 @@ function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 }
 
 async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, evaluatorUri, resolver, scope ) {
-	if ( keyType.Z9K1 !== 'Z6' ) {
+	const allowedKeyTypes = [ 'Z6', 'Z39' ];
+	if ( !allowedKeyTypes.includes( keyType.Z9K1 ) ) {
 		const newError = normalError(
 			[ error.argument_value_error ],
 			[ 'Z883K1', keyType ]
