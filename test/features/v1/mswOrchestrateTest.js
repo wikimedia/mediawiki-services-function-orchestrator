@@ -161,12 +161,16 @@ describe( 'orchestrate', function () {
 		readJSON( './test/features/v1/test_data/invalid_call_return_value_not_of_declared_type_expected.json' )
 	);
 
-	test(
-		'argument value error: invalid value for Z883K1 / key type passed to Z883 / Typed Map',
-		readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883.json' ),
-		null,
-		readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883_expected.json' )
-	);
+	{
+		const mapCall = readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883.json' );
+		mapCall.Z883K1 = 'Z1';
+		test(
+			'argument value error: invalid value for Z883K1 / key type passed to Z883 / Typed Map',
+			mapCall,
+			null,
+			readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883_expected.json' )
+		);
+	}
 
 	test(
 		'input to composition type error: static validation is skipped',
@@ -518,6 +522,28 @@ describe( 'orchestrate', function () {
 			genericMap,
 			expected,
 			null
+		);
+	}
+
+	{
+		const mapCall = readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883.json' );
+		mapCall.Z883K1 = 'Z6';
+		const expected = readJSON( './test/features/v1/test_data/map-key-z6-expected.json' );
+		test(
+			'map key can be Z6/String',
+			mapCall,
+			expected
+		);
+	}
+
+	{
+		const mapCall = readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883.json' );
+		mapCall.Z883K1 = 'Z39';
+		const expected = readJSON( './test/features/v1/test_data/map-key-z39-expected.json' );
+		test(
+			'map key can be Z39/Key Reference',
+			mapCall,
+			expected
 		);
 	}
 
