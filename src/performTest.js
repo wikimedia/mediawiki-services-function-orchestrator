@@ -1,7 +1,7 @@
 'use strict';
 
 const { ReferenceResolver } = require( './db.js' );
-const parse = require( './parse.js' );
+const { generateError } = require( './utils' );
 const orchestrate = require( './orchestrate.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
 
@@ -13,6 +13,16 @@ function parseNormalizedArray( zobject, refs = [] ) {
 		return parseNormalizedArray( tail, [ ...refs, head.Z9K1 ] );
 	} else {
 		return refs;
+	}
+}
+
+function parse( str ) {
+	try {
+		const zobject = JSON.parse( str );
+		return zobject;
+	} catch ( err ) {
+		const m = ( err.name === 'SyntaxError' ) ? err.message : err.name;
+		return generateError( m );
 	}
 }
 
