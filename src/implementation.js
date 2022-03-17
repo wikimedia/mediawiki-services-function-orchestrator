@@ -3,9 +3,9 @@
 const Bluebird = require( 'bluebird' );
 const builtins = require( './builtins.js' );
 const fetch = require( 'node-fetch' );
-const { containsError, traverseZ10 } = require( './utils.js' );
+const { containsError, traverseZList } = require( './utils.js' );
 const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
-const { arrayToZ10, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertArrayToZList, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 
 fetch.Promise = Bluebird;
@@ -126,19 +126,22 @@ class Evaluated extends Implementation {
 		const Z7 = {};
 		Z7.Z1K1 = zobject.Z1K1;
 		Z7.Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_ ) ).Z22K1;
-		Z7.Z7K1.Z8K4 = arrayToZ10( [ this.Z14_ ] );
+		Z7.Z7K1.Z8K4 = await convertArrayToZList( [ this.Z14_ ] );
 
 		const implementation = this;
 
 		// Implementation may need to be dereferenced.
-		await traverseZ10( Z7.Z7K1.Z8K4, async function ( tail ) {
-			if ( tail.Z10K1.Z14K3 !== undefined ) {
-				await mutate( tail, [ 'Z10K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.evaluatorUri_, implementation.resolver_, implementation.scope_ );
+		await traverseZList( Z7.Z7K1.Z8K4, async function ( tail ) {
+			if ( tail.K1.Z14K3 !== undefined ) {
+				await mutate(
+					tail, [ 'K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.evaluatorUri_,
+					implementation.resolver_, implementation.scope_,
+					/* ignoreList= */null, /* resolveInternals= */false );
 			}
 		} );
 
 		// Return type may be a function call and must be resolved to allow for serialization.
-		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.evaluatorUri_, this.resolver_, this.scope_, true );
+		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.evaluatorUri_, this.resolver_, this.scope_ );
 		if ( containsError( returnTypeEnvelope ) ) {
 			return returnTypeEnvelope;
 		}

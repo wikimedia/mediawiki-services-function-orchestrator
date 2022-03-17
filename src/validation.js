@@ -67,7 +67,7 @@ async function runValidationFunction( Z8, evaluatorUri, resolver, scope, ...Z1s 
  * @return {Array} an array of Z5/Error
  */
 async function runTypeValidator( Z1, Z4, evaluatorUri, resolver, scope ) {
-	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], evaluatorUri, resolver, scope ) ).Z22K1;
+	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], evaluatorUri, resolver, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.
@@ -98,7 +98,7 @@ async function runTypeValidator( Z1, Z4, evaluatorUri, resolver, scope ) {
  * @return {Array} an array of Z5/Error
  */
 async function runTypeValidatorDynamic( Z1, Z4, evaluatorUri, resolver, scope ) {
-	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], evaluatorUri, resolver, scope ) ).Z22K1;
+	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], evaluatorUri, resolver, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.

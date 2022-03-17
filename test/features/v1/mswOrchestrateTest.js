@@ -94,6 +94,7 @@ describe( 'orchestrate', function () {
 			try {
 				result = await orchestrate( input, implementationSelector );
 			} catch ( err ) {
+				console.trace();
 				thrownError = err;
 			}
 			assert.deepEqual( thrownError, null );
@@ -679,5 +680,4 @@ describe( 'orchestrate', function () {
 			}
 		);
 	}
-
 } );
