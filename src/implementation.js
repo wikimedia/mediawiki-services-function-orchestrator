@@ -18,6 +18,7 @@ class Implementation {
 		this.evaluatorUri_ = null;
 		this.lazyVariables_ = new Set();
 		this.lazyReturn_ = false;
+		this.doValidate_ = true;
 		this.Z14_ = Z14;
 	}
 
@@ -35,6 +36,10 @@ class Implementation {
 
 	setResolver( resolver ) {
 		this.resolver_ = resolver;
+	}
+
+	setDoValidate( doValidate ) {
+		this.doValidate_ = doValidate;
 	}
 
 	setEvaluatorUri( evaluatorUri ) {
@@ -125,7 +130,8 @@ class Evaluated extends Implementation {
 		// to the function evaluator.
 		const Z7 = {};
 		Z7.Z1K1 = zobject.Z1K1;
-		Z7.Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_ ) ).Z22K1;
+		Z7.Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_,
+			/* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ ) ).Z22K1;
 		Z7.Z7K1.Z8K4 = await convertArrayToZList( [ this.Z14_ ] );
 
 		const implementation = this;
@@ -135,13 +141,14 @@ class Evaluated extends Implementation {
 			if ( tail.K1.Z14K3 !== undefined ) {
 				await mutate(
 					tail, [ 'K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.evaluatorUri_,
-					implementation.resolver_, implementation.scope_,
-					/* ignoreList= */null, /* resolveInternals= */false );
+					implementation.resolver_, implementation.scope_, /* ignoreList= */ null,
+					/* resolveInternals= */ false, implementation.doValidate_ );
 			}
 		} );
 
 		// Return type may be a function call and must be resolved to allow for serialization.
-		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.evaluatorUri_, this.resolver_, this.scope_ );
+		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.evaluatorUri_, this.resolver_,
+			this.scope_, /* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ );
 		if ( containsError( returnTypeEnvelope ) ) {
 			return returnTypeEnvelope;
 		}
@@ -180,7 +187,9 @@ class Composition extends Implementation {
 
 	async execute() {
 		return await resolveFunctionCallsAndReferences(
-			this.composition_, this.evaluatorUri_, this.resolver_, this.scope_ );
+			this.composition_, this.evaluatorUri_, this.resolver_, this.scope_,
+			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ null,
+			/* resolveInternals= */ true, this.doValidate_ );
 	}
 
 }

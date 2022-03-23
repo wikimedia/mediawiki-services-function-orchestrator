@@ -21,7 +21,7 @@ const MutationType = Object.freeze( {
 
 async function resolveFunctionCallsAndReferences(
 	nextObject, evaluatorUri, resolver, scope = null, originalObject = null,
-	key = null, ignoreList = null, resolveInternals = true ) {
+	key = null, ignoreList = null, resolveInternals = true, doValidate = true ) {
 	if ( ignoreList === null ) {
 		ignoreList = new Set();
 	}
@@ -33,9 +33,8 @@ async function resolveFunctionCallsAndReferences(
 			const argumentReferenceStatus = await validatesAsArgumentReference( nextObject );
 			if ( argumentReferenceStatus.isValid() && scope !== null ) {
 				const refKey = nextObject.Z18K1.Z6K1;
-				const dereferenced = await scope.retrieveArgument(
-					refKey, evaluatorUri, resolver, /* lazily= */ false,
-					/* doValidate= */ true, /* resolveInternals= */ resolveInternals );
+				const dereferenced = await scope.retrieveArgument( refKey, evaluatorUri,
+					resolver, /* lazily= */ false, doValidate, resolveInternals );
 				if ( dereferenced.state === 'ERROR' ) {
 					return makeResultEnvelope( null, dereferenced.error );
 				}
@@ -63,7 +62,7 @@ async function resolveFunctionCallsAndReferences(
 			if ( functionCallStatus.isValid() ) {
 				const { execute } = require( './execute.js' );
 				const Z22 = await execute(
-					nextObject, evaluatorUri, resolver, scope, /* doValidate= */ true,
+					nextObject, evaluatorUri, resolver, scope, doValidate,
 					/* implementationSelector= */ null, resolveInternals );
 				if ( containsError( Z22 ) ) {
 					return Z22;
@@ -76,7 +75,8 @@ async function resolveFunctionCallsAndReferences(
 			}
 		}
 		if ( await isGenericType( nextObject ) ) {
-			const executionResult = await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope, ignoreList, resolveInternals );
+			const executionResult = await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope, ignoreList,
+				resolveInternals, doValidate );
 			if ( containsError( executionResult ) ) {
 				return executionResult;
 			}
@@ -100,7 +100,7 @@ async function resolveFunctionCallsAndReferences(
 
 mutate = async function (
 	zobject, keys, evaluatorUri, resolver, scope = null, ignoreList = null,
-	resolveInternals = true ) {
+	resolveInternals = true, doValidate = true ) {
 	if ( ignoreList === null ) {
 		ignoreList = new Set();
 	}
@@ -108,8 +108,8 @@ mutate = async function (
 		return makeResultEnvelope( zobject, null );
 	}
 	const key = keys.shift();
-	const nextObjectEnvelope = await resolveFunctionCallsAndReferences(
-		zobject[ key ], evaluatorUri, resolver, scope, zobject, key, ignoreList, resolveInternals );
+	const nextObjectEnvelope = await resolveFunctionCallsAndReferences( zobject[ key ],
+		evaluatorUri, resolver, scope, zobject, key, ignoreList, resolveInternals, doValidate );
 
 	if ( containsError( nextObjectEnvelope ) ) {
 		return nextObjectEnvelope;
@@ -141,7 +141,7 @@ mutate = async function (
 		}
 	}
 	return await mutate(
-		nextObject, keys, evaluatorUri, resolver, scope, ignoreList, resolveInternals );
+		nextObject, keys, evaluatorUri, resolver, scope, ignoreList, resolveInternals, doValidate );
 };
 
 module.exports = { mutate, resolveFunctionCallsAndReferences, MutationType };

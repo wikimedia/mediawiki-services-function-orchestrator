@@ -76,7 +76,7 @@ async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = 
 	const genericValidatorZ8Reference = wrapInZ9( genericSchemaValidatorZID );
 	const genericValidatorZ8 = ( await resolveFunctionCallsAndReferences(
 		genericValidatorZ8Reference, evaluatorUri, resolver, scope,
-		/* originalObject= */null, /* key= */null,
+		/* originalObject= */ null, /* key= */ null,
 		/* ignoreList= */ null ) ).Z22K1;
 
 	if ( typeZObject === null ) {
@@ -121,9 +121,10 @@ async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = 
  * @param {string} evaluatorUri URI of native code evaluator service
  * @param {ReferenceResolver} resolver handles resolution of Z9s
  * @param {Frame} scope current variable bindings
+ * @param {boolean} doValidate whether to validate types of arguments and return values
  * @return {ArgumentState|null} error state or null if no error encountered
  */
-async function resolveTypes( Z1, evaluatorUri, resolver, scope ) {
+async function resolveTypes( Z1, evaluatorUri, resolver, scope, doValidate = true ) {
 	const objectQueue = [ Z1 ];
 	while ( objectQueue.length > 0 ) {
 		const nextObject = objectQueue.shift();
@@ -131,7 +132,8 @@ async function resolveTypes( Z1, evaluatorUri, resolver, scope ) {
 			continue;
 		}
 		const typeEnvelope = await mutate(
-			nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope );
+			nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope,
+			/* ignoreList= */ null, /* resolveInternals= */ false, doValidate );
 		if ( containsError( typeEnvelope ) ) {
 			return ArgumentState.ERROR( typeEnvelope.Z22K2 );
 		}
@@ -176,7 +178,7 @@ class Frame extends BaseFrame {
 		const argumentEnvelope = await resolveFunctionCallsAndReferences(
 			argumentDict.argument, evaluatorUri, resolver, this.lastFrame_,
 			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ null,
-			resolveInternals );
+			resolveInternals, doValidate );
 		if ( containsError( argumentEnvelope ) ) {
 			return ArgumentState.ERROR( argumentEnvelope.Z22K2 );
 		}
@@ -278,19 +280,21 @@ class Frame extends BaseFrame {
  * @param {string} evaluatorUri URI of native code evaluator service
  * @param {ReferenceResolver} resolver handles resolution of Z9s
  * @param {Frame} scope current variable bindings
+ * @param {boolean} doValidate whether to validate types of arguments and return values
  * @return {Array} list of objects containing argument names
  */
-async function getArgumentStates( zobject, evaluatorUri, resolver, scope ) {
+async function getArgumentStates( zobject, evaluatorUri, resolver, scope,
+	doValidate = true ) {
 	const argumentStates = [];
 	const Z7K1Envelope = (
 		await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope,
-			/* ignoreList= */ null ) );
+			/* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
 	if ( containsError( Z7K1Envelope ) ) {
 		return [ ArgumentState.ERROR( 'Could not dereference Z8K1' ) ];
 	}
 	const Z8K1Envelope = ( await mutate(
 		Z7K1Envelope.Z22K1, [ 'Z8K1' ], evaluatorUri, resolver, scope,
-		/* ignoreList= */ null, /* resolveInternals= */ false ) );
+		/* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
 	// This usually happens because dereferencing can't occur during validation
 	// (and is expected).
 	if ( containsError( Z8K1Envelope ) ) {
@@ -304,12 +308,12 @@ async function getArgumentStates( zobject, evaluatorUri, resolver, scope ) {
 		const argumentDict = {};
 		const argumentName = ( await mutate(
 			Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope,
-			/* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
+			/* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) ).Z22K1;
 		argumentDict.name = argumentName;
 		// TODO (T292787): This is flaky to rely on; find a better way to determine type.
 		const declaredType = ( await mutate(
 			Z17, [ 'Z17K1' ], evaluatorUri, resolver, scope,
-			/* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
+			/* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) ).Z22K1;
 		argumentDict.declaredType = declaredType;
 		let key = argumentName;
 		if ( zobject[ key ] === undefined ) {
@@ -422,7 +426,7 @@ execute = async function (
 	// dereferenced (Z8K4 and all elements thereof).
 	const Z8K4Envelope = await mutate(
 		zobject, [ 'Z7K1', 'Z8K4' ], evaluatorUri, resolver, scope,
-		/* ignoreList= */ null, /* resolveInternals= */ false );
+		/* ignoreList= */ null, /* resolveInternals= */ false, doValidate );
 	if ( containsError( Z8K4Envelope ) ) {
 		return Z8K4Envelope;
 	}
@@ -430,8 +434,8 @@ execute = async function (
 	const implementations = [];
 	for ( const Z14 of convertZListToArray( Z8K4 ) ) {
 		implementations.push( ( await resolveFunctionCallsAndReferences(
-			Z14, evaluatorUri, resolver, scope, /* originalObject= */null,
-			/* key= */null, /* ignoreList= */null, /* resolveInternals= */ false ) ).Z22K1 );
+			Z14, evaluatorUri, resolver, scope, /* originalObject= */null, /* key= */null,
+			/* ignoreList= */null, /* resolveInternals= */ false, doValidate ) ).Z22K1 );
 	}
 
 	if ( implementations === [] ) {
@@ -485,11 +489,13 @@ execute = async function (
 	implementation.setScope( scope );
 	implementation.setResolver( resolver );
 	implementation.setEvaluatorUri( evaluatorUri );
+	implementation.setDoValidate( doValidate );
 	let result = await implementation.execute( zobject, argumentInstantiations );
 
 	// Execute result if implementation is lazily evaluated.
 	if ( implementation.returnsLazy() ) {
-		result = await mutate( result, [ 'Z22K1' ], evaluatorUri, resolver, scope );
+		result = await mutate( result, [ 'Z22K1' ], evaluatorUri, resolver, scope,
+			/* ignoreList= */ null, /* resolveInternals= */ true, doValidate );
 	}
 	if ( doValidate && resolveInternals ) {
 		result = await validateReturnType( result, zobject, evaluatorUri, resolver, scope );

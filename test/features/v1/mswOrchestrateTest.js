@@ -687,4 +687,53 @@ describe( 'orchestrate', function () {
 			}
 		);
 	}
+
+	{
+		cannedResponses.setWiki( 'Z10081', readJSON( './test/features/v1/test_data/Z10081.json' ) );
+		cannedResponses.setWiki( 'Z10086', readJSON( './test/features/v1/test_data/Z10086.json' ) );
+		cannedResponses.setWiki( 'Z10084', readJSON( './test/features/v1/test_data/Z10084.json' ) );
+		cannedResponses.setWiki( 'Z10085', readJSON( './test/features/v1/test_data/Z10085.json' ) );
+		const validateNonempty = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z10084',
+			Z10084K1: {
+				Z1K1: 'Z10081',
+				Z10081K1: {
+					Z1K1: 'Z6',
+					Z6K1: 'x'
+				}
+			}
+		};
+		test(
+			'Nonempty string with Z10084 validator',
+			validateNonempty,
+			readJSON( './test/features/v1/test_data/Z10084_nonempty_string_expected.json' ),
+			null
+		);
+	}
+
+	{
+		cannedResponses.setWiki( 'Z10081', readJSON( './test/features/v1/test_data/Z10081.json' ) );
+		cannedResponses.setWiki( 'Z10086', readJSON( './test/features/v1/test_data/Z10086.json' ) );
+		cannedResponses.setWiki( 'Z10084', readJSON( './test/features/v1/test_data/Z10084.json' ) );
+		cannedResponses.setWiki( 'Z10085', readJSON( './test/features/v1/test_data/Z10085.json' ) );
+		const validateEmpty = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z10084',
+			Z10084K1: {
+				Z1K1: 'Z10081',
+				Z10081K1: {
+					Z1K1: 'Z6',
+					Z6K1: ''
+				}
+			}
+		};
+		test(
+			'Empty string with Z10084 validator',
+			validateEmpty,
+			null,
+			readJSON( './test/features/v1/test_data/Z10084_empty_string_expected.json' )
+		);
+	}
+
 } );
