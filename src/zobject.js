@@ -1,7 +1,7 @@
 'use strict';
 
 const { containsError, createSchema, isGenericType } = require( './utils.js' );
-const { isUserDefined, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils' );
+const { isString, isUserDefined, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const {
 	validatesAsFunctionCall,
@@ -144,4 +144,49 @@ mutate = async function (
 		nextObject, keys, evaluatorUri, resolver, scope, ignoreList, resolveInternals, doValidate );
 };
 
-module.exports = { mutate, resolveFunctionCallsAndReferences, MutationType };
+class ZObject {
+
+	constructor() {
+		this.names_ = new Map();
+	}
+
+	static create( zobjectJSON ) {
+		if ( isString( zobjectJSON ) ) {
+			return zobjectJSON;
+		}
+		const result = new ZObject();
+		for ( const key of Object.keys( zobjectJSON ) ) {
+			const value = ZObject.create( zobjectJSON[ key ] );
+			result.names_.set( key, value );
+			Object.defineProperty( result, key, {
+				get: function () {
+					return this.names_.get( key );
+				},
+				set: function ( newValue ) {
+					this.names_.set( key, ZObject.create( newValue ) );
+				}
+			} );
+		}
+		return result;
+	}
+
+	asJSON() {
+		const result = {};
+		for ( const entry of this.names_.entries() ) {
+			const key = entry[ 0 ];
+			let value = entry[ 1 ];
+			if ( !isString( value ) ) {
+				value = value.asJSON();
+			}
+			result[ key ] = value;
+		}
+		return result;
+	}
+
+	keys() {
+		return this.names_.keys();
+	}
+
+}
+
+module.exports = { mutate, resolveFunctionCallsAndReferences, MutationType, ZObject };
