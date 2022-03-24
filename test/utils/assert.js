@@ -7,8 +7,8 @@ function deepEqual( result, expected, message ) {
 	try {
 		assert.deepEqual( result, expected, message );
 	} catch ( e ) {
-		console.log( `Expected:\n${JSON.stringify( expected, null, 2 )}` );
-		console.log( `Result:\n${JSON.stringify( result, null, 2 )}` );
+		console.error( `Expected:\n${JSON.stringify( expected, null, 2 )}` );
+		console.error( `Result:\n${JSON.stringify( result, null, 2 )}` );
 		throw e;
 	}
 
@@ -57,8 +57,8 @@ function notDeepEqual( result, expected, message ) {
 	try {
 		assert.notDeepEqual( result, expected, message );
 	} catch ( e ) {
-		console.log( `Not expected:\n${JSON.stringify( expected, null, 2 )}` );
-		console.log( `Result:\n${JSON.stringify( result, null, 2 )}` );
+		console.error( `Not expected:\n${JSON.stringify( expected, null, 2 )}` );
+		console.error( `Result:\n${JSON.stringify( result, null, 2 )}` );
 		throw e;
 	}
 
