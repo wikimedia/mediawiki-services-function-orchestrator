@@ -57,8 +57,7 @@
 		"mocha.parallel": "0.15.6",
 		"msw": "0.32.0",
 		"nyc": "14.1.1",
-		"openapi-schema-validator": "3.0.3",
-		"sinon": "11.1.1"
+		"openapi-schema-validator": "3.0.3"
 	},
 	"engines": {
 		"node": "12.22.5"
