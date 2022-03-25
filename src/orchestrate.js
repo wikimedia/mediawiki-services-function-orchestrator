@@ -94,11 +94,7 @@ async function orchestrate( input, implementationSelector = null ) {
 		[ execute, [ evaluatorUri, resolver, /* oldScope= */null, /* doValidate= */true, /* implementationSelector= */implementationSelector ], 'execute' ]
 	];
 
-	currentPair = await returnOnFirstError(
-		currentPair, callTuples, /* callback= */ async function ( currentPair, callTuple ) {
-			console.debug( 'calling function', callTuple[ 2 ], 'on currentPair:', currentPair );
-		}
-	);
+	currentPair = await returnOnFirstError( currentPair, callTuples );
 
 	const canonicalized = await canonicalize( currentPair );
 
