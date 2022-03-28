@@ -4,7 +4,7 @@ const Bluebird = require( 'bluebird' );
 const builtins = require( './builtins.js' );
 const fetch = require( 'node-fetch' );
 const { containsError, traverseZList } = require( './utils.js' );
-const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
+const { mutate, resolveFunctionCallsAndReferences, ZWrapper } = require( './zobject.js' );
 const { convertArrayToZList, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 
@@ -28,6 +28,10 @@ class Implementation {
 
 	returnsLazy() {
 		return this.lazyReturn_;
+	}
+
+	async execute( zobject, argumentList ) {
+		return ZWrapper.create( await this.executeInternal( zobject, argumentList ) );
 	}
 
 	setScope( scope ) {
@@ -95,7 +99,7 @@ class BuiltIn extends Implementation {
 	 * @param {Array} argumentList
 	 * @return {Object} the result of calling this.functor_ with provided arguments
 	 */
-	async execute( zobject, argumentList ) {
+	async executeInternal( zobject, argumentList ) {
 		const keys = [];
 		const nameToArgument = new Map();
 		for ( const argumentDict of argumentList ) {
@@ -113,6 +117,10 @@ class BuiltIn extends Implementation {
 		return this.functor_( ...callArgs );
 	}
 
+	async execute( zobject, argumentList ) {
+		return ZWrapper.create( await this.executeInternal( zobject, argumentList ) );
+	}
+
 }
 
 class Evaluated extends Implementation {
@@ -124,20 +132,22 @@ class Evaluated extends Implementation {
 	 * @param {Array} argumentList
 	 * @return {Object} the result of calling this.functor_ with provided arguments
 	 */
-	async execute( zobject, argumentList ) {
+	async executeInternal( zobject, argumentList ) {
 		// Arguments should already be fully resolved, but any other attributes
 		// of the Z7 which are Z9s/Z18s must be resolved before dispatching
 		// to the function evaluator.
 		const Z7 = {};
-		Z7.Z1K1 = zobject.Z1K1;
-		Z7.Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_,
-			/* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ ) ).Z22K1;
-		Z7.Z7K1.Z8K4 = await convertArrayToZList( [ this.Z14_ ] );
+		Z7.Z1K1 = zobject.Z1K1.asJSON();
+		Z7.Z7K1 = (
+			await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_,
+			/* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ )
+		).Z22K1.asJSON();
+		const Z8K4 = ZWrapper.create( await convertArrayToZList( [ this.Z14_.asJSON() ] ) );
 
 		const implementation = this;
 
 		// Implementation may need to be dereferenced.
-		await traverseZList( Z7.Z7K1.Z8K4, async function ( tail ) {
+		await traverseZList( Z8K4, async function ( tail ) {
 			if ( tail.K1.Z14K3 !== undefined ) {
 				await mutate(
 					tail, [ 'K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.evaluatorUri_,
@@ -145,6 +155,7 @@ class Evaluated extends Implementation {
 					/* resolveInternals= */ false, implementation.doValidate_ );
 			}
 		} );
+		Z7.Z7K1.Z8K4 = Z8K4.asJSON();
 
 		// Return type may be a function call and must be resolved to allow for serialization.
 		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.evaluatorUri_, this.resolver_,
@@ -152,9 +163,9 @@ class Evaluated extends Implementation {
 		if ( containsError( returnTypeEnvelope ) ) {
 			return returnTypeEnvelope;
 		}
-		Z7.Z7K1.Z8K2 = returnTypeEnvelope.Z22K1;
+		Z7.Z7K1.Z8K2 = returnTypeEnvelope.Z22K1.asJSON();
 		for ( const argumentDict of argumentList ) {
-			Z7[ argumentDict.name ] = argumentDict.argument;
+			Z7[ argumentDict.name ] = argumentDict.argument.asJSON();
 		}
 		const fetchedResult = await fetch(
 			this.evaluatorUri_, {
@@ -182,10 +193,10 @@ class Composition extends Implementation {
 
 	constructor( Z14 ) {
 		super( Z14 );
-		this.composition_ = { ...Z14.Z14K2 };
+		this.composition_ = ZWrapper.create( Z14.Z14K2.asJSON() );
 	}
 
-	async execute() {
+	async executeInternal() {
 		return await resolveFunctionCallsAndReferences(
 			this.composition_, this.evaluatorUri_, this.resolver_, this.scope_,
 			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ null,

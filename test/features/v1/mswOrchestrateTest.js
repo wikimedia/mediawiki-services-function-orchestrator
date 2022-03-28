@@ -736,4 +736,39 @@ describe( 'orchestrate', function () {
 		);
 	}
 
+	{
+		cannedResponses.setWiki( 'Z10088', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10088' },
+			Z2K2: readJSON( './test/features/v1/test_data/curry-implementation-Z10088.json' )
+		} );
+		cannedResponses.setWiki( 'Z10087', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10087' },
+			Z2K2: readJSON( './test/features/v1/test_data/curry-Z10087.json' )
+		} );
+		cannedResponses.setWiki( 'Z30086', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z30086' },
+			Z2K2: readJSON( './test/features/v1/test_data/curry-call-Z30086.json' )
+		} );
+		cannedResponses.setWiki( 'Z10007', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10007' },
+			Z2K2: readJSON( './test/features/v1/test_data/and-Z10007.json' )
+		} );
+		const curryCall = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z30086',
+			Z30086K1: 'Z10007',
+			Z30086K2: makeTrue(),
+			Z30086K3: makeTrue()
+		};
+		test(
+			'curry',
+			curryCall,
+			makeTrue()
+		);
+	}
+
 } );

@@ -8,7 +8,7 @@ const {
 	validatesAsUnit,
 	ZObjectKeyFactory
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { isUserDefined, getHead, getTail, makeUnit } = require( '../function-schemata/javascript/src/utils' );
+const { isUserDefined, getHead, getTail, makeResultEnvelope, makeUnit } = require( '../function-schemata/javascript/src/utils' );
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z6Validator = normalFactory.create( 'Z6_literal' );
@@ -23,19 +23,35 @@ const Z9Validator = normalFactory.create( 'Z9_literal' );
  * @return {bool} true if Z1 validates as either Z6 or Z7
  */
 async function isRefOrString( Z1 ) {
+	const { ZWrapper } = require( './zobject.js' );
+	if ( Z1 instanceof ZWrapper ) {
+		Z1 = Z1.asJSON();
+	}
 	return (
 		( await Z6Validator.validate( Z1 ) ) ||
 		( await Z9Validator.validate( Z1 ) )
 	);
 }
 
+async function createZObjectKey( ZObject ) {
+	const { ZWrapper } = require( './zobject.js' );
+	if ( ZObject instanceof ZWrapper ) {
+		ZObject = ZObject.asJSON();
+	}
+	return await ZObjectKeyFactory.create( ZObject );
+}
+
 async function createSchema( Z1 ) {
 	// TODO (T302032): Use function-schemata version of findIdentity to improve
 	// type inference here.
-	if ( await isRefOrString( Z1 ) ) {
-		return normalFactory.create( Z1.Z1K1 );
+	const { ZWrapper } = require( './zobject.js' );
+	let Z1K1 = Z1.Z1K1;
+	if ( Z1K1 instanceof ZWrapper ) {
+		Z1K1 = Z1K1.asJSON();
 	}
-	const Z1K1 = Z1.Z1K1;
+	if ( await isRefOrString( Z1 ) ) {
+		return normalFactory.create( Z1K1 );
+	}
 	if ( ( await validatesAsReference( Z1K1 ) ).isValid() ) {
 		if ( isUserDefined( Z1K1.Z9K1 ) ) {
 			throw new Error( `Tried to create schema for unrecognized ZID ${Z1K1.Z9K1}` );
@@ -43,7 +59,7 @@ async function createSchema( Z1 ) {
 		return normalFactory.create( Z1K1.Z9K1 );
 	}
 	const result = await normalFactory.createUserDefined( [ Z1K1 ] );
-	const key = ( await ZObjectKeyFactory.create( Z1K1 ) ).asString();
+	const key = ( await createZObjectKey( Z1K1 ) ).asString();
 	return result.get( key );
 }
 
@@ -69,13 +85,18 @@ function isError( Z1 ) {
  * @return {bool} whether Z1 can validate as a generic type instantiation
  */
 async function isGenericType( Z1 ) {
+	const { ZWrapper } = require( './zobject.js' );
 	// TODO (T296658): Use the GENERIC schema.
 	try {
-		if ( !( await validatesAsFunctionCall( Z1.Z1K1 ) ).isValid() ) {
+		let Z1K1 = Z1.Z1K1;
+		if ( Z1 instanceof ZWrapper ) {
+			Z1K1 = Z1.asJSON().Z1K1;
+		}
+		if ( !( await validatesAsFunctionCall( Z1K1 ) ).isValid() ) {
 			return false;
 		}
 		const localKeyRegex = /K[1-9]\d*$/;
-		for ( const key of Object.keys( Z1 ) ) {
+		for ( const key of Z1.keys() ) {
 			if ( key === 'Z1K1' || key === 'Z7K1' ) {
 				continue;
 			}
@@ -106,9 +127,10 @@ function containsError( pair ) {
  * @return {bool} true if Z22K2 is not the Unit; false otherwise
  */
 async function containsValue( pair ) {
+	const Z22K1 = pair.Z22K1.asJSON();
 	return (
-		( await validatesAsZObject( pair.Z22K1 ) ).isValid() &&
-		!( ( await validatesAsUnit( pair.Z22K1 ) ).isValid() )
+		( await validatesAsZObject( Z22K1 ) ).isValid() &&
+		!( ( await validatesAsUnit( Z22K1 ) ).isValid() )
 	);
 }
 
@@ -252,25 +274,33 @@ async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = tr
 }
 
 function quoteZObject( ZObject ) {
-	return {
+	const { ZWrapper } = require( './zobject.js' );
+	return ZWrapper.create( {
 		Z1K1: {
 			Z1K1: 'Z9',
 			Z9K1: 'Z99'
 		},
 		Z99K1: ZObject
-	};
+	} );
+}
+
+function makeWrappedResultEnvelope( ...args ) {
+	const { ZWrapper } = require( './zobject.js' );
+	return ZWrapper.create( makeResultEnvelope( ...args ) );
 }
 
 module.exports = {
 	containsError,
 	containsValue,
 	createSchema,
+	createZObjectKey,
 	generateError,
 	isError,
 	isGenericType,
 	isRefOrString,
 	makeBoolean,
 	makeResultEnvelopeAndMaybeCanonicalise,
+	makeWrappedResultEnvelope,
 	quoteZObject,
 	returnOnFirstError,
 	traverseZList

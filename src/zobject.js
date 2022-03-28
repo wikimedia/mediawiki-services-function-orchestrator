@@ -1,7 +1,8 @@
 'use strict';
 
-const { containsError, createSchema, isGenericType } = require( './utils.js' );
-const { isString, isUserDefined, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils' );
+const { EmptyFrame } = require( './frame.js' );
+const { containsError, createSchema, isGenericType, makeWrappedResultEnvelope } = require( './utils.js' );
+const { isString, isUserDefined } = require( '../function-schemata/javascript/src/utils' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const {
 	validatesAsFunctionCall,
@@ -12,6 +13,64 @@ const {
 
 let mutate = null;
 
+class ZWrapper {
+
+	constructor() {
+		this.names_ = new Map();
+		this.scope_ = null;
+	}
+
+	static create( zobjectJSON ) {
+		if ( isString( zobjectJSON ) || zobjectJSON instanceof ZWrapper ) {
+			return zobjectJSON;
+		}
+		const result = new ZWrapper();
+		for ( const key of Object.keys( zobjectJSON ) ) {
+			const value = ZWrapper.create( zobjectJSON[ key ] );
+			result.names_.set( key, value );
+			Object.defineProperty( result, key, {
+				get: function () {
+					const result = this.names_.get( key );
+					if ( result instanceof ZWrapper && result.getScope() === null ) {
+						result.setScope( this.getScope() );
+					}
+					return result;
+				},
+				set: function ( newValue ) {
+					this.names_.set( key, ZWrapper.create( newValue ) );
+				}
+			} );
+		}
+		return result;
+	}
+
+	asJSON() {
+		const result = {};
+		for ( const entry of this.names_.entries() ) {
+			const key = entry[ 0 ];
+			let value = entry[ 1 ];
+			if ( value instanceof ZWrapper ) {
+				value = value.asJSON();
+			}
+			result[ key ] = value;
+		}
+		return result;
+	}
+
+	keys() {
+		return this.names_.keys();
+	}
+
+	getScope() {
+		return this.scope_;
+	}
+
+	setScope( scope ) {
+		this.scope_ = scope;
+	}
+
+}
+
 const MutationType = Object.freeze( {
 	REFERENCE: Symbol( 'REFERENCE' ),
 	ARGUMENT_REFERENCE: Symbol( 'ARGUMENT_REFERENCE' ),
@@ -19,9 +78,9 @@ const MutationType = Object.freeze( {
 	GENERIC_INSTANCE: Symbol( 'GENERIC_INSTANCE' )
 } );
 
-async function resolveFunctionCallsAndReferences(
-	nextObject, evaluatorUri, resolver, scope = null, originalObject = null,
-	key = null, ignoreList = null, resolveInternals = true, doValidate = true ) {
+async function resolveFunctionCallsAndReferencesInternal(
+	nextObject, evaluatorUri, resolver, scope, originalObject, key, ignoreList,
+	resolveInternals, doValidate ) {
 	if ( ignoreList === null ) {
 		ignoreList = new Set();
 	}
@@ -29,21 +88,25 @@ async function resolveFunctionCallsAndReferences(
 		throw new Error( 'originalObject and key must both be null if one is' );
 	}
 	while ( true ) {
+		let nextJSON = nextObject;
+		if ( nextJSON instanceof ZWrapper ) {
+			nextJSON = nextJSON.asJSON();
+		}
 		if ( !ignoreList.has( MutationType.ARGUMENT_REFERENCE ) ) {
-			const argumentReferenceStatus = await validatesAsArgumentReference( nextObject );
+			const argumentReferenceStatus = await validatesAsArgumentReference( nextJSON );
 			if ( argumentReferenceStatus.isValid() && scope !== null ) {
 				const refKey = nextObject.Z18K1.Z6K1;
 				const dereferenced = await scope.retrieveArgument( refKey, evaluatorUri,
 					resolver, /* lazily= */ false, doValidate, resolveInternals );
 				if ( dereferenced.state === 'ERROR' ) {
-					return makeResultEnvelope( null, dereferenced.error );
+					return makeWrappedResultEnvelope( null, dereferenced.error );
 				}
 				nextObject = dereferenced.argumentDict.argument;
 				continue;
 			}
 		}
 		if ( !ignoreList.has( MutationType.REFERENCE ) ) {
-			const referenceStatus = await validatesAsReference( nextObject );
+			const referenceStatus = await validatesAsReference( nextJSON );
 			// TODO (T296686): isUserDefined call here is only an
 			// optimization/testing expedient; it would be better to pre-populate
 			// the cache with builtin types.
@@ -58,7 +121,7 @@ async function resolveFunctionCallsAndReferences(
 			}
 		}
 		if ( !ignoreList.has( MutationType.FUNCTION_CALL ) ) {
-			const functionCallStatus = await validatesAsFunctionCall( nextObject );
+			const functionCallStatus = await validatesAsFunctionCall( nextJSON );
 			if ( functionCallStatus.isValid() ) {
 				const { execute } = require( './execute.js' );
 				const Z22 = await execute(
@@ -75,16 +138,15 @@ async function resolveFunctionCallsAndReferences(
 			}
 		}
 		if ( await isGenericType( nextObject ) ) {
-			const executionResult = await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope, ignoreList,
-				resolveInternals, doValidate );
+			const executionResult = await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope, ignoreList, resolveInternals, doValidate );
 			if ( containsError( executionResult ) ) {
 				return executionResult;
 			}
 			const Z4 = executionResult.Z22K1;
-			const typeStatus = await validatesAsType( Z4 );
+			const typeStatus = await validatesAsType( Z4.asJSON() );
 			if ( !typeStatus.isValid() ) {
 				// TODO (T2966681): Return typeStatus.getZ5() as part of this result.
-				return makeResultEnvelope(
+				return makeWrappedResultEnvelope(
 					null,
 					normalError(
 						[ error.argument_type_mismatch ],
@@ -95,7 +157,26 @@ async function resolveFunctionCallsAndReferences(
 		}
 		break;
 	}
-	return makeResultEnvelope( nextObject, null );
+	return makeWrappedResultEnvelope( nextObject, null );
+}
+
+async function resolveFunctionCallsAndReferences(
+	nextObject, evaluatorUri, resolver, scope = null, originalObject = null,
+	key = null, ignoreList = null, resolveInternals = true, doValidate = true ) {
+	let innerScope = null;
+	if ( nextObject instanceof ZWrapper ) {
+		innerScope = nextObject.getScope();
+	}
+	if ( innerScope === null ) {
+		innerScope = new EmptyFrame();
+	}
+	if ( scope === null ) {
+		scope = new EmptyFrame();
+	}
+	scope = innerScope.mergedCopy( scope );
+	return await resolveFunctionCallsAndReferencesInternal(
+		nextObject, evaluatorUri, resolver, scope, originalObject,
+		key, ignoreList, resolveInternals, doValidate );
 }
 
 mutate = async function (
@@ -105,7 +186,7 @@ mutate = async function (
 		ignoreList = new Set();
 	}
 	if ( keys.length <= 0 ) {
-		return makeResultEnvelope( zobject, null );
+		return makeWrappedResultEnvelope( zobject, null );
 	}
 	const key = keys.shift();
 	const nextObjectEnvelope = await resolveFunctionCallsAndReferences( zobject[ key ],
@@ -119,74 +200,28 @@ mutate = async function (
 	if ( resolveInternals ) {
 		// Validate that the newly-mutated object validates in accordance with the
 		// original object's key declaration.
-		const theSchema = await createSchema( zobject );
+		const theSchema = await createSchema( zobject.asJSON() );
 		// We validate elsewhere that Z1K1 must be a type, so the schemata do not
 		// surface separate validators for Z1K1.
 		if ( key !== 'Z1K1' ) {
 			const subValidator = theSchema.subValidator( key );
 			if ( subValidator === undefined ) {
 				// Should never happen?
-				return makeResultEnvelope(
+				return makeWrappedResultEnvelope(
 					null,
 					normalError(
 						[ error.invalid_key ],
 						[ `ZObject does not have the key ${key}` ] ) );
 			}
-			const theStatus = await subValidator.validateStatus( nextObject );
+			const theStatus = await subValidator.validateStatus( nextObject.asJSON() );
 			if ( !theStatus.isValid() ) {
 				// TODO (T302015): Find a way to incorporate information about where this
 				// error came from.
-				return makeResultEnvelope( null, theStatus.getZ5() );
+				return makeWrappedResultEnvelope( null, theStatus.getZ5() );
 			}
 		}
 	}
 	return await mutate(
 		nextObject, keys, evaluatorUri, resolver, scope, ignoreList, resolveInternals, doValidate );
 };
-
-class ZObject {
-
-	constructor() {
-		this.names_ = new Map();
-	}
-
-	static create( zobjectJSON ) {
-		if ( isString( zobjectJSON ) ) {
-			return zobjectJSON;
-		}
-		const result = new ZObject();
-		for ( const key of Object.keys( zobjectJSON ) ) {
-			const value = ZObject.create( zobjectJSON[ key ] );
-			result.names_.set( key, value );
-			Object.defineProperty( result, key, {
-				get: function () {
-					return this.names_.get( key );
-				},
-				set: function ( newValue ) {
-					this.names_.set( key, ZObject.create( newValue ) );
-				}
-			} );
-		}
-		return result;
-	}
-
-	asJSON() {
-		const result = {};
-		for ( const entry of this.names_.entries() ) {
-			const key = entry[ 0 ];
-			let value = entry[ 1 ];
-			if ( !isString( value ) ) {
-				value = value.asJSON();
-			}
-			result[ key ] = value;
-		}
-		return result;
-	}
-
-	keys() {
-		return this.names_.keys();
-	}
-
-}
-
-module.exports = { mutate, resolveFunctionCallsAndReferences, MutationType, ZObject };
+module.exports = { mutate, resolveFunctionCallsAndReferences, MutationType, ZWrapper };

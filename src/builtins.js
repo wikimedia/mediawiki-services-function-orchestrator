@@ -10,7 +10,7 @@ const {
 	validatesAsType,
 	validatesAsReference
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
+const { mutate, resolveFunctionCallsAndReferences, ZWrapper } = require( './zobject.js' );
 const fs = require( 'fs' );
 
 /**
@@ -202,7 +202,7 @@ async function reifyRecursive( Z1 ) {
 		Z882K2: Z9For( 'Z1' )
 	};
 	const result = [];
-	for ( const key of Object.keys( Z1 ) ) {
+	for ( const key of Z1.keys() ) {
 		const value = await reifyRecursive( Z1[ key ] );
 		result.push( {
 			Z1K1: pairType,
@@ -406,7 +406,7 @@ function BUILTIN_UNQUOTE_( Z99 ) {
 
 function makeValidatorResultEnvelope( Z1, errors ) {
 	if ( errors.length === 0 ) {
-		return makeResultEnvelope( Z1, null );
+		return makeResultEnvelope( Z1.asJSON(), null );
 	} else if ( errors.length === 1 ) {
 		return makeResultEnvelope( null, errors[ 0 ] );
 	} else {
@@ -430,10 +430,10 @@ async function BUILTIN_SCHEMA_VALIDATOR_(
 			Z3Tail, [ 'K1', 'Z3K1' ], evaluatorUri, resolver, scope,
 			/* ignoreList= */null, /* resolveInternals= */false );
 	} );
-	const theSchema = await createSchema( { Z1K1: Z4 } );
+	const theSchema = await createSchema( { Z1K1: Z4.asJSON() } );
 
 	// TODO (T294289): Return validationStatus Z5s as Z22K2.
-	const theStatus = await theSchema.validateStatus( Z1 );
+	const theStatus = await theSchema.validateStatus( Z1.asJSON() );
 	let errors;
 	if ( theStatus.isValid() ) {
 		errors = [];
@@ -538,7 +538,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 
 	// TODO (T296668): Also check declared arguments that are absent from the Z7.
 	// TODO (T296668): Also check local keys.
-	for ( const key of Object.keys( Z1 ) ) {
+	for ( const key of Z1.keys() ) {
 		if ( keysToSkip.has( key ) ) {
 			continue;
 		}
@@ -552,8 +552,14 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 			);
 			continue;
 		}
-		const type = Z1[ key ].Z1K1.Z9K1 || Z1[ key ].Z1K1;
+		let type = Z1[ key ].Z1K1.Z9K1 || Z1[ key ].Z1K1;
+		if ( type instanceof ZWrapper ) {
+			type = type.asJSON();
+		}
 		let declaredType = argumentDict.declaredType;
+		if ( declaredType instanceof ZWrapper ) {
+			declaredType = declaredType.asJSON();
+		}
 		// TODO (T296669): Fix type semantics below; do something when declaredType is a Z4.
 		if ( ( await validatesAsType( declaredType ) ).isValid() ) {
 			continue;
@@ -638,6 +644,9 @@ function BUILTIN_ERROR_TYPE_VALIDATOR_( Z99 ) {
 }
 
 async function resolveListType( typeZ4 ) {
+	if ( typeZ4 instanceof ZWrapper ) {
+		typeZ4 = typeZ4.asJSON();
+	}
 	const itsMe = {
 		Z1K1: {
 			Z1K1: 'Z9',
@@ -725,13 +734,17 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, evaluatorUri, reso
 		Z882K2: valueType
 	};
 
-	const pairType = ( await execute( pairFunctionCall, null, resolver, null ) ).Z22K1;
+	const pairType = (
+		await execute( ZWrapper.create( pairFunctionCall ), null, resolver, null )
+	).Z22K1.asJSON();
 	const listFunctionCall = {
 		Z1K1: Z9For( 'Z7' ),
 		Z7K1: Z9For( 'Z881' ),
 		Z881K1: pairType
 	};
-	const listType = ( await execute( listFunctionCall, null, resolver, null ) ).Z22K1;
+	const listType = (
+		await execute( ZWrapper.create( listFunctionCall ), null, resolver, null )
+	).Z22K1.asJSON();
 	const Z4 = {
 		Z1K1: {
 			Z1K1: 'Z9',

@@ -1,10 +1,10 @@
 'use strict';
 
 const { execute } = require( './execute.js' );
-const { mutate } = require( './zobject.js' );
-const { containsError, createSchema, quoteZObject } = require( './utils.js' );
+const { mutate, ZWrapper } = require( './zobject.js' );
+const { containsError, createSchema, createZObjectKey, quoteZObject } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
-const { validatesAsFunctionCall, ZObjectKeyFactory } = require( '../function-schemata/javascript/src/schema.js' );
+const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { convertZListToArray, isString, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 
 const validators = new Map();
@@ -16,11 +16,12 @@ const validators = new Map();
  * @return {Schema} a fully-initialized Schema or null if unsupported.
  */
 async function getSchemaValidator( Z1 ) {
+	Z1 = Z1.asJSON();
 	const result = {
 		typeKey: null,
 		schemaValidator: null
 	};
-	result.typeKey = await ZObjectKeyFactory.create( Z1.Z1K1 );
+	result.typeKey = await createZObjectKey( Z1.Z1K1 );
 	if ( result.typeKey.type() === 'GenericTypeKey' ) {
 		return result;
 	}
@@ -33,6 +34,8 @@ async function getSchemaValidator( Z1 ) {
 }
 
 function createValidatorZ7( Z8, ...Z1s ) {
+	// throw new Error('nope');
+	// Z8 = Z8.asJSON();
 	const argumentDeclarations = convertZListToArray( Z8.Z8K1 );
 	if ( argumentDeclarations.length !== Z1s.length ) {
 		// TODO (T2926668): Call BUILTIN_FUNCTION_CALL_VALIDATOR_ on result to
@@ -45,10 +48,12 @@ function createValidatorZ7( Z8, ...Z1s ) {
 		},
 		Z7K1: Z8
 	};
+	// TBD: Possibly arrange to convert to ZWrapper here instead of below
 	for ( const argument of argumentDeclarations ) {
-		result[ argument.Z17K2.Z6K1 ] = { ...Z1s.shift() };
+		const nextZ1 = ZWrapper.create( Z1s.shift().asJSON() );
+		result[ argument.Z17K2.Z6K1 ] = nextZ1;
 	}
-	return result;
+	return ZWrapper.create( result );
 }
 
 async function runValidationFunction( Z8, evaluatorUri, resolver, scope, ...Z1s ) {
@@ -76,10 +81,10 @@ async function runTypeValidator( Z1, Z4, evaluatorUri, resolver, scope ) {
 			quoteZObject( Z4 ) );
 	} catch ( err ) {
 		console.error( err );
-		return makeResultEnvelope( null, normalError(
+		return ZWrapper.create( makeResultEnvelope( null, normalError(
 			[ error.zid_not_found ],
 			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
-		) );
+		) ) );
 	}
 }
 
@@ -106,10 +111,10 @@ async function runTypeValidatorDynamic( Z1, Z4, evaluatorUri, resolver, scope ) 
 			validationFunction, evaluatorUri, resolver, scope, Z1, Z4 );
 	} catch ( err ) {
 		console.error( err );
-		return makeResultEnvelope( null, normalError(
+		return ZWrapper.create( makeResultEnvelope( null, normalError(
 			[ error.zid_not_found ],
 			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
-		) );
+		) ) );
 	}
 }
 
@@ -119,10 +124,10 @@ async function traverseInternal( ZObject, callback, promises ) {
 	}
 	promises.push( callback( ZObject ) );
 	let keys;
-	if ( ( await validatesAsFunctionCall( ZObject ) ).isValid() ) {
+	if ( ( await validatesAsFunctionCall( ZObject.asJSON() ) ).isValid() ) {
 		keys = [ 'Z1K1', 'Z7K1' ];
 	} else {
-		keys = Object.keys( ZObject );
+		keys = ZObject.keys();
 	}
 	for ( const key of keys ) {
 		await traverseInternal( ZObject[ key ], callback, promises );
@@ -149,7 +154,7 @@ async function getContainedTypeZObjects( zobject, resolver ) {
 	const promises = [];
 	await traverseOmittingFunctionCallInputs( zobject, function ( Z1 ) {
 		promises.push( ( async function () {
-			const typeKey = await ZObjectKeyFactory.create( Z1.Z1K1 );
+			const typeKey = await createZObjectKey( Z1.Z1K1 );
 			const key = typeKey.asString();
 			// TODO (T297717): We should add other types to the set, not just builtins.
 			if ( typeKey.type() === 'SimpleTypeKey' ) {
@@ -172,7 +177,6 @@ async function getContainedTypeZObjects( zobject, resolver ) {
  * @return {Array} an array of validation errors.
  */
 async function validate( zobject, resolver ) {
-
 	const errors = [];
 	const ZObjectTypes = await getContainedTypeZObjects( zobject, resolver );
 	const traversalPromises = [];
@@ -186,9 +190,9 @@ async function validate( zobject, resolver ) {
 			} catch ( error ) {
 				console.error( 'Attempting to validate Z1', Z1, 'produced error', error );
 				errors.push(
-					normalError(
+					ZWrapper.create( normalError(
 						[ error.zid_not_found ],
-						[ error.message ] ) );
+						[ error.message ] ) ) );
 				return;
 			}
 			const {
@@ -202,9 +206,9 @@ async function validate( zobject, resolver ) {
 				// TODO (T297717): We should add other types to the set, not just builtins.
 				return;
 			}
-			const theStatus = await schemaValidator.validateStatus( Z1 );
+			const theStatus = await schemaValidator.validateStatus( Z1.asJSON() );
 			if ( !theStatus.isValid() ) {
-				errors.push( theStatus.getZ5() );
+				errors.push( ZWrapper.create( theStatus.getZ5() ) );
 			} else {
 				typeValidatorPromises.push(
 					runTypeValidator(
