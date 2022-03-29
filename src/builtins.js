@@ -27,6 +27,13 @@ function isTrue( Z40 ) {
 	return Z40.Z40K1.Z9K1 === makeTrue().Z40K1.Z9K1;
 }
 
+/**
+ * Constructs a Z3 object with the given type and name.
+ *
+ * @param {Object} typeZ4 A Z4 object (in JSON form, not ZWrapper)
+ * @param {Object} nameZ6 A Z6 object (in JSON form, not ZWrapper)
+ * @return {Object} Constructed Z3 / Key object (in JSON form, not ZWrapper)
+ */
 function Z3For( typeZ4, nameZ6 ) {
 	return {
 		Z1K1: {
@@ -60,6 +67,12 @@ function Z3For( typeZ4, nameZ6 ) {
 	};
 }
 
+/**
+ * Constructs a Z9 object for the given ZID.
+ *
+ * @param {string} typeZID A Zobject identifier
+ * @return {Object} Constructed Z9 / Reference object (in JSON form, not ZWrapper)
+ */
 function Z9For( typeZID ) {
 	return {
 		Z1K1: 'Z9',
@@ -71,7 +84,8 @@ function Z9For( typeZID ) {
  * Wraps English label in a Z12/Multilingual String object.
  *
  * @param {string} name The English label.
- * @return {Object} a Z12/Multilingual String containing a single Z11 wrapping the label
+ * @return {Object} a Z12/Multilingual String containing a single Z11
+ * wrapping the label (in JSON form, not ZWrapper)
  */
 async function Z12For( name ) {
 	return {

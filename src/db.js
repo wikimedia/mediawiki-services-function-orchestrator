@@ -32,6 +32,8 @@ class ReferenceResolver {
 			const previouslyDereferenced = this.referenceMap.get( ZID );
 			if ( builtin !== null ) {
 				unresolved.delete( ZID );
+				// stringify / parse are used here to create a deep copy. Otherwise, we'd
+				// end up with circular references in some of the results here.
 				dereferenced[ ZID ] = JSON.parse( JSON.stringify( { Z2K1: { Z1K1: 'Z6', Z6K1: ZID }, Z2K2: builtin } ) );
 			} else if ( previouslyDereferenced !== undefined ) {
 				unresolved.delete( ZID );
