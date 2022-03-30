@@ -290,7 +290,7 @@ async function getArgumentStates( zobject, evaluatorUri, resolver, scope,
 		await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope,
 			/* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
 	if ( containsError( Z7K1Envelope ) ) {
-		return [ ArgumentState.ERROR( 'Could not dereference Z8K1' ) ];
+		return [ ArgumentState.ERROR( 'Could not dereference Z7K1' ) ];
 	}
 	const Z8K1Envelope = ( await mutate(
 		Z7K1Envelope.Z22K1, [ 'Z8K1' ], evaluatorUri, resolver, scope,

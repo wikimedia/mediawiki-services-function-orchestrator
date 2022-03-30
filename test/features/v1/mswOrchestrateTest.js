@@ -682,7 +682,7 @@ describe( 'orchestrate', function () {
 				Z1K1: 'Z5',
 				Z5K1: {
 					Z1K1: 'Z507',
-					Z507K1: 'Could not dereference Z8K1'
+					Z507K1: 'Could not dereference Z7K1'
 				}
 			}
 		);
