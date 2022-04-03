@@ -118,7 +118,7 @@ async function getTestResults( data ) {
 		) ).Z22K1;
 		const testResult = testResponse.Z22K1;
 
-		if ( testResult === 'Z23' || testResult.Z9K1 === 'Z23' ) {
+		if ( testResult === 'Z21' || testResult.Z9K1 === 'Z21' ) {
 			payload.validationResponse = testResponse;
 		} else {
 			const validatorFn = validator.Z7K1.Z9K1;

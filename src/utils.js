@@ -5,10 +5,9 @@ const {
 	validatesAsZObject,
 	validatesAsFunctionCall,
 	validatesAsReference,
-	validatesAsUnit,
 	ZObjectKeyFactory
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { isUserDefined, getHead, getTail, makeUnit } = require( '../function-schemata/javascript/src/utils' );
+const { isUserDefined, getHead, getTail, makeVoid, isVoid } = require( '../function-schemata/javascript/src/utils' );
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z6Validator = normalFactory.create( 'Z6_literal' );
@@ -100,15 +99,15 @@ function containsError( pair ) {
 }
 
 /**
- * Determines whether a pair contains an error Z23.
+ * Determines whether a pair contains a value (i.e., a non-Void first element).
  *
  * @param {Object} pair a Z22
- * @return {bool} true if Z22K2 is not the Unit; false otherwise
+ * @return {bool} true if Z22K1 is not Z24 / Void; false otherwise
  */
 async function containsValue( pair ) {
 	return (
 		( await validatesAsZObject( pair.Z22K1 ) ).isValid() &&
-		!( ( await validatesAsUnit( pair.Z22K1 ) ).isValid() )
+		!( isVoid( pair.Z22K1 ) )
 	);
 }
 
@@ -128,8 +127,8 @@ function makeResultEnvelopeAndMaybeCanonicalise(
 	}
 	return {
 		Z1K1: Z1K1,
-		Z22K1: goodResult === null ? makeUnit( canonical ) : goodResult,
-		Z22K2: badResult === null ? makeUnit( canonical ) : badResult
+		Z22K1: goodResult === null ? makeVoid( canonical ) : goodResult,
+		Z22K2: badResult === null ? makeVoid( canonical ) : badResult
 	};
 }
 
@@ -227,11 +226,11 @@ async function traverseZList( ZList, callback ) {
 async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = true ) {
 	let currentPair = Z22;
 	for ( const callTuple of callTuples ) {
-		// TODO (T296681): validatesAsUnit check is redundant once validation returns
+		// TODO (T296681): isVoid check is redundant once validation returns
 		// correct type.
 		if (
 			containsError( currentPair ) ||
-			( await validatesAsUnit( currentPair.Z22K1 ) ).isValid()
+			isVoid( currentPair.Z22K1 )
 		) {
 			break;
 		}
