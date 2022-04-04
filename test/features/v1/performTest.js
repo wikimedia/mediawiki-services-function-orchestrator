@@ -68,6 +68,41 @@ describe( 'performTest', function () {
 		return mockServiceWorker.resetHandlers();
 	} );
 
+	it( 'throws if you give it invalid JSON in the outer data structure', async () => {
+		// This covers the parse() function
+		let result;
+		try {
+			// We're passing invalid JSON so this should throw rather than return.
+			result = await performTest( '{ zfunction: "{}", zimplementations: "[{]", ztesters: "[]", wikiUri: "http://thewiki", evaluatorUri: "http://theevaluator", doValidate: false' );
+		} catch ( error ) {
+			// This is the expected behaviour
+			assert.ok( 'Yay' );
+		}
+		// The result should be left undefined.
+		assert.deepEqual( result, undefined );
+	} );
+
+	it( 'throws if you give it invalid JSON in the inner values', async () => {
+		// This covers bits of the getTestResults() function
+		let result;
+		try {
+			// We're passing invalid JSON so this should throw rather than return.
+			result = await performTest( JSON.stringify( {
+				zfunction: '{}',
+				zimplementations: '[{]',
+				ztesters: '[]',
+				wikiUri: 'http://thewiki',
+				evaluatorUri: 'http://theevaluator',
+				doValidate: false
+			} ) );
+		} catch ( error ) {
+			// This is the expected behaviour
+			assert.ok( 'Yay' );
+		}
+		// The result should be left undefined.
+		assert.deepEqual( result, undefined );
+	} );
+
 	it( 'performs a test and validation, and returns the result.', async () => {
 		cannedResponses.setWiki( 'Z10006', {
 			Z1K1: 'Z2',
