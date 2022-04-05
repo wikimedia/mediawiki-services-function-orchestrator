@@ -144,7 +144,7 @@ describe( 'performTest', function () {
 						Z1K1: 'Z40',
 						Z40K1: 'Z41'
 					},
-					Z22K2: 'Z24'
+					Z22K2: 'Z23'
 				}
 			}
 		] );
