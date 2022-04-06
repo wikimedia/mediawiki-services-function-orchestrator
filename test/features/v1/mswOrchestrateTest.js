@@ -771,4 +771,43 @@ describe( 'orchestrate', function () {
 		);
 	}
 
+	{
+		cannedResponses.setWiki(
+			'Z100920',
+			readJSON( './test/features/v1/test_data/Z100920-wrap.json' ) );
+		cannedResponses.setWiki(
+			'Z100930',
+			readJSON( './test/features/v1/test_data/Z100930-wrap-implementation.json' )
+		);
+		const wrapCall = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z100920',
+			Z100920K1: 'Z6'
+		};
+		const expected = {
+			Z1K1: 'Z4',
+			Z4K1: [],
+			Z4K2: [
+				{
+					Z1K1: 'Z3',
+					Z3K1: 'Z6',
+					Z3K2: {
+						Z1K1: 'Z6',
+						Z6K1: 'K1'
+					},
+					Z3K3: {
+						Z12K1: [],
+						Z1K1: 'Z12'
+					}
+				}
+			],
+			Z4K3: 'Z100'
+		};
+		test(
+			'wrap type',
+			wrapCall,
+			expected
+		);
+	}
+
 } );

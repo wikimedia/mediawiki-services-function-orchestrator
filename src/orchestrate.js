@@ -96,7 +96,13 @@ async function orchestrate( input, implementationSelector = null ) {
 		[ Z7OrError, [], 'Z7OrError' ],
 		[ makeWrappedResultEnvelope, [], 'wrapAsZObject' ],
 		[ maybeValidate, [ doValidate, resolver ], 'maybeValidate' ],
-		[ execute, [ evaluatorUri, resolver, /* oldScope= */null, /* doValidate= */true, /* implementationSelector= */implementationSelector ], 'execute' ]
+		[
+			execute, [
+				evaluatorUri, resolver, /* oldScope= */null, /* doValidate= */true,
+				/* implementationSelector= */implementationSelector,
+				/* resolveInternals= */true, /* topLevel= */true ],
+			'execute'
+		]
 	];
 
 	currentPair = await returnOnFirstError( currentPair, callTuples );

@@ -5,12 +5,11 @@ const { BaseFrame, EmptyFrame } = require( './frame.js' );
 const { Composition, Implementation } = require( './implementation.js' );
 const { RandomImplementationSelector } = require( './implementationSelector.js' );
 const { containsError, containsValue, createZObjectKey, isRefOrString, makeWrappedResultEnvelope, quoteZObject, returnOnFirstError } = require( './utils.js' );
-const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
+const { mutate, resolveFunctionCallsAndReferences, MutationType, ZWrapper } = require( './zobject.js' );
 const { resolveListType } = require( './builtins.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
-const { validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
-const { ZWrapper } = require( './zobject' );
+const { validatesAsArgumentReference, validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
 
 let execute = null;
 
@@ -463,6 +462,42 @@ async function executeInternal(
 	return result;
 }
 
+async function resolveDanglingReferences( zobject, evaluatorUri, resolver, scope ) {
+	let keys = [];
+	if ( zobject instanceof ZWrapper ) {
+		keys = zobject.keys();
+	}
+	for ( const key of keys ) {
+		let oldValue = zobject[ key ];
+		let oldValueJSON = oldValue;
+		if ( oldValueJSON instanceof ZWrapper ) {
+			oldValueJSON = oldValueJSON.asJSON();
+		}
+		if ( ( await validatesAsArgumentReference( oldValueJSON ) ).isValid() ) {
+			const valueEnvelope = await resolveFunctionCallsAndReferences(
+				oldValue, evaluatorUri, resolver, scope,
+				/* originalObject= */ null, /* key= */ null,
+				/* ignoreList= */ new Set( [
+					MutationType.REFERENCE, MutationType.FUNCTION_CALL,
+					MutationType.GENERIC_INSTANCE
+				] ), /* resolveInternals= */ false, /* doValidate= */ true
+			);
+			if ( valueEnvelope.Z22K1 instanceof ZWrapper ) {
+				if ( oldValue instanceof ZWrapper ) {
+					valueEnvelope.Z22K1.setScope( oldValue.getScope() );
+				} else {
+					valueEnvelope.Z22K1.setScope( zobject.getScope() );
+				}
+			}
+			oldValue = valueEnvelope.Z22K1;
+		}
+		const newValue = await resolveDanglingReferences(
+			oldValue, evaluatorUri, resolver, scope );
+		zobject[ key ] = newValue;
+	}
+	return zobject;
+}
+
 /**
  * Accepts a function call, retrieves the appropriate implementation, and tries
  * to execute with supplied arguments.
@@ -475,16 +510,21 @@ async function executeInternal(
  * @param {ImplementationSelector} implementationSelector
  * @param {boolean} resolveInternals if false, will evaluate typed lists via shortcut
  *      and will not validate attributes of Z7s
+ * @param {boolean} topLevel whether this is the top-level Z7 sent to the orchestrator
  * @return {Object} result of executing function call
  */
 execute = async function (
 	zobject, evaluatorUri, resolver, oldScope = null, doValidate = true,
-	implementationSelector = null, resolveInternals = true ) {
+	implementationSelector = null, resolveInternals = true, topLevel = false ) {
 	const scope = new Frame( oldScope );
 	const result = ZWrapper.create( await executeInternal(
 		zobject, evaluatorUri, resolver, scope, doValidate,
 		implementationSelector, resolveInternals ) );
 	result.setScope( scope );
+	if ( topLevel ) {
+		result.Z22K1 = await resolveDanglingReferences(
+			result.Z22K1, evaluatorUri, resolver, scope );
+	}
 	return result;
 };
 
