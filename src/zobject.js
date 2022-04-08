@@ -213,7 +213,15 @@ mutate = async function (
 						[ error.invalid_key ],
 						[ `ZObject does not have the key ${key}` ] ) );
 			}
-			const theStatus = await subValidator.validateStatus( nextObject.asJSON() );
+
+			let toValidate;
+			if ( nextObject instanceof ZWrapper ) {
+				toValidate = nextObject.asJSON();
+			} else {
+				toValidate = nextObject;
+			}
+			const theStatus = await subValidator.validateStatus( toValidate );
+
 			if ( !theStatus.isValid() ) {
 				// TODO (T302015): Find a way to incorporate information about where this
 				// error came from.
