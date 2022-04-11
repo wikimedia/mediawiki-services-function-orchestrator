@@ -810,4 +810,30 @@ describe( 'orchestrate', function () {
 		);
 	}
 
+	{
+		cannedResponses.setWiki(
+			'Z20022',
+			readJSON( './test/features/v1/test_data/Z20022-natural-number-type.json' ) );
+		cannedResponses.setWiki(
+			'Z20095',
+			readJSON( './test/features/v1/test_data/Z20095-natural-number-from-string.json' ) );
+		cannedResponses.setWiki(
+			'Z20096',
+			readJSON( './test/features/v1/test_data/Z20096-nnfs-implementation.json' ) );
+		const naturalNumberCall = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z20095',
+			Z20095K1: '15'
+		};
+		const expected = {
+			Z1K1: 'Z20022',
+			Z20022K1: '15'
+		};
+		test(
+			'construct positive integer from string',
+			naturalNumberCall,
+			expected
+		);
+	}
+
 } );
