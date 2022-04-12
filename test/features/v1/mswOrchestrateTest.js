@@ -840,4 +840,33 @@ describe( 'orchestrate', function () {
 		);
 	}
 
+	{
+		cannedResponses.setWiki( 'Z31000', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z31000' },
+			Z2K2: readJSON( './test/features/v1/test_data/bind-binary-Z31000.json' )
+		} );
+		cannedResponses.setWiki( 'Z31001', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z31001' },
+			Z2K2: readJSON( './test/features/v1/test_data/bind-binary-implementation-Z31001.json' )
+		} );
+		cannedResponses.setWiki( 'Z10007', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10007' },
+			Z2K2: readJSON( './test/features/v1/test_data/and-Z10007.json' )
+		} );
+		const binaryBindCall = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z31000',
+			Z31000K1: 'Z10007',
+			Z31000K2: makeTrue()
+		};
+		test(
+			'bind binary function',
+			binaryBindCall,
+			readJSON( './test/features/v1/test_data/bind-binary-expected.json' )
+		);
+	}
+
 } );

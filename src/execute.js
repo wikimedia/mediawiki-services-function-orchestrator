@@ -128,7 +128,9 @@ class Frame extends BaseFrame {
 		this.names_.set( name, argumentState );
 	}
 
-	async processArgument( argumentDict, evaluatorUri, resolver, doValidate, resolveInternals ) {
+	async processArgument(
+		argumentDict, evaluatorUri, resolver, doValidate, resolveInternals,
+		ignoreList ) {
 		// TODO (T296675): "doValidate" is a heavy-handed hack to avoid infinite
 		// recursion. Better solutions include
 		//  -   validating directly with schemata if the type is built-in,
@@ -138,7 +140,7 @@ class Frame extends BaseFrame {
 		//  -   caching and reusing the results of function calls
 		const argumentEnvelope = await resolveFunctionCallsAndReferences(
 			argumentDict.argument, evaluatorUri, resolver, this.lastFrame_,
-			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ null,
+			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ ignoreList,
 			resolveInternals, doValidate );
 		if ( containsError( argumentEnvelope ) ) {
 			return ArgumentState.ERROR( argumentEnvelope.Z22K2 );
@@ -176,12 +178,14 @@ class Frame extends BaseFrame {
 	 *      without validating return type (if it's a Z7)
 	 * @param {boolean} resolveInternals if false, will evaluate typed lists via shortcut
 	 *      and will not validate attributes of Z7s
+	 * @param {Set(MutationType)} ignoreList which types of mutations to ignore
+	 *      when resolving function calls and references
 	 * @return {Object} argument instantiated with given name in lowest enclosing scope
 	 * along with enclosing scope
 	 */
 	async retrieveArgument(
 		argumentName, evaluatorUri, resolver, lazily = false,
-		doValidate = true, resolveInternals = true ) {
+		doValidate = true, resolveInternals = true, ignoreList = null ) {
 		let boundValue = this.names_.get( argumentName );
 		let doSetBoundValue = false;
 
@@ -190,7 +194,8 @@ class Frame extends BaseFrame {
 		if ( boundValue === undefined ) {
 			doSetBoundValue = true;
 			boundValue = await this.lastFrame_.retrieveArgument(
-				argumentName, evaluatorUri, resolver, lazily, doValidate, resolveInternals );
+				argumentName, evaluatorUri, resolver, lazily, doValidate,
+				resolveInternals, ignoreList );
 		} else if ( boundValue.state === 'UNEVALUATED' && !lazily ) {
 			doSetBoundValue = true;
 			// If boundValue is in the ERROR or EVALUATED state, it has already
@@ -200,7 +205,7 @@ class Frame extends BaseFrame {
 			// or Z7).
 			const argumentDict = boundValue.argumentDict;
 			const evaluatedArgument = await this.processArgument(
-				argumentDict, evaluatorUri, resolver, doValidate, resolveInternals );
+				argumentDict, evaluatorUri, resolver, doValidate, resolveInternals, ignoreList );
 			if ( evaluatedArgument.state === 'ERROR' ) {
 				boundValue = evaluatedArgument;
 			} else if ( evaluatedArgument.state === 'EVALUATED' ) {
@@ -482,14 +487,20 @@ async function resolveDanglingReferences( zobject, evaluatorUri, resolver, scope
 					MutationType.GENERIC_INSTANCE
 				] ), /* resolveInternals= */ false, /* doValidate= */ true
 			);
-			if ( valueEnvelope.Z22K1 instanceof ZWrapper ) {
-				if ( oldValue instanceof ZWrapper ) {
-					valueEnvelope.Z22K1.setScope( oldValue.getScope() );
-				} else {
-					valueEnvelope.Z22K1.setScope( zobject.getScope() );
+			// It's okay for some Z18s not to have values assigned.
+			// TODO (T305981): We should formally distinguish between unbound
+			// and unassigned variables. This will constrain further the errors
+			// that we let slide here.
+			if ( !containsError( valueEnvelope ) ) {
+				if ( valueEnvelope.Z22K1 instanceof ZWrapper ) {
+					if ( oldValue instanceof ZWrapper ) {
+						valueEnvelope.Z22K1.setScope( oldValue.getScope() );
+					} else {
+						valueEnvelope.Z22K1.setScope( zobject.getScope() );
+					}
 				}
+				oldValue = valueEnvelope.Z22K1;
 			}
-			oldValue = valueEnvelope.Z22K1;
 		}
 		const newValue = await resolveDanglingReferences(
 			oldValue, evaluatorUri, resolver, scope );

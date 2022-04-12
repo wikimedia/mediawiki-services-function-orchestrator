@@ -97,7 +97,7 @@ async function resolveFunctionCallsAndReferencesInternal(
 			if ( argumentReferenceStatus.isValid() && scope !== null ) {
 				const refKey = nextObject.Z18K1.Z6K1;
 				const dereferenced = await scope.retrieveArgument( refKey, evaluatorUri,
-					resolver, /* lazily= */ false, doValidate, resolveInternals );
+					resolver, /* lazily= */ false, doValidate, resolveInternals, ignoreList );
 				if ( dereferenced.state === 'ERROR' ) {
 					return makeWrappedResultEnvelope( null, dereferenced.error );
 				}
