@@ -5,7 +5,7 @@ const { mutate, ZWrapper } = require( './zobject.js' );
 const { containsError, createSchema, createZObjectKey, quoteZObject } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
-const { convertZListToArray, isString, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToArray, isString, makeResultEnvelopeWithVoid } = require( '../function-schemata/javascript/src/utils.js' );
 
 const validators = new Map();
 
@@ -81,7 +81,7 @@ async function runTypeValidator( Z1, Z4, evaluatorUri, resolver, scope ) {
 			quoteZObject( Z4 ) );
 	} catch ( err ) {
 		console.error( err );
-		return ZWrapper.create( makeResultEnvelope( null, normalError(
+		return ZWrapper.create( makeResultEnvelopeWithVoid( null, normalError(
 			[ error.zid_not_found ],
 			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
 		) ) );
@@ -111,7 +111,7 @@ async function runTypeValidatorDynamic( Z1, Z4, evaluatorUri, resolver, scope ) 
 			validationFunction, evaluatorUri, resolver, scope, Z1, Z4 );
 	} catch ( err ) {
 		console.error( err );
-		return ZWrapper.create( makeResultEnvelope( null, normalError(
+		return ZWrapper.create( makeResultEnvelopeWithVoid( null, normalError(
 			[ error.zid_not_found ],
 			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
 		) ) );

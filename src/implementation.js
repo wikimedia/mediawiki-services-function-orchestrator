@@ -5,8 +5,9 @@ const builtins = require( './builtins.js' );
 const fetch = require( 'node-fetch' );
 const { containsError, traverseZList } = require( './utils.js' );
 const { mutate, resolveFunctionCallsAndReferences, ZWrapper } = require( './zobject.js' );
-const { convertArrayToZList, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertArrayToZList, makeResultEnvelopeWithVoid } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
+const { makeVoid } = require( '../function-schemata/javascript/src/utils' );
 
 fetch.Promise = Bluebird;
 
@@ -176,11 +177,21 @@ class Evaluated extends Implementation {
 		);
 		if ( fetchedResult.ok ) {
 			// Assume the evaluator is returning Z22s.
-			return await fetchedResult.json();
+			const resultEnvelope = await fetchedResult.json();
+			// Transitional code: replace Z23 with Z24 (void)
+			// TODO (T285433): After function-schemata updates for this ticket,
+			// remove transitional code
+			if ( resultEnvelope.Z22K1 === 'Z23' || resultEnvelope.Z22K1.Z9K1 === 'Z23' ) {
+				resultEnvelope.Z22K1 = makeVoid();
+			}
+			if ( resultEnvelope.Z22K2 === 'Z23' || resultEnvelope.Z22K2.Z9K1 === 'Z23' ) {
+				resultEnvelope.Z22K2 = makeVoid();
+			}
+			return resultEnvelope;
 		}
 		const statusCode = fetchedResult.status;
 		const errorText = await fetchedResult.text();
-		return makeResultEnvelope(
+		return makeResultEnvelopeWithVoid(
 			null,
 			normalError(
 				[ error.error_in_evaluation ],

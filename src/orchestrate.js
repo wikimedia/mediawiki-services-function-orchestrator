@@ -2,7 +2,7 @@
 
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
-const { convertArrayToZList, makeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertArrayToZList, makeResultEnvelopeWithVoid } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
 const { validate } = require( './validation.js' );
@@ -28,10 +28,10 @@ async function maybeValidate( zobject, doValidate, resolver ) {
 		).map( ( errorWrapper ) => errorWrapper.asJSON() );
 		if ( errors.length > 0 ) {
 			// TODO (T296681): Wrap errors in a Z5.
-			return makeResultEnvelope( null, await convertArrayToZList( errors ) );
+			return makeResultEnvelopeWithVoid( null, await convertArrayToZList( errors ) );
 		}
 	}
-	return makeResultEnvelope( zobject, null );
+	return makeResultEnvelopeWithVoid( zobject, null );
 }
 
 /**
@@ -43,9 +43,9 @@ async function maybeValidate( zobject, doValidate, resolver ) {
  */
 async function Z7OrError( zobject ) {
 	if ( ( await validatesAsFunctionCall( zobject ) ).isValid() ) {
-		return makeResultEnvelope( zobject, null );
+		return makeResultEnvelopeWithVoid( zobject, null );
 	}
-	return makeResultEnvelope(
+	return makeResultEnvelopeWithVoid(
 		null,
 		normalError(
 			[ error.wrong_content_type ],
