@@ -786,7 +786,11 @@ describe( 'orchestrate', function () {
 		};
 		const expected = {
 			Z1K1: 'Z4',
-			Z4K1: [],
+			Z4K1: {
+				Z1K1: 'Z7',
+				Z7K1: 'Z100920',
+				Z100920K1: 'Z6'
+			},
 			Z4K2: [
 				{
 					Z1K1: 'Z3',
