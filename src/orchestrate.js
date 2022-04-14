@@ -60,7 +60,7 @@ async function Z7OrError( zobject ) {
  *
  * Takes and returns JSON representation; not ZWrapper.
  *
- * @param {string} input the input for a function call
+ * @param {Object} input the input for a function call
  * @param {ImplementationSelector} implementationSelector
  * @return {Object} a Z22 containing the result of function evaluation or a Z5
  */
