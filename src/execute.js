@@ -391,7 +391,7 @@ async function executeInternal(
 				const implementationInternalEnvelope = (
 					await resolveFunctionCallsAndReferences(
 						Z14[ key ], evaluatorUri, resolver, scope, /* originalObject= */null,
-						/* key= */null, /* ignoreList= */null, /* resolveInternals= */ false,
+						/* key= */null, /* ignoreList= */null, /* resolveInternals= */ true,
 						doValidate ) );
 				if ( containsError( implementationInternalEnvelope ) ) {
 					return implementationInternalEnvelope;

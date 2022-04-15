@@ -211,7 +211,7 @@ class Composition extends Implementation {
 		return await resolveFunctionCallsAndReferences(
 			this.composition_, this.evaluatorUri_, this.resolver_, this.scope_,
 			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ null,
-			/* resolveInternals= */ true, this.doValidate_ );
+			/* resolveInternals= */ true, /* doValidate= */ this.doValidate_ );
 	}
 
 }
