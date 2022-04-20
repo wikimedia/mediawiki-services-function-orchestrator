@@ -91,7 +91,7 @@ async function orchestrate( input, implementationSelector = null ) {
 	const doValidate = typeof input.doValidate === 'boolean' ? input.doValidate : true;
 
 	const callTuples = [
-		[ normalize, [ /* generically= */true ], 'normalize' ],
+		[ normalize, [ /* generically= */true, /* withVoid= */ true ], 'normalize' ],
 		// TODO (T296685): Dereference top-level object if it is a Z9?
 		[ Z7OrError, [], 'Z7OrError' ],
 		[ makeWrappedResultEnvelope, [], 'wrapAsZObject' ],
@@ -110,7 +110,7 @@ async function orchestrate( input, implementationSelector = null ) {
 	if ( currentPair instanceof ZWrapper ) {
 		currentPair = currentPair.asJSON();
 	}
-	const canonicalized = await canonicalize( currentPair );
+	const canonicalized = await canonicalize( currentPair, /* withVoid= */ true );
 
 	if ( containsError( canonicalized ) ) {
 		// If canonicalization fails, return normalized form instead.

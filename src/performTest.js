@@ -39,7 +39,10 @@ async function getTestResults( data ) {
 	const resolver = new ReferenceResolver( wikiUri );
 
 	// Get ZFunction object
-	const zFunction = zfunction.match( /^Z\d+$/ ) ? ( await resolver.dereference( [ zfunction ] ) )[ zfunction ].asJSON() : ( await normalize( JSON.parse( zfunction ), /* generically= */true ) ).Z22K1;
+	const zFunction = zfunction.match( /^Z\d+$/ ) ?
+		( await resolver.dereference( [ zfunction ] ) )[ zfunction ].asJSON() :
+		( await normalize( JSON.parse( zfunction ),
+			/* generically= */true, /* withVoid= */ true ) ).Z22K1;
 
 	// Get ZImplementation objects
 	// If list of implementations is provided, get those.
@@ -52,7 +55,8 @@ async function getTestResults( data ) {
 				async ( impl ) => {
 					if ( typeof impl === 'object' ) {
 						// If it's an object, normalize it
-						return ( await normalize( impl ), /* generically= */true ).Z22K1;
+						return ( await normalize( impl,
+							/* generically= */true, /* withVoid= */ true ) ).Z22K1;
 					} else {
 						// If it's a string, dereference it
 						return resolver.dereference(
@@ -78,7 +82,8 @@ async function getTestResults( data ) {
 				async ( tester ) => {
 					if ( typeof tester === 'object' ) {
 						// If it's an object, normalize it
-						return ( await normalize( tester, /* generically= */true ) ).Z22K1;
+						return ( await normalize( tester,
+							/* generically= */true, /* withVoid= */ true ) ).Z22K1;
 						// If it's a string, dereference it
 					} else {
 						return resolver.dereference(
@@ -118,7 +123,7 @@ async function getTestResults( data ) {
 				evaluatorUri,
 				wikiUri,
 				doValidate
-			} ), /* generically= */true
+			} ), /* generically= */true, /* withVoid= */ true
 		) ).Z22K1;
 		const testResult = testResponse.Z22K1;
 

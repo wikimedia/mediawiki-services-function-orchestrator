@@ -930,7 +930,7 @@ async function createZ8( identity, argumentList, returnType, builtinName ) {
 			}
 		} ],
 		Z8K5: identity
-	}, /* generically= */true ) ).Z22K1;
+	}, /* generically= */true, /* withVoid= */ true ) ).Z22K1;
 }
 
 const builtinReferences = new Map();
@@ -963,13 +963,14 @@ const builtinReferences = new Map();
 		'Z804',
 		[
 			await createArgument(
-				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z39' } ) ).Z22K1,
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z39' },
+					/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 				'Z804K1' ),
 			await createArgument( 'Z1', 'Z804K2' )
 		],
 		( await normalize(
-			{ Z1K1: 'Z7', Z7K1: 'Z883', Z883K1: 'Z39', Z883K2: 'Z1' }
-		) ).Z22K1,
+			{ Z1K1: 'Z7', Z7K1: 'Z883', Z883K1: 'Z39', Z883K2: 'Z1' },
+			/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 		'Z904'
 	) );
 	builtinReferences.set( 'Z805', await createZ8(
@@ -978,8 +979,8 @@ const builtinReferences = new Map();
 			await createArgument( 'Z1', 'Z805K1' )
 		],
 		( await normalize(
-			{ Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } }, /* generically= */true
-		) ).Z22K1,
+			{ Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } },
+			/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 		'Z905'
 	) );
 	builtinReferences.set( 'Z808', await createZ8(
@@ -987,8 +988,8 @@ const builtinReferences = new Map();
 		[
 			await createArgument(
 				( await normalize(
-					{ Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } }, /* generically= */true )
-				).Z22K1,
+					{ Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z39', Z882K2: 'Z1' } },
+					/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 				'Z808K1' )
 		], 'Z1', 'Z908'
 	) );
@@ -997,15 +998,18 @@ const builtinReferences = new Map();
 		[
 			await createArgument( 'Z1', 'Z810K1' ),
 			await createArgument(
-				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' }, /* generically= */true ) ).Z22K1,
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' },
+					/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 				'Z810K2' )
-		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' }, /* generically= */true ) ).Z22K1, 'Z910'
+		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' },
+			/* generically= */true, /* withVoid= */ true ) ).Z22K1, 'Z910'
 	) );
 	builtinReferences.set( 'Z811', await createZ8(
 		'Z811',
 		[
 			await createArgument(
-				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' }, /* generically= */true ) ).Z22K1,
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' },
+					/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 				'Z811K1' )
 		], 'Z1', 'Z911'
 	) );
@@ -1013,9 +1017,11 @@ const builtinReferences = new Map();
 		'Z812',
 		[
 			await createArgument(
-				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' }, /* generically= */true ) ).Z22K1,
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' },
+					/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 				'Z812K1' )
-		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' }, /* generically= */true ) ).Z22K1, 'Z912'
+		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' },
+			/* generically= */true, /* withVoid= */ true ) ).Z22K1, 'Z912'
 	) );
 	builtinReferences.set( 'Z813', await createZ8(
 		'Z813',
@@ -1023,7 +1029,8 @@ const builtinReferences = new Map();
 			// TODO (T298054): Update argument validation for built-in list
 			// functions to exclude Z10s
 			await createArgument(
-				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' }, /* generically= */true ) ).Z22K1,
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' },
+					/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 				'Z813K1' )
 		], 'Z40', 'Z913'
 	) );
@@ -1037,7 +1044,8 @@ const builtinReferences = new Map();
 		'Z821',
 		[
 			await createArgument(
-				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z1', Z882K2: 'Z1' } ) ).Z22K1,
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z1', Z882K2: 'Z1' },
+					/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 				'Z821K1' )
 		], 'Z1', 'Z921'
 	) );
@@ -1045,7 +1053,8 @@ const builtinReferences = new Map();
 		'Z822',
 		[
 			await createArgument(
-				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z1', Z882K2: 'Z1' } ) ).Z22K1,
+				( await normalize( { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z1', Z882K2: 'Z1' },
+					/* generically= */true, /* withVoid= */ true ) ).Z22K1,
 				'Z822K1' )
 		], 'Z1', 'Z922'
 	) );
@@ -1073,7 +1082,8 @@ const builtinReferences = new Map();
 		'Z868',
 		[
 			await createArgument( 'Z6', 'Z868K1' )
-		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' }, /* generically= */true ) ).Z22K1, 'Z968'
+		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' },
+			/* generically= */true, /* withVoid= */ true ) ).Z22K1, 'Z968'
 	) );
 	builtinReferences.set( 'Z881', await createZ8(
 		'Z881',
@@ -1098,7 +1108,8 @@ const builtinReferences = new Map();
 	builtinReferences.set( 'Z886', await createZ8(
 		'Z886',
 		[
-			await createArgument( ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' }, /* generically= */true ) ).Z22K1, 'Z886K1' )
+			await createArgument( ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z86' },
+				/* generically= */true, /* withVoid= */ true ) ).Z22K1, 'Z886K1' )
 		], 'Z6', 'Z986'
 	) );
 	builtinReferences.set( 'Z888', await createZ8(
@@ -1119,7 +1130,8 @@ const builtinReferences = new Map();
 		[
 			await createArgument( 'Z99', 'Z831K1' ),
 			await createArgument( 'Z99', 'Z831K2' )
-		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' }, /* generically= */true ) ).Z22K1, 'Z931'
+		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' },
+			/* generically= */true, /* withVoid= */ true ) ).Z22K1, 'Z931'
 	) );
 }() ).then();
 

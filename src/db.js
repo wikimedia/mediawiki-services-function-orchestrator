@@ -59,7 +59,8 @@ class ReferenceResolver {
 			await Promise.all( [ ...unresolved ].map( async ( ZID ) => {
 				const zobject = JSON.parse( result[ ZID ].wikilambda_fetch );
 				const normalized =
-					ZWrapper.create( await normalize( zobject, /* generically= */true ) );
+					ZWrapper.create( await normalize( zobject,
+						/* generically= */true, /* withVoid= */ true ) );
 				// TODO (T304971): We should include the entire Z22 in the result.
 				// We should also generate Z22s when the call to the wiki fails.
 				// Given that the wiki will return no results if any single ZID

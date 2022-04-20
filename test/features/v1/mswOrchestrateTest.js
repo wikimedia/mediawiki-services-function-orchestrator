@@ -84,10 +84,10 @@ describe( 'orchestrate', function () {
 		};
 		it( 'orchestrate msw: ' + name, async () => {
 			if ( output !== null ) {
-				output = ( await canonicalize( output ) ).Z22K1;
+				output = ( await canonicalize( output, /* withVoid= */ true ) ).Z22K1;
 			}
 			if ( error !== null ) {
-				error = ( await canonicalize( error ) ).Z22K1;
+				error = ( await canonicalize( error, /* withVoid= */ true ) ).Z22K1;
 			}
 			let result = {};
 			let thrownError = null;

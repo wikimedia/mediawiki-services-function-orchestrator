@@ -28,10 +28,10 @@ describe( 'orchestration endpoint', function () {
 	const testFunctionCall = function ( name, input, output = null, error = null ) {
 		it( 'orchestration endpoint: ' + name, async function () {
 			if ( output !== null ) {
-				output = ( await canonicalize( output ) ).Z22K1;
+				output = ( await canonicalize( output, /* withVoid= */ true ) ).Z22K1;
 			}
 			if ( error !== null ) {
-				error = ( await canonicalize( error ) ).Z22K1;
+				error = ( await canonicalize( error, /* withVoid= */ true ) ).Z22K1;
 			}
 			const result = await preq.post( {
 				uri: uri,
