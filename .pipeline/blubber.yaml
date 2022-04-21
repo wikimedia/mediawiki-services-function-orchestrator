@@ -11,7 +11,10 @@ variants:
     copies: [local]
     apt: { packages: [git, build-essential, python, pkg-config] }
     node: { requirements: [package.json, package-lock.json, function-schemata/package.json, function-schemata/package-lock.json] }
-    runs: { environment: { LINK: g++ } }
+    runs:
+      # Allow the application to write to the filesystem so we can generate coverage reports
+      insecurely: true
+      environment: { LINK: g++ }
   development:
     includes: [build]
     apt: { packages: [ca-certificates] }
@@ -20,6 +23,9 @@ variants:
     includes: [build]
     apt: { packages: [ca-certificates] }
     entrypoint: [npm, test]
+    runs:
+      # Allow the application to write to the filesystem so we can generate coverage reports
+      insecurely: true
   prep:
     includes: [build]
     node: { env: production }
