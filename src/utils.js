@@ -12,6 +12,7 @@ const { isUserDefined, getHead, getTail, makeResultEnvelopeWithVoid, makeVoid, i
 const normalFactory = SchemaFactory.NORMAL();
 const Z6Validator = normalFactory.create( 'Z6_literal' );
 const Z9Validator = normalFactory.create( 'Z9_literal' );
+const { ZWrapper } = require( './ZWrapper' );
 
 /**
  * Determines whether argument is a Z6 or Z9. These two types' Z1K1s are
@@ -22,7 +23,6 @@ const Z9Validator = normalFactory.create( 'Z9_literal' );
  * @return {bool} true if Z1 validates as either Z6 or Z7
  */
 async function isRefOrString( Z1 ) {
-	const { ZWrapper } = require( './zobject.js' );
 	if ( Z1 instanceof ZWrapper ) {
 		Z1 = Z1.asJSON();
 	}
@@ -33,7 +33,6 @@ async function isRefOrString( Z1 ) {
 }
 
 async function createZObjectKey( ZObject ) {
-	const { ZWrapper } = require( './zobject.js' );
 	if ( ZObject instanceof ZWrapper ) {
 		ZObject = ZObject.asJSON();
 	}
@@ -43,7 +42,6 @@ async function createZObjectKey( ZObject ) {
 async function createSchema( Z1 ) {
 	// TODO (T302032): Use function-schemata version of findIdentity to improve
 	// type inference here.
-	const { ZWrapper } = require( './zobject.js' );
 	let Z1K1 = Z1.Z1K1;
 	if ( Z1K1 instanceof ZWrapper ) {
 		Z1K1 = Z1K1.asJSON();
@@ -84,7 +82,6 @@ function isError( Z1 ) {
  * @return {bool} whether Z1 can validate as a generic type instantiation
  */
 async function isGenericType( Z1 ) {
-	const { ZWrapper } = require( './zobject.js' );
 	// TODO (T296658): Use the GENERIC schema.
 	try {
 		let Z1K1 = Z1.Z1K1;
@@ -273,7 +270,6 @@ async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = tr
 }
 
 function quoteZObject( ZObject ) {
-	const { ZWrapper } = require( './zobject.js' );
 	return ZWrapper.create( {
 		Z1K1: {
 			Z1K1: 'Z9',
@@ -284,7 +280,6 @@ function quoteZObject( ZObject ) {
 }
 
 function makeWrappedResultEnvelope( ...args ) {
-	const { ZWrapper } = require( './zobject.js' );
 	return ZWrapper.create( makeResultEnvelopeWithVoid( ...args ) );
 }
 

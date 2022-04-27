@@ -1,9 +1,9 @@
 'use strict';
 
 const assert = require( '../../utils/assert.js' );
-const { ZWrapper } = require( '../../../src/zobject.js' );
+const { ZWrapper } = require( '../../../src/ZWrapper' );
 
-describe( 'ZWrapperFOO test', function () {
+describe( 'ZWrapper test', function () {
 
 	it( 'ZWrapper class string construction', async () => {
 		const stringIsNotAZWrapper = ZWrapper.create( 'Hello I am a test string' );

@@ -10,7 +10,8 @@ const {
 	validatesAsType,
 	validatesAsReference
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { mutate, resolveFunctionCallsAndReferences, ZWrapper } = require( './zobject.js' );
+const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
+const { ZWrapper } = require( './ZWrapper' );
 const fs = require( 'fs' );
 
 /**

@@ -4,7 +4,7 @@ const Bluebird = require( 'bluebird' );
 const fetch = require( 'node-fetch' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { containsError } = require( './utils.js' );
-const { ZWrapper } = require( './zobject' );
+const { ZWrapper } = require( './ZWrapper' );
 
 fetch.Promise = Bluebird;
 
