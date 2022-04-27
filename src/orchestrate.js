@@ -9,7 +9,7 @@ const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
 const { containsError, isError, makeResultEnvelopeAndMaybeCanonicalise, makeWrappedResultEnvelope, returnOnFirstError } = require( './utils.js' );
 const { ReferenceResolver } = require( './db.js' );
-const { ZWrapper } = require( './zobject.js' );
+const { ZWrapper } = require( './ZWrapper' );
 
 /**
  * Decides whether to validate a function. Returns the pair

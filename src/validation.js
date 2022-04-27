@@ -1,7 +1,8 @@
 'use strict';
 
 const { execute } = require( './execute.js' );
-const { mutate, ZWrapper } = require( './zobject.js' );
+const { mutate } = require( './zobject.js' );
+const { ZWrapper } = require( './ZWrapper' );
 const { containsError, createSchema, createZObjectKey, quoteZObject } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
