@@ -11,6 +11,7 @@ const {
 	validatesAsReference
 } = require( '../function-schemata/javascript/src/schema.js' );
 const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
+const { Invariants } = require( './Invariants.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const fs = require( 'fs' );
 
@@ -416,11 +417,11 @@ function makeValidatorResultEnvelope( Z1, errors ) {
 }
 
 async function BUILTIN_SCHEMA_VALIDATOR_(
-	quotedObject, quotedType, evaluatorUri, resolver, scope ) {
+	quotedObject, quotedType, invariants, scope ) {
 	// TODO (T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
 	const Z1 = quotedObject.Z99K1;
 	const Z4 = ( await resolveFunctionCallsAndReferences(
-		quotedType.Z99K1, evaluatorUri, resolver, scope,
+		quotedType.Z99K1, invariants, scope,
 		/* originalObject= */null, /* key= */null, /* ignoreList= */null,
 		/* resolveInternals= */ false ) ).Z22K1;
 
@@ -428,7 +429,7 @@ async function BUILTIN_SCHEMA_VALIDATOR_(
 	// TODO (T297904): Also need to resolve generic types.
 	await traverseZList( Z4.Z4K2, async function ( Z3Tail ) {
 		await mutate(
-			Z3Tail, [ 'K1', 'Z3K1' ], evaluatorUri, resolver, scope,
+			Z3Tail, [ 'K1', 'Z3K1' ], invariants, scope,
 			/* ignoreList= */null, /* resolveInternals= */false );
 	} );
 	const theSchema = await createSchema( { Z1K1: Z4.asJSON() } );
@@ -518,10 +519,10 @@ function BUILTIN_Z4_TYPE_VALIDATOR_( Z99 ) {
 }
 
 async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
-	Z99, errors, evaluatorUri, resolver, scope ) {
+	Z99, errors, invariants, scope ) {
 	const Z1 = Z99.Z99K1;
 	const { getArgumentStates } = require( './execute.js' );
-	const argumentStates = await getArgumentStates( Z1, evaluatorUri, resolver, scope, true );
+	const argumentStates = await getArgumentStates( Z1, invariants, scope, true );
 	const dictDict = {};
 	for ( const argumentState of argumentStates ) {
 		if ( argumentState.state === 'ERROR' ) {
@@ -584,21 +585,21 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 	}
 }
 
-async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, evaluatorUri, resolver, scope ) {
+async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, invariants, scope ) {
 	const errors = [];
-	await BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_( Z99, errors, evaluatorUri, resolver, scope );
+	await BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_( Z99, errors, invariants, scope );
 
 	return makeValidatorResultEnvelope( Z99, errors );
 }
 
-async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, evaluatorUri, resolver, scope ) {
+async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants, scope ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
 	const Z11s = utils.convertZListToArray( Z1.Z12K1 );
 	const languages = await Promise.all( Z11s.map( async ( Z11 ) => await mutate(
 		Z11,
 		[ 'Z11K1', 'Z60K1', 'Z6K1' ],
-		evaluatorUri, resolver, scope ).Z22K1 ) );
+		invariants, scope ).Z22K1 ) );
 
 	const seen = new Set();
 	for ( let i = 0; i < languages.length; ++i ) {
@@ -712,7 +713,7 @@ async function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 	return makeResultEnvelopeWithVoid( Z4, null );
 }
 
-async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, evaluatorUri, resolver, scope ) {
+async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants, scope ) {
 	const allowedKeyTypes = [ 'Z6', 'Z39' ];
 	if ( !allowedKeyTypes.includes( keyType.Z9K1 ) ) {
 		const newError = normalError(
@@ -735,8 +736,9 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, evaluatorUri, reso
 		Z882K2: valueType
 	};
 
+	const noEvaluator = new Invariants( null, invariants.resolver );
 	const pairType = (
-		await execute( ZWrapper.create( pairFunctionCall ), null, resolver, null )
+		await execute( ZWrapper.create( pairFunctionCall ), noEvaluator, null )
 	).Z22K1.asJSON();
 	const listFunctionCall = {
 		Z1K1: Z9For( 'Z7' ),
@@ -744,7 +746,7 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, evaluatorUri, reso
 		Z881K1: pairType
 	};
 	const listType = (
-		await execute( ZWrapper.create( listFunctionCall ), null, resolver, null )
+		await execute( ZWrapper.create( listFunctionCall ), noEvaluator, null )
 	).Z22K1.asJSON();
 	const Z4 = {
 		Z1K1: {

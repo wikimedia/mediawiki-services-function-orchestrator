@@ -2,6 +2,7 @@
 
 const { execute } = require( './execute.js' );
 const { mutate } = require( './zobject.js' );
+const { Invariants } = require( './Invariants.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { containsError, createSchema, createZObjectKey, quoteZObject } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
@@ -57,9 +58,9 @@ function createValidatorZ7( Z8, ...Z1s ) {
 	return ZWrapper.create( result );
 }
 
-async function runValidationFunction( Z8, evaluatorUri, resolver, scope, ...Z1s ) {
+async function runValidationFunction( Z8, invariants, scope, ...Z1s ) {
 	const validatorZ7 = createValidatorZ7( Z8, ...Z1s );
-	return await execute( validatorZ7, evaluatorUri, resolver, scope, /* doValidate= */ false );
+	return await execute( validatorZ7, invariants, scope, /* doValidate= */ false );
 }
 
 /**
@@ -67,18 +68,17 @@ async function runValidationFunction( Z8, evaluatorUri, resolver, scope, ...Z1s 
  *
  * @param {Object} Z1 the Z1/Object
  * @param {Object} Z4 the type ZObject
- * @param {string} evaluatorUri URI of native code evaluator service
- * @param {ReferenceResolver} resolver used to resolve references
+ * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @param {Scope} scope current variable bindings
  * @return {Array} an array of Z5/Error
  */
-async function runTypeValidator( Z1, Z4, evaluatorUri, resolver, scope ) {
-	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], evaluatorUri, resolver, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
+async function runTypeValidator( Z1, Z4, invariants, scope ) {
+	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.
 		return await runValidationFunction(
-			validationFunction, evaluatorUri, resolver, scope, quoteZObject( Z1 ),
+			validationFunction, invariants, scope, quoteZObject( Z1 ),
 			quoteZObject( Z4 ) );
 	} catch ( err ) {
 		console.error( err );
@@ -98,18 +98,17 @@ async function runTypeValidator( Z1, Z4, evaluatorUri, resolver, scope ) {
  *
  * @param {Object} Z1 the Z1/Object
  * @param {Object} Z4 the type ZObject
- * @param {string} evaluatorUri URI of native code evaluator service
- * @param {ReferenceResolver} resolver used to resolve references
+ * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @param {Scope} scope current variable bindings
  * @return {Array} an array of Z5/Error
  */
-async function runTypeValidatorDynamic( Z1, Z4, evaluatorUri, resolver, scope ) {
-	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], evaluatorUri, resolver, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
+async function runTypeValidatorDynamic( Z1, Z4, invariants, scope ) {
+	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.
 		return await runValidationFunction(
-			validationFunction, evaluatorUri, resolver, scope, Z1, Z4 );
+			validationFunction, invariants, scope, Z1, Z4 );
 	} catch ( err ) {
 		console.error( err );
 		return ZWrapper.create( makeResultEnvelopeWithVoid( null, normalError(
@@ -146,10 +145,10 @@ async function traverseOmittingFunctionCallInputs( ZObject, callback ) {
  * and return their ZObjects. The ZObjects are fetched from the database.
  *
  * @param {Object} zobject the zobject in normal.
- * @param {ReferenceResolver} resolver used to resolve references
+ * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @return {Object} an object mapping the ZID to the ZObject of the type.
  */
-async function getContainedTypeZObjects( zobject, resolver ) {
+async function getContainedTypeZObjects( zobject, invariants ) {
 	const containedTypes = new Set();
 
 	const promises = [];
@@ -165,7 +164,7 @@ async function getContainedTypeZObjects( zobject, resolver ) {
 	} );
 	await Promise.all( promises );
 
-	const result = await resolver.dereference( containedTypes );
+	const result = await invariants.resolver.dereference( containedTypes );
 	return result;
 }
 
@@ -174,12 +173,12 @@ async function getContainedTypeZObjects( zobject, resolver ) {
  * validator.
  *
  * @param {Object} zobject the zobject in normal form.
- * @param {ReferenceResolver} resolver used to resolve references
+ * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @return {Array} an array of validation errors.
  */
-async function validate( zobject, resolver ) {
+async function validate( zobject, invariants ) {
 	const errors = [];
-	const ZObjectTypes = await getContainedTypeZObjects( zobject, resolver );
+	const ZObjectTypes = await getContainedTypeZObjects( zobject, invariants );
 	const traversalPromises = [];
 	const typeValidatorPromises = [];
 
@@ -211,10 +210,12 @@ async function validate( zobject, resolver ) {
 			if ( !theStatus.isValid() ) {
 				errors.push( ZWrapper.create( theStatus.getZ5() ) );
 			} else {
+				// TODO (T307244): Use ignoreList instead of setting evaluator
+				// to null.
+				const noEvaluator = new Invariants( null, invariants.resolver );
 				typeValidatorPromises.push(
 					runTypeValidator(
-						Z1, ZObjectTypes[ typeKey.asString() ].Z2K2, /* evaluatorUri= */null,
-						resolver, /* scope= */null )
+						Z1, ZObjectTypes[ typeKey.asString() ].Z2K2, noEvaluator, /* scope= */null )
 				);
 			}
 		} )() );

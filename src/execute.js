@@ -14,7 +14,7 @@ const { validatesAsArgumentReference, validatesAsType } = require( '../function-
 
 let execute = null;
 
-async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = null ) {
+async function validateAsType( Z1, invariants, scope, typeZObject = null ) {
 	const wrapInZ9 = ( ZID ) => {
 		return ZWrapper.create( {
 			Z1K1: 'Z9',
@@ -24,7 +24,7 @@ async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = 
 	const genericSchemaValidatorZID = 'Z831';
 	const genericValidatorZ8Reference = wrapInZ9( genericSchemaValidatorZID );
 	const genericValidatorZ8 = ( await resolveFunctionCallsAndReferences(
-		genericValidatorZ8Reference, evaluatorUri, resolver, scope,
+		genericValidatorZ8Reference, invariants, scope,
 		/* originalObject= */ null, /* key= */ null,
 		/* ignoreList= */ null ) ).Z22K1;
 
@@ -42,22 +42,22 @@ async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = 
 		[
 			runValidationFunction,
 			[
-				genericValidatorZ8, evaluatorUri, resolver, scope,
+				genericValidatorZ8, invariants, scope,
 				quoteZObject( Z1 ), quoteZObject( typeZObject ) ],
 			'runValidationFunction' ] );
 	// TODO (T301532): Find a more reliable way to signal that no additional
 	// validation needs to be run. Here we just make sure that we won't run the
 	// same function twice by comparing Z8K5 references.
 	const resolvedType = ( await resolveFunctionCallsAndReferences(
-		typeZObject, evaluatorUri, resolver, scope ) ).Z22K1;
+		typeZObject, invariants, scope ) ).Z22K1;
 	if ( ( await validatesAsType( resolvedType.asJSON() ) ).isValid() ) {
-		const validatorZ8 = ( await mutate( resolvedType, [ 'Z4K3' ], evaluatorUri, resolver, scope ) ).Z22K1;
+		const validatorZ8 = ( await mutate( resolvedType, [ 'Z4K3' ], invariants, scope ) ).Z22K1;
 		if ( validatorZ8.Z8K5.Z9K1 !== genericValidatorZ8.Z8K5.Z9K1 ) {
 			const { runTypeValidatorDynamic } = require( './validation.js' );
 			callTuples.push(
 				[
 					runTypeValidatorDynamic,
-					[ Z1, typeZObject, evaluatorUri, resolver, scope ],
+					[ Z1, typeZObject, invariants, scope ],
 					'runTypeValidator' ] );
 		}
 	}
@@ -70,13 +70,12 @@ async function validateAsType( Z1, evaluatorUri, resolver, scope, typeZObject = 
  * Traverses a ZObject and resolves all Z1K1s.
  *
  * @param {Object} Z1 object whose Z1K1s are to be resolved
- * @param {string} evaluatorUri URI of native code evaluator service
- * @param {ReferenceResolver} resolver handles resolution of Z9s
+ * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @param {Frame} scope current variable bindings
  * @param {boolean} doValidate whether to validate types of arguments and return values
  * @return {ArgumentState|null} error state or null if no error encountered
  */
-async function resolveTypes( Z1, evaluatorUri, resolver, scope, doValidate = true ) {
+async function resolveTypes( Z1, invariants, scope, doValidate = true ) {
 	Z1 = ZWrapper.create( Z1 );
 	const objectQueue = [ Z1 ];
 	while ( objectQueue.length > 0 ) {
@@ -85,7 +84,7 @@ async function resolveTypes( Z1, evaluatorUri, resolver, scope, doValidate = tru
 			continue;
 		}
 		const typeEnvelope = await mutate(
-			nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope,
+			nextObject, [ 'Z1K1' ], invariants, scope,
 			/* ignoreList= */ null, /* resolveInternals= */ false, doValidate );
 		if ( containsError( typeEnvelope ) ) {
 			return ArgumentState.ERROR( typeEnvelope.Z22K2 );
@@ -130,7 +129,7 @@ class Frame extends BaseFrame {
 	}
 
 	async processArgument(
-		argumentDict, evaluatorUri, resolver, doValidate, resolveInternals,
+		argumentDict, invariants, doValidate, resolveInternals,
 		ignoreList ) {
 		// TODO (T296675): "doValidate" is a heavy-handed hack to avoid infinite
 		// recursion. Better solutions include
@@ -140,7 +139,7 @@ class Frame extends BaseFrame {
 		//      doValidate is currently false, otherwise using a Function;
 		//  -   caching and reusing the results of function calls
 		const argumentEnvelope = await resolveFunctionCallsAndReferences(
-			argumentDict.argument, evaluatorUri, resolver, this.lastFrame_,
+			argumentDict.argument, invariants, this.lastFrame_,
 			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ ignoreList,
 			resolveInternals, doValidate );
 		if ( containsError( argumentEnvelope ) ) {
@@ -149,12 +148,12 @@ class Frame extends BaseFrame {
 		const argument = ZWrapper.create( argumentEnvelope.Z22K1 );
 		if ( doValidate && resolveInternals ) {
 			const typeError = await resolveTypes(
-				argument, evaluatorUri, resolver, this.lastFrame_ );
+				argument, invariants, this.lastFrame_ );
 			if ( typeError !== null ) {
 				return typeError;
 			}
 			const actualResult = await validateAsType(
-				argument, evaluatorUri, resolver, this.lastFrame_ );
+				argument, invariants, this.lastFrame_ );
 			if ( containsError( actualResult ) ) {
 				return ArgumentState.ERROR(
 					normalError(
@@ -172,8 +171,8 @@ class Frame extends BaseFrame {
 	 * Ascend enclosing scopes to find instantiation of argument with provided name.
 	 *
 	 * @param {string} argumentName
-	 * @param {string} evaluatorUri URI of native code evaluator service
-	 * @param {ReferenceResolver} resolver handles resolution of Z9s
+	 * @param {Invariants} invariants evaluator, resolver: invariants preserved
+	 *      over all function calls
 	 * @param {boolean} lazily
 	 * @param {boolean} doValidate if false, then the argument will be executed
 	 *      without validating return type (if it's a Z7)
@@ -185,7 +184,7 @@ class Frame extends BaseFrame {
 	 * along with enclosing scope
 	 */
 	async retrieveArgument(
-		argumentName, evaluatorUri, resolver, lazily = false,
+		argumentName, invariants, lazily = false,
 		doValidate = true, resolveInternals = true, ignoreList = null ) {
 		let boundValue = this.names_.get( argumentName );
 		let doSetBoundValue = false;
@@ -195,7 +194,7 @@ class Frame extends BaseFrame {
 		if ( boundValue === undefined ) {
 			doSetBoundValue = true;
 			boundValue = await this.lastFrame_.retrieveArgument(
-				argumentName, evaluatorUri, resolver, lazily, doValidate,
+				argumentName, invariants, lazily, doValidate,
 				resolveInternals, ignoreList );
 		} else if ( boundValue.state === 'UNEVALUATED' && !lazily ) {
 			doSetBoundValue = true;
@@ -206,7 +205,7 @@ class Frame extends BaseFrame {
 			// or Z7).
 			const argumentDict = boundValue.argumentDict;
 			const evaluatedArgument = await this.processArgument(
-				argumentDict, evaluatorUri, resolver, doValidate, resolveInternals, ignoreList );
+				argumentDict, invariants, doValidate, resolveInternals, ignoreList );
 			if ( evaluatedArgument.state === 'ERROR' ) {
 				boundValue = evaluatedArgument;
 			} else if ( evaluatedArgument.state === 'EVALUATED' ) {
@@ -220,7 +219,7 @@ class Frame extends BaseFrame {
 					const argument = newDict.argument;
 					const declaredType = newDict.declaredType;
 					const declaredResult = await validateAsType(
-						argument, evaluatorUri, resolver, this.lastFrame_, declaredType );
+						argument, invariants, this.lastFrame_, declaredType );
 					if ( containsError( declaredResult ) ) {
 						boundValue = ArgumentState.ERROR(
 							normalError(
@@ -244,19 +243,18 @@ class Frame extends BaseFrame {
  * Retrieve argument declarations and instantiations from a Z7.
  *
  * @param {Object} zobject
- * @param {string} evaluatorUri URI of native code evaluator service
- * @param {ReferenceResolver} resolver handles resolution of Z9s
+ * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @param {Frame} scope current variable bindings
  * @param {boolean} doValidate whether to validate types of arguments and return values
  * @return {Array} list of objects containing argument names
  */
-async function getArgumentStates( zobject, evaluatorUri, resolver, scope, doValidate = true ) {
+async function getArgumentStates( zobject, invariants, scope, doValidate = true ) {
 	const argumentStates = [];
-	const Z7K1Envelope = ( await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope, /* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
+	const Z7K1Envelope = ( await mutate( zobject, [ 'Z7K1' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
 	if ( containsError( Z7K1Envelope ) ) {
 		return [ ArgumentState.ERROR( 'Could not dereference Z7K1' ) ];
 	}
-	const Z8K1Envelope = ( await mutate( Z7K1Envelope.Z22K1, [ 'Z8K1' ], evaluatorUri, resolver, scope, /* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
+	const Z8K1Envelope = ( await mutate( Z7K1Envelope.Z22K1, [ 'Z8K1' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
 	// This usually happens because dereferencing can't occur during validation
 	// (and is expected).
 	if ( containsError( Z8K1Envelope ) ) {
@@ -269,12 +267,12 @@ async function getArgumentStates( zobject, evaluatorUri, resolver, scope, doVali
 	for ( const Z17 of convertZListToArray( Z8K1 ) ) {
 		const argumentDict = {};
 		const argumentName = ( await mutate(
-			Z17, [ 'Z17K2', 'Z6K1' ], evaluatorUri, resolver, scope,
+			Z17, [ 'Z17K2', 'Z6K1' ], invariants, scope,
 			/* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) ).Z22K1;
 		argumentDict.name = argumentName;
 		// TODO (T292787): This is flaky to rely on; find a better way to determine type.
 		const declaredType = ( await mutate(
-			Z17, [ 'Z17K1' ], evaluatorUri, resolver, scope,
+			Z17, [ 'Z17K1' ], invariants, scope,
 			/* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) ).Z22K1;
 		argumentDict.declaredType = declaredType;
 		let key = argumentName;
@@ -306,12 +304,11 @@ async function getArgumentStates( zobject, evaluatorUri, resolver, scope, doVali
  *
  * @param {Object} result
  * @param {Object} zobject
- * @param {string} evaluatorUri URI of native code evaluator service
- * @param {ReferenceResolver} resolver handles resolution of Z9s
+ * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @param {Frame} scope current variable bindings
  * @return {Object} zobject if validation succeeds; error tuple otherwise
  */
-async function validateReturnType( result, zobject, evaluatorUri, resolver, scope ) {
+async function validateReturnType( result, zobject, invariants, scope ) {
 	// eslint-disable-next-line no-bitwise
 	const thebits = ( ( await containsValue( result ) ) << 1 ) | containsError( result );
 
@@ -324,10 +321,10 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 				[ 'Function evaluation returned an empty object.' ] ) );
 	} else if ( thebits === 2 ) {
 		// Value returned; validate its return type..
-		const Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], evaluatorUri, resolver, scope ) ).Z22K1;
-		const returnType = ( await mutate( Z7K1, [ 'Z8K2' ], evaluatorUri, resolver, scope ) ).Z22K1;
+		const Z7K1 = ( await mutate( zobject, [ 'Z7K1' ], invariants, scope ) ).Z22K1;
+		const returnType = ( await mutate( Z7K1, [ 'Z8K2' ], invariants, scope ) ).Z22K1;
 		const returnTypeValidation = await validateAsType(
-			result.Z22K1, evaluatorUri, resolver, scope, returnType );
+			result.Z22K1, invariants, scope, returnType );
 		if ( containsError( returnTypeValidation ) ) {
 			return makeWrappedResultEnvelope(
 				null,
@@ -347,7 +344,7 @@ async function validateReturnType( result, zobject, evaluatorUri, resolver, scop
 }
 
 async function executeInternal(
-	zobject, evaluatorUri, resolver, scope, doValidate = true,
+	zobject, invariants, scope, doValidate = true,
 	implementationSelector = null, resolveInternals = true ) {
 
 	const typeKey = await createZObjectKey( zobject );
@@ -357,7 +354,7 @@ async function executeInternal(
 	}
 
 	// Retrieve argument declarations and instantiations.
-	const argumentStates = await getArgumentStates( zobject, evaluatorUri, resolver, scope );
+	const argumentStates = await getArgumentStates( zobject, invariants, scope );
 	for ( const argumentState of argumentStates ) {
 		if ( argumentState.state === 'ERROR' ) {
 			return makeWrappedResultEnvelope(
@@ -374,7 +371,7 @@ async function executeInternal(
 	// Ensure Z8 (Z7K1) is dereferenced. Also ensure implementations are
 	// dereferenced (Z8K4 and all elements thereof).
 	const Z8K4Envelope = await mutate(
-		zobject, [ 'Z7K1', 'Z8K4' ], evaluatorUri, resolver, scope,
+		zobject, [ 'Z7K1', 'Z8K4' ], invariants, scope,
 		/* ignoreList= */ null, /* resolveInternals= */ false, doValidate );
 	if ( containsError( Z8K4Envelope ) ) {
 		return Z8K4Envelope;
@@ -384,14 +381,14 @@ async function executeInternal(
 
 	for ( let Z14 of convertZListToArray( Z8K4 ) ) {
 		Z14 = ( await resolveFunctionCallsAndReferences(
-			Z14, evaluatorUri, resolver, scope, /* originalObject= */null,
+			Z14, invariants, scope, /* originalObject= */null,
 			/* key= */null, /* ignoreList= */null, /* resolveInternals= */ false,
 			doValidate ) ).Z22K1;
 		for ( const key of [ 'Z14K2', 'Z14K3', 'Z14K4' ] ) {
 			if ( Z14[ key ] !== undefined ) {
 				const implementationInternalEnvelope = (
 					await resolveFunctionCallsAndReferences(
-						Z14[ key ], evaluatorUri, resolver, scope, /* originalObject= */null,
+						Z14[ key ], invariants, scope, /* originalObject= */null,
 						/* key= */null, /* ignoreList= */null, /* resolveInternals= */ true,
 						doValidate ) );
 				if ( containsError( implementationInternalEnvelope ) ) {
@@ -437,7 +434,7 @@ async function executeInternal(
 			const argumentDict = argumentState.argumentDict;
 			instantiationPromises.push(
 				scope.retrieveArgument(
-					argumentDict.name, evaluatorUri, resolver,
+					argumentDict.name, invariants,
 					implementation.hasLazyVariable( argumentDict.name ),
 					doValidate
 				) );
@@ -452,23 +449,22 @@ async function executeInternal(
 
 	// Equip the implementation for its journey and execute.
 	implementation.setScope( scope );
-	implementation.setResolver( resolver );
-	implementation.setEvaluatorUri( evaluatorUri );
+	implementation.setInvariants( invariants );
 	implementation.setDoValidate( doValidate );
 	let result = await implementation.execute( zobject, argumentInstantiations );
 
 	// Execute result if implementation is lazily evaluated.
 	if ( implementation.returnsLazy() ) {
-		result = await mutate( result, [ 'Z22K1' ], evaluatorUri, resolver, scope,
+		result = await mutate( result, [ 'Z22K1' ], invariants, scope,
 			/* ignoreList= */ null, /* resolveInternals= */ true, doValidate );
 	}
 	if ( doValidate && resolveInternals ) {
-		result = await validateReturnType( result, zobject, evaluatorUri, resolver, scope );
+		result = await validateReturnType( result, zobject, invariants, scope );
 	}
 	return result;
 }
 
-async function resolveDanglingReferences( zobject, evaluatorUri, resolver, scope ) {
+async function resolveDanglingReferences( zobject, invariants, scope ) {
 	let keys = [];
 	if ( zobject instanceof ZWrapper ) {
 		keys = zobject.keys();
@@ -481,7 +477,7 @@ async function resolveDanglingReferences( zobject, evaluatorUri, resolver, scope
 		}
 		if ( ( await validatesAsArgumentReference( oldValueJSON ) ).isValid() ) {
 			const valueEnvelope = await resolveFunctionCallsAndReferences(
-				oldValue, evaluatorUri, resolver, scope,
+				oldValue, invariants, scope,
 				/* originalObject= */ null, /* key= */ null,
 				/* ignoreList= */ new Set( [
 					MutationType.REFERENCE, MutationType.FUNCTION_CALL,
@@ -504,7 +500,7 @@ async function resolveDanglingReferences( zobject, evaluatorUri, resolver, scope
 			}
 		}
 		const newValue = await resolveDanglingReferences(
-			oldValue, evaluatorUri, resolver, scope );
+			oldValue, invariants, scope );
 		zobject[ key ] = newValue;
 	}
 	return zobject;
@@ -515,8 +511,7 @@ async function resolveDanglingReferences( zobject, evaluatorUri, resolver, scope
  * to execute with supplied arguments.
  *
  * @param {Object} zobject object describing a function call
- * @param {string} evaluatorUri URI of native code evaluator service
- * @param {ReferenceResolver} resolver handles resolution of Z9s
+ * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @param {Frame} oldScope current variable bindings
  * @param {boolean} doValidate whether to validate types of arguments and return value
  * @param {ImplementationSelector} implementationSelector
@@ -526,16 +521,16 @@ async function resolveDanglingReferences( zobject, evaluatorUri, resolver, scope
  * @return {Object} result of executing function call
  */
 execute = async function (
-	zobject, evaluatorUri, resolver, oldScope = null, doValidate = true,
+	zobject, invariants, oldScope = null, doValidate = true,
 	implementationSelector = null, resolveInternals = true, topLevel = false ) {
 	const scope = new Frame( oldScope );
 	const result = ZWrapper.create( await executeInternal(
-		zobject, evaluatorUri, resolver, scope, doValidate,
+		zobject, invariants, scope, doValidate,
 		implementationSelector, resolveInternals ) );
 	result.setScope( scope );
 	if ( topLevel ) {
 		result.Z22K1 = await resolveDanglingReferences(
-			result.Z22K1, evaluatorUri, resolver, scope );
+			result.Z22K1, invariants, scope );
 	}
 	return result;
 };

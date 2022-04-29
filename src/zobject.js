@@ -22,7 +22,7 @@ const MutationType = Object.freeze( {
 } );
 
 async function resolveFunctionCallsAndReferencesInternal(
-	nextObject, evaluatorUri, resolver, scope, originalObject, key, ignoreList,
+	nextObject, invariants, scope, originalObject, key, ignoreList,
 	resolveInternals, doValidate ) {
 	if ( ignoreList === null ) {
 		ignoreList = new Set();
@@ -39,8 +39,9 @@ async function resolveFunctionCallsAndReferencesInternal(
 			const argumentReferenceStatus = await validatesAsArgumentReference( nextJSON );
 			if ( argumentReferenceStatus.isValid() && scope !== null ) {
 				const refKey = nextObject.Z18K1.Z6K1;
-				const dereferenced = await scope.retrieveArgument( refKey, evaluatorUri,
-					resolver, /* lazily= */ false, doValidate, resolveInternals, ignoreList );
+				const dereferenced = await scope.retrieveArgument(
+					refKey, invariants, /* lazily= */ false, doValidate,
+					resolveInternals, ignoreList );
 				if ( dereferenced.state === 'ERROR' ) {
 					return makeWrappedResultEnvelope( null, dereferenced.error );
 				}
@@ -55,7 +56,7 @@ async function resolveFunctionCallsAndReferencesInternal(
 			// the cache with builtin types.
 			if ( referenceStatus.isValid() && isUserDefined( nextObject.Z9K1 ) ) {
 				const refKey = nextObject.Z9K1;
-				const dereferenced = await resolver.dereference( [ refKey ] );
+				const dereferenced = await invariants.resolver.dereference( [ refKey ] );
 				nextObject = dereferenced[ refKey ].Z2K2;
 				if ( originalObject !== null ) {
 					originalObject[ key ] = nextObject;
@@ -68,7 +69,7 @@ async function resolveFunctionCallsAndReferencesInternal(
 			if ( functionCallStatus.isValid() ) {
 				const { execute } = require( './execute.js' );
 				const Z22 = await execute(
-					nextObject, evaluatorUri, resolver, scope, doValidate,
+					nextObject, invariants, scope, doValidate,
 					/* implementationSelector= */ null, resolveInternals );
 				if ( containsError( Z22 ) ) {
 					return Z22;
@@ -81,7 +82,7 @@ async function resolveFunctionCallsAndReferencesInternal(
 			}
 		}
 		if ( await isGenericType( nextObject ) ) {
-			const executionResult = await mutate( nextObject, [ 'Z1K1' ], evaluatorUri, resolver, scope, ignoreList, resolveInternals, doValidate );
+			const executionResult = await mutate( nextObject, [ 'Z1K1' ], invariants, scope, ignoreList, resolveInternals, doValidate );
 			if ( containsError( executionResult ) ) {
 				return executionResult;
 			}
@@ -104,7 +105,7 @@ async function resolveFunctionCallsAndReferencesInternal(
 }
 
 async function resolveFunctionCallsAndReferences(
-	nextObject, evaluatorUri, resolver, scope = null, originalObject = null,
+	nextObject, invariants, scope = null, originalObject = null,
 	key = null, ignoreList = null, resolveInternals = true, doValidate = true ) {
 	let innerScope = null;
 	if ( nextObject instanceof ZWrapper ) {
@@ -118,12 +119,12 @@ async function resolveFunctionCallsAndReferences(
 	}
 	scope = innerScope.mergedCopy( scope );
 	return await resolveFunctionCallsAndReferencesInternal(
-		nextObject, evaluatorUri, resolver, scope, originalObject,
+		nextObject, invariants, scope, originalObject,
 		key, ignoreList, resolveInternals, doValidate );
 }
 
 mutate = async function (
-	zobject, keys, evaluatorUri, resolver, scope = null, ignoreList = null,
+	zobject, keys, invariants, scope = null, ignoreList = null,
 	resolveInternals = true, doValidate = true ) {
 	if ( ignoreList === null ) {
 		ignoreList = new Set();
@@ -133,7 +134,7 @@ mutate = async function (
 	}
 	const key = keys.shift();
 	const nextObjectEnvelope = await resolveFunctionCallsAndReferences( zobject[ key ],
-		evaluatorUri, resolver, scope, zobject, key, ignoreList, resolveInternals, doValidate );
+		invariants, scope, zobject, key, ignoreList, resolveInternals, doValidate );
 
 	if ( containsError( nextObjectEnvelope ) ) {
 		return nextObjectEnvelope;
@@ -173,6 +174,6 @@ mutate = async function (
 		}
 	}
 	return await mutate(
-		nextObject, keys, evaluatorUri, resolver, scope, ignoreList, resolveInternals, doValidate );
+		nextObject, keys, invariants, scope, ignoreList, resolveInternals, doValidate );
 };
 module.exports = { mutate, resolveFunctionCallsAndReferences, MutationType };

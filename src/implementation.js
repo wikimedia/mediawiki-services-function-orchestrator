@@ -1,8 +1,6 @@
 'use strict';
 
-const Bluebird = require( 'bluebird' );
 const builtins = require( './builtins.js' );
-const fetch = require( 'node-fetch' );
 const { containsError, traverseZList } = require( './utils.js' );
 const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
 const { ZWrapper } = require( './ZWrapper' );
@@ -10,14 +8,11 @@ const { convertArrayToZList, makeResultEnvelopeWithVoid } = require( '../functio
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../function-schemata/javascript/src/utils' );
 
-fetch.Promise = Bluebird;
-
 class Implementation {
 
 	constructor( Z14 ) {
-		this.resolver_ = null;
+		this.invariants_ = null;
 		this.scope_ = null;
-		this.evaluatorUri_ = null;
 		this.lazyVariables_ = new Set();
 		this.lazyReturn_ = false;
 		this.doValidate_ = true;
@@ -40,16 +35,12 @@ class Implementation {
 		this.scope_ = scope;
 	}
 
-	setResolver( resolver ) {
-		this.resolver_ = resolver;
+	setInvariants( invariants ) {
+		this.invariants_ = invariants;
 	}
 
 	setDoValidate( doValidate ) {
 		this.doValidate_ = doValidate;
-	}
-
-	setEvaluatorUri( evaluatorUri ) {
-		this.evaluatorUri_ = evaluatorUri;
 	}
 
 	/**
@@ -113,8 +104,7 @@ class BuiltIn extends Implementation {
 		for ( const key of keys ) {
 			callArgs.push( nameToArgument.get( key ) );
 		}
-		callArgs.push( this.evaluatorUri_ );
-		callArgs.push( this.resolver_ );
+		callArgs.push( this.invariants_ );
 		callArgs.push( this.scope_ );
 		return this.functor_( ...callArgs );
 	}
@@ -141,7 +131,7 @@ class Evaluated extends Implementation {
 		const Z7 = {};
 		Z7.Z1K1 = zobject.Z1K1.asJSON();
 		Z7.Z7K1 = (
-			await mutate( zobject, [ 'Z7K1' ], this.evaluatorUri_, this.resolver_, this.scope_,
+			await mutate( zobject, [ 'Z7K1' ], this.invariants_, this.scope_,
 			/* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ )
 		).Z22K1.asJSON();
 		const Z8K4 = ZWrapper.create( await convertArrayToZList( [ this.Z14_.asJSON() ] ) );
@@ -152,15 +142,15 @@ class Evaluated extends Implementation {
 		await traverseZList( Z8K4, async function ( tail ) {
 			if ( tail.K1.Z14K3 !== undefined ) {
 				await mutate(
-					tail, [ 'K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.evaluatorUri_,
-					implementation.resolver_, implementation.scope_, /* ignoreList= */ null,
+					tail, [ 'K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.invariants_,
+					implementation.scope_, /* ignoreList= */ null,
 					/* resolveInternals= */ false, implementation.doValidate_ );
 			}
 		} );
 		Z7.Z7K1.Z8K4 = Z8K4.asJSON();
 
 		// Return type may be a function call and must be resolved to allow for serialization.
-		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.evaluatorUri_, this.resolver_,
+		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.invariants_,
 			this.scope_, /* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ );
 		if ( containsError( returnTypeEnvelope ) ) {
 			return returnTypeEnvelope;
@@ -169,13 +159,7 @@ class Evaluated extends Implementation {
 		for ( const argumentDict of argumentList ) {
 			Z7[ argumentDict.name ] = argumentDict.argument.asJSON();
 		}
-		const fetchedResult = await fetch(
-			this.evaluatorUri_, {
-				method: 'POST',
-				body: JSON.stringify( Z7 ),
-				headers: { 'Content-Type': 'application/json' }
-			}
-		);
+		const fetchedResult = await this.invariants_.evaluator.evaluate( Z7 );
 		if ( fetchedResult.ok ) {
 			// Assume the evaluator is returning Z22s.
 			const resultEnvelope = await fetchedResult.json();
@@ -210,7 +194,7 @@ class Composition extends Implementation {
 
 	async executeInternal() {
 		return await resolveFunctionCallsAndReferences(
-			this.composition_, this.evaluatorUri_, this.resolver_, this.scope_,
+			this.composition_, this.invariants_, this.scope_,
 			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ null,
 			/* resolveInternals= */ true, /* doValidate= */ this.doValidate_ );
 	}

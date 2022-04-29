@@ -8,6 +8,8 @@ const { error, normalError } = require( '../function-schemata/javascript/src/err
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
 const { containsError, isError, makeResultEnvelopeAndMaybeCanonicalise, makeWrappedResultEnvelope, returnOnFirstError } = require( './utils.js' );
+const { Evaluator } = require( './Evaluator.js' );
+const { Invariants } = require( './Invariants.js' );
 const { ReferenceResolver } = require( './db.js' );
 const { ZWrapper } = require( './ZWrapper' );
 
@@ -18,13 +20,13 @@ const { ZWrapper } = require( './ZWrapper' );
  *
  * @param {Object} zobject
  * @param {boolean} doValidate whether to run validation; succeeds trivially if false
- * @param {ReferenceResolver} resolver for resolving Z9s
+ * @param {Invariants} invariants for resolving Z9s
  * @return {Object} a Z22
  */
-async function maybeValidate( zobject, doValidate, resolver ) {
+async function maybeValidate( zobject, doValidate, invariants ) {
 	if ( doValidate ) {
 		const errors = (
-			await validate( zobject, resolver )
+			await validate( zobject, invariants )
 		).map( ( errorWrapper ) => errorWrapper.asJSON() );
 		if ( errors.length > 0 ) {
 			// TODO (T296681): Wrap errors in a Z5.
@@ -82,10 +84,10 @@ async function orchestrate( input, implementationSelector = null ) {
 		);
 	}
 
-	const evaluatorUri = input.evaluatorUri || null;
-	const wikiUri = input.wikiUri || null;
+	const evaluator = new Evaluator( input.evaluatorUri || null );
+	const resolver = new ReferenceResolver( input.wikiUri || null );
+	const invariants = new Invariants( evaluator, resolver );
 
-	const resolver = new ReferenceResolver( wikiUri );
 	const doValidate = typeof input.doValidate === 'boolean' ? input.doValidate : true;
 
 	const callTuples = [
@@ -93,10 +95,10 @@ async function orchestrate( input, implementationSelector = null ) {
 		// TODO (T296685): Dereference top-level object if it is a Z9?
 		[ Z7OrError, [], 'Z7OrError' ],
 		[ makeWrappedResultEnvelope, [], 'wrapAsZObject' ],
-		[ maybeValidate, [ doValidate, resolver ], 'maybeValidate' ],
+		[ maybeValidate, [ doValidate, invariants ], 'maybeValidate' ],
 		[
 			execute, [
-				evaluatorUri, resolver, /* oldScope= */null, /* doValidate= */true,
+				invariants, /* oldScope= */null, /* doValidate= */true,
 				/* implementationSelector= */implementationSelector,
 				/* resolveInternals= */true, /* topLevel= */true ],
 			'execute'
