@@ -7,7 +7,9 @@ const {
 	validatesAsReference,
 	ZObjectKeyFactory
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { isUserDefined, getHead, getTail, makeResultEnvelopeWithVoid, makeVoid, isVoid } = require( '../function-schemata/javascript/src/utils' );
+const { isUserDefined, getHead, getTail, makeMappedResultEnvelope, makeVoid, isVoid,
+	isZMap, getZMapValue
+} = require( '../function-schemata/javascript/src/utils' );
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z6Validator = normalFactory.create( 'Z6_literal' );
@@ -107,13 +109,21 @@ async function isGenericType( Z1 ) {
 }
 
 /**
- * Determines whether a pair contains an error.
+ * Determines whether a Z22 / Evaluation result contains an error.  Works both with older
+ * "basic" Z22s and with newer map-based Z22s.
  *
- * @param {Object} pair a Z22
- * @return {bool} true if Z22K2 is a Z5; false otherwise
+ * @param {Object} envelope a Z22
+ * @return {bool} true if Z22K2 contains an error; false otherwise
  */
-function containsError( pair ) {
-	return isError( pair.Z22K2 );
+function containsError( envelope ) {
+	const metadata = envelope.Z22K2;
+	if ( isVoid( metadata ) ) {
+		return false;
+	} else if ( isZMap( metadata ) ) {
+		return ( getZMapValue( metadata, { Z1K1: 'Z6', Z6K1: 'errors' } ) !== undefined );
+	} else {
+		return isError( metadata );
+	}
 }
 
 /**
@@ -280,7 +290,7 @@ function quoteZObject( ZObject ) {
 }
 
 function makeWrappedResultEnvelope( ...args ) {
-	return ZWrapper.create( makeResultEnvelopeWithVoid( ...args ) );
+	return ZWrapper.create( makeMappedResultEnvelope( ...args ) );
 }
 
 module.exports = {

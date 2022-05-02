@@ -5,6 +5,7 @@ const fetch = require( 'node-fetch' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { containsError } = require( './utils.js' );
 const { ZWrapper } = require( './ZWrapper' );
+const { getError } = require( '../function-schemata/javascript/src/utils.js' );
 
 fetch.Promise = Bluebird;
 
@@ -67,7 +68,7 @@ class ReferenceResolver {
 				// fails, we should provisionally consider making separate calls
 				// to the wiki for each ZID.
 				if ( containsError( normalized ) ) {
-					dereferenced[ ZID ] = normalized.Z22K2;
+					dereferenced[ ZID ] = getError( normalized );
 				} else {
 					dereferenced[ ZID ] = normalized.Z22K1;
 				}

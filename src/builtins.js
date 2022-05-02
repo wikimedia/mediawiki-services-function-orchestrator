@@ -4,7 +4,7 @@ const utils = require( '../function-schemata/javascript/src/utils' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { createSchema, makeBoolean, traverseZList } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
-const { makeResultEnvelopeWithVoid, makeTrue, makeFalse } = require( '../function-schemata/javascript/src/utils.js' );
+const { makeMappedResultEnvelope, makeTrue, makeFalse } = require( '../function-schemata/javascript/src/utils.js' );
 const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
 const {
 	validatesAsType,
@@ -119,7 +119,7 @@ async function Z12For( name ) {
  */
 
 function BUILTIN_ECHO_( input ) {
-	return makeResultEnvelopeWithVoid( input, null );
+	return makeMappedResultEnvelope( input, null );
 }
 
 function BUILTIN_IF_( antecedent, trueConsequent, falseConsequent ) {
@@ -129,7 +129,7 @@ function BUILTIN_IF_( antecedent, trueConsequent, falseConsequent ) {
 	} else {
 		result = falseConsequent;
 	}
-	return makeResultEnvelopeWithVoid( result, null );
+	return makeMappedResultEnvelope( result, null );
 }
 
 function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
@@ -143,7 +143,7 @@ function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
 	} else {
 		goodResult = Z1[ key ];
 	}
-	return makeResultEnvelopeWithVoid( goodResult, badResult );
+	return makeMappedResultEnvelope( goodResult, badResult );
 }
 
 async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
@@ -173,7 +173,7 @@ async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
 		const badResult = normalError(
 			[ error.error_in_evaluation ],
 			[ 'Object did not contain key(s): ' + missing ] );
-		return makeResultEnvelopeWithVoid( null, badResult );
+		return makeMappedResultEnvelope( null, badResult );
 	} else {
 		const pairList = await utils.convertArrayToZList( pairArray );
 		const mapType = {
@@ -186,7 +186,7 @@ async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
 			Z1K1: mapType,
 			K1: pairList
 		};
-		return makeResultEnvelopeWithVoid( goodResult, null );
+		return makeMappedResultEnvelope( goodResult, null );
 	}
 }
 
@@ -225,7 +225,7 @@ async function reifyRecursive( Z1 ) {
 }
 
 async function BUILTIN_REIFY_( Z1 ) {
-	return makeResultEnvelopeWithVoid( await reifyRecursive( Z1 ), null );
+	return makeMappedResultEnvelope( await reifyRecursive( Z1 ), null );
 }
 
 function abstractRecursive( ZList ) {
@@ -244,7 +244,7 @@ function abstractRecursive( ZList ) {
 function BUILTIN_ABSTRACT_( ZList ) {
 	// TODO (T296666): Validate that List is a reified list, i.e. that all
 	// elements are Pairs(Key, ZObject).
-	return makeResultEnvelopeWithVoid( abstractRecursive( ZList ), null );
+	return makeMappedResultEnvelope( abstractRecursive( ZList ), null );
 }
 
 async function BUILTIN_CONS_( Z1, Z10 ) {
@@ -256,12 +256,12 @@ async function BUILTIN_CONS_( Z1, Z10 ) {
 		result = await utils.convertArrayToZList( [ Z1 ] );
 		result.K2 = Z10;
 	}
-	return makeResultEnvelopeWithVoid( result, null );
+	return makeMappedResultEnvelope( result, null );
 }
 
 function BUILTIN_HEAD_( Z10 ) {
 	if ( utils.isEmptyZList( Z10 ) ) {
-		return makeResultEnvelopeWithVoid(
+		return makeMappedResultEnvelope(
 			null,
 			normalError(
 				[ error.argument_type_mismatch ],
@@ -269,15 +269,15 @@ function BUILTIN_HEAD_( Z10 ) {
 	}
 
 	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
-		return makeResultEnvelopeWithVoid( Z10.Z10K1, null );
+		return makeMappedResultEnvelope( Z10.Z10K1, null );
 	}
 
-	return makeResultEnvelopeWithVoid( Z10.K1, null );
+	return makeMappedResultEnvelope( Z10.K1, null );
 }
 
 function BUILTIN_TAIL_( Z10 ) {
 	if ( utils.isEmptyZList( Z10 ) ) {
-		return makeResultEnvelopeWithVoid(
+		return makeMappedResultEnvelope(
 			null,
 			normalError(
 				[ error.argument_type_mismatch ],
@@ -285,10 +285,10 @@ function BUILTIN_TAIL_( Z10 ) {
 	}
 
 	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
-		return makeResultEnvelopeWithVoid( Z10.Z10K2, null );
+		return makeMappedResultEnvelope( Z10.Z10K2, null );
 	}
 
-	return makeResultEnvelopeWithVoid( Z10.K2, null );
+	return makeMappedResultEnvelope( Z10.K2, null );
 }
 
 function BUILTIN_EMPTY_( Z10 ) {
@@ -298,19 +298,19 @@ function BUILTIN_EMPTY_( Z10 ) {
 	} else {
 		result = makeFalse();
 	}
-	return makeResultEnvelopeWithVoid( result, null );
+	return makeMappedResultEnvelope( result, null );
 }
 
 function BUILTIN_FIRST_( Z882 ) {
-	return makeResultEnvelopeWithVoid( Z882.K1, null );
+	return makeMappedResultEnvelope( Z882.K1, null );
 }
 
 function BUILTIN_SECOND_( Z882 ) {
-	return makeResultEnvelopeWithVoid( Z882.K2, null );
+	return makeMappedResultEnvelope( Z882.K2, null );
 }
 
 function BUILTIN_EQUALS_BOOLEAN_( Z40_1, Z40_2 ) {
-	return makeResultEnvelopeWithVoid(
+	return makeMappedResultEnvelope(
 		makeBoolean( ( Z40_1.Z40K1.Z9K1 === Z40_2.Z40K1.Z9K1 ) ),
 		null
 	);
@@ -341,11 +341,11 @@ function BUILTIN_LANGUAGE_CODE_TO_LANGUAGE_( Z6 ) {
 		};
 	}
 
-	return makeResultEnvelopeWithVoid( result );
+	return makeMappedResultEnvelope( result );
 }
 
 function BUILTIN_EQUALS_STRING_( Z6_1, Z6_2 ) {
-	return makeResultEnvelopeWithVoid(
+	return makeMappedResultEnvelope(
 		makeBoolean( ( Z6_1.Z6K1 === Z6_2.Z6K1 ) ),
 		null
 	);
@@ -363,7 +363,7 @@ async function stringToCharsInternal( characterArray ) {
 }
 
 async function BUILTIN_STRING_TO_CHARS_( Z6 ) {
-	return makeResultEnvelopeWithVoid(
+	return makeMappedResultEnvelope(
 		await stringToCharsInternal( Array.from( Z6.Z6K1 ) ),
 		null );
 }
@@ -379,7 +379,7 @@ function charsToStringInternal( Z10 ) {
 
 function BUILTIN_CHARS_TO_STRING_( Z10 ) {
 	// TODO (T294482): Validate input is a List(Z86).
-	return makeResultEnvelopeWithVoid(
+	return makeMappedResultEnvelope(
 		{
 			Z1K1: 'Z6',
 			Z6K1: charsToStringInternal( Z10 ).join( '' )
@@ -389,7 +389,7 @@ function BUILTIN_CHARS_TO_STRING_( Z10 ) {
 }
 
 function BUILTIN_TRIGGER_METADATA_( Z5 ) {
-	return makeResultEnvelopeWithVoid( null, Z5 );
+	return makeMappedResultEnvelope( null, Z5 );
 }
 
 function BUILTIN_SAME_( Z86_1, Z86_2 ) {
@@ -399,20 +399,20 @@ function BUILTIN_SAME_( Z86_1, Z86_2 ) {
 	} else {
 		result = makeFalse();
 	}
-	return makeResultEnvelopeWithVoid( result, null );
+	return makeMappedResultEnvelope( result, null );
 }
 
 function BUILTIN_UNQUOTE_( Z99 ) {
-	return makeResultEnvelopeWithVoid( Z99.Z99K1, null );
+	return makeMappedResultEnvelope( Z99.Z99K1, null );
 }
 
 function makeValidatorResultEnvelope( Z1, errors ) {
 	if ( errors.length === 0 ) {
-		return makeResultEnvelopeWithVoid( Z1.asJSON(), null );
+		return makeMappedResultEnvelope( Z1.asJSON(), null );
 	} else if ( errors.length === 1 ) {
-		return makeResultEnvelopeWithVoid( null, errors[ 0 ] );
+		return makeMappedResultEnvelope( null, errors[ 0 ] );
 	} else {
-		return makeResultEnvelopeWithVoid( null, ErrorFormatter.createZErrorList( errors ) );
+		return makeMappedResultEnvelope( null, ErrorFormatter.createZErrorList( errors ) );
 	}
 }
 
@@ -447,7 +447,7 @@ async function BUILTIN_SCHEMA_VALIDATOR_(
 }
 
 function BUILTIN_EMPTY_VALIDATOR_( Z1 ) {
-	return makeResultEnvelopeWithVoid( Z1, null );
+	return makeMappedResultEnvelope( Z1, null );
 }
 
 /**
@@ -675,7 +675,7 @@ async function resolveListType( typeZ4 ) {
 			Z9K1: 'Z831'
 		}
 	};
-	return makeResultEnvelopeWithVoid( Z4, null );
+	return makeMappedResultEnvelope( Z4, null );
 }
 
 async function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
@@ -710,17 +710,18 @@ async function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 			Z9K1: 'Z831'
 		}
 	};
-	return makeResultEnvelopeWithVoid( Z4, null );
+	return makeMappedResultEnvelope( Z4, null );
 }
 
 async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants, scope ) {
+	// TODO (T302015) When ZMap keys are extended beyond Z6/String, update accordingly
 	const allowedKeyTypes = [ 'Z6', 'Z39' ];
 	if ( !allowedKeyTypes.includes( keyType.Z9K1 ) ) {
 		const newError = normalError(
 			[ error.argument_value_error ],
 			[ 'Z883K1', keyType ]
 		);
-		return makeResultEnvelopeWithVoid( null, newError );
+		return makeMappedResultEnvelope( null, newError );
 	}
 	const { execute } = require( './execute.js' );
 	const itsMe = {
@@ -762,7 +763,7 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants, scope 
 			Z9K1: 'Z831'
 		}
 	};
-	return makeResultEnvelopeWithVoid( Z4, null );
+	return makeMappedResultEnvelope( Z4, null );
 }
 
 const builtinFunctions = new Map();

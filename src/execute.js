@@ -9,7 +9,7 @@ const { mutate, resolveFunctionCallsAndReferences, MutationType } = require( './
 const { ZWrapper } = require( './ZWrapper' );
 const { resolveListType } = require( './builtins.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
-const { convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToArray, getError } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsArgumentReference, validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
 
 let execute = null;
@@ -87,7 +87,7 @@ async function resolveTypes( Z1, invariants, scope, doValidate = true ) {
 			nextObject, [ 'Z1K1' ], invariants, scope,
 			/* ignoreList= */ null, /* resolveInternals= */ false, doValidate );
 		if ( containsError( typeEnvelope ) ) {
-			return ArgumentState.ERROR( typeEnvelope.Z22K2 );
+			return ArgumentState.ERROR( getError( typeEnvelope ) );
 		}
 		nextObject.Z1K1 = typeEnvelope.Z22K1;
 		for ( const key of nextObject.keys() ) {
@@ -143,7 +143,7 @@ class Frame extends BaseFrame {
 			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ ignoreList,
 			resolveInternals, doValidate );
 		if ( containsError( argumentEnvelope ) ) {
-			return ArgumentState.ERROR( argumentEnvelope.Z22K2 );
+			return ArgumentState.ERROR( getError( argumentEnvelope ) );
 		}
 		const argument = ZWrapper.create( argumentEnvelope.Z22K1 );
 		if ( doValidate && resolveInternals ) {
@@ -158,7 +158,7 @@ class Frame extends BaseFrame {
 				return ArgumentState.ERROR(
 					normalError(
 						[ error.object_type_mismatch ],
-						[ argument.Z1K1, argument, actualResult.Z22K2 ] ) );
+						[ argument.Z1K1, argument, getError( actualResult ) ] ) );
 			}
 		}
 		return ArgumentState.EVALUATED( {
@@ -224,7 +224,8 @@ class Frame extends BaseFrame {
 						boundValue = ArgumentState.ERROR(
 							normalError(
 								[ error.argument_type_mismatch ],
-								[ declaredType, argument.Z1K1, argument, declaredResult.Z22K2 ] ) );
+								[ declaredType, argument.Z1K1, argument,
+									getError( declaredResult ) ] ) );
 					}
 				}
 			} else {
@@ -330,7 +331,8 @@ async function validateReturnType( result, zobject, invariants, scope ) {
 				null,
 				normalError(
 					[ error.return_type_mismatch ],
-					[ returnType, result.Z22K1.Z1K1, result.Z22K1, returnTypeValidation.Z22K2 ] ) );
+					[ returnType, result.Z22K1.Z1K1, result.Z22K1,
+						getError( returnTypeValidation ) ] ) );
 		}
 	} else if ( thebits === 3 ) {
 		// Both value and error.

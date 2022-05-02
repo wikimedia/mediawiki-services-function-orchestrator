@@ -4,7 +4,7 @@ const builtins = require( './builtins.js' );
 const { containsError, traverseZList } = require( './utils.js' );
 const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
 const { ZWrapper } = require( './ZWrapper' );
-const { convertArrayToZList, makeResultEnvelopeWithVoid } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertArrayToZList, makeMappedResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../function-schemata/javascript/src/utils' );
 
@@ -176,7 +176,7 @@ class Evaluated extends Implementation {
 		}
 		const statusCode = fetchedResult.status;
 		const errorText = await fetchedResult.text();
-		return makeResultEnvelopeWithVoid(
+		return makeMappedResultEnvelope(
 			null,
 			normalError(
 				[ error.error_in_evaluation ],
