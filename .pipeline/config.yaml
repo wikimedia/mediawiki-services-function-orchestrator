@@ -2,21 +2,19 @@ pipelines:
   test:
     blubberfile: blubber.yaml
     stages:
-      - name: built
-        build: npm-run
-      - name: tested
-        run:
-          image: '${built.imageID}'
-          arguments: [test]
-    execution:
-      - [built, tested]
+      - name: test
+        build: test
+        run: true
   publish:
+    blubberfile: blubber.yaml
     stages:
+      - name: test
+        build: test
+        run: true
       - name: production
         build: production
         publish:
           image:
-            id: '${.imageID}'
             tags:
               - latest
               - '${setup.tag}'
