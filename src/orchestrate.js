@@ -2,12 +2,13 @@
 
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
-const { convertArrayToZList, makeResultEnvelopeWithVoid } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertArrayToZList, makeMappedResultEnvelope,
+	maybeDowngradeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
-const { containsError, isError, makeResultEnvelopeAndMaybeCanonicalise, makeWrappedResultEnvelope, returnOnFirstError } = require( './utils.js' );
+const { containsError, isError, makeWrappedResultEnvelope, returnOnFirstError } = require( './utils.js' );
 const { Evaluator } = require( './Evaluator.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ReferenceResolver } = require( './db.js' );
@@ -30,10 +31,10 @@ async function maybeValidate( zobject, doValidate, invariants ) {
 		).map( ( errorWrapper ) => errorWrapper.asJSON() );
 		if ( errors.length > 0 ) {
 			// TODO (T296681): Wrap errors in a Z5.
-			return makeResultEnvelopeWithVoid( null, await convertArrayToZList( errors ) );
+			return makeMappedResultEnvelope( null, await convertArrayToZList( errors ) );
 		}
 	}
-	return makeResultEnvelopeWithVoid( zobject, null );
+	return makeMappedResultEnvelope( zobject, null );
 }
 
 /**
@@ -45,9 +46,9 @@ async function maybeValidate( zobject, doValidate, invariants ) {
  */
 async function Z7OrError( zobject ) {
 	if ( ( await validatesAsFunctionCall( zobject ) ).isValid() ) {
-		return makeResultEnvelopeWithVoid( zobject, null );
+		return makeMappedResultEnvelope( zobject, null );
 	}
-	return makeResultEnvelopeWithVoid(
+	return makeMappedResultEnvelope(
 		null,
 		normalError(
 			[ error.wrong_content_type ],
@@ -75,11 +76,11 @@ async function orchestrate( input, implementationSelector = null ) {
 	let currentPair;
 
 	if ( isError( zobject ) ) {
-		currentPair = makeResultEnvelopeAndMaybeCanonicalise(
+		currentPair = makeMappedResultEnvelope(
 			null, zobject, /* canonicalize= */true
 		);
 	} else {
-		currentPair = makeResultEnvelopeAndMaybeCanonicalise(
+		currentPair = makeMappedResultEnvelope(
 			zobject, null, /* canonicalize= */true
 		);
 	}
@@ -110,6 +111,9 @@ async function orchestrate( input, implementationSelector = null ) {
 	if ( currentPair instanceof ZWrapper ) {
 		currentPair = currentPair.asJSON();
 	}
+
+	currentPair = maybeDowngradeResultEnvelope( currentPair );
+
 	const canonicalized = await canonicalize( currentPair, /* withVoid= */ true );
 
 	if ( containsError( canonicalized ) ) {

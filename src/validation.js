@@ -7,7 +7,7 @@ const { ZWrapper } = require( './ZWrapper' );
 const { containsError, createSchema, createZObjectKey, quoteZObject } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
-const { convertZListToArray, isString, makeResultEnvelopeWithVoid } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToArray, isString, makeMappedResultEnvelope, getError } = require( '../function-schemata/javascript/src/utils.js' );
 
 const validators = new Map();
 
@@ -82,7 +82,7 @@ async function runTypeValidator( Z1, Z4, invariants, scope ) {
 			quoteZObject( Z4 ) );
 	} catch ( err ) {
 		console.error( err );
-		return ZWrapper.create( makeResultEnvelopeWithVoid( null, normalError(
+		return ZWrapper.create( makeMappedResultEnvelope( null, normalError(
 			[ error.zid_not_found ],
 			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
 		) ) );
@@ -111,7 +111,7 @@ async function runTypeValidatorDynamic( Z1, Z4, invariants, scope ) {
 			validationFunction, invariants, scope, Z1, Z4 );
 	} catch ( err ) {
 		console.error( err );
-		return ZWrapper.create( makeResultEnvelopeWithVoid( null, normalError(
+		return ZWrapper.create( makeMappedResultEnvelope( null, normalError(
 			[ error.zid_not_found ],
 			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
 		) ) );
@@ -227,7 +227,7 @@ async function validate( zobject, invariants ) {
 	typeValidatorResults
 		.filter( containsError )
 		.forEach( ( result ) => {
-			const error = result.Z22K2;
+			const error = getError( result );
 
 			// if this is a Z509/Multiple errors it will be flattened
 			if ( error.Z5K1.Z9K1 === 'Z509' ) {

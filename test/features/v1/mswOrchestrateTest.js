@@ -2,12 +2,13 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-const { makeResultEnvelopeWithVoid, makeTrue, makeFalse } = require( '../../../function-schemata/javascript/src/utils.js' );
+const { makeMappedResultEnvelope, makeTrue, makeFalse, setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
 const utils = require( '../../../src/utils.js' );
 const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
 const { readJSON, readZObjectsFromDirectory } = require( '../../utils/read-json.js' );
+const { normalError, error } = require( '../../../function-schemata/javascript/src/error.js' );
 
 class Canned {
 
@@ -293,7 +294,7 @@ describe( 'orchestrate', function () {
 	}
 
 	{
-		cannedResponses.setEvaluator( 'Z1000', makeResultEnvelopeWithVoid( { Z1K1: 'Z6', Z6K1: '13' }, null ) );
+		cannedResponses.setEvaluator( 'Z1000', makeMappedResultEnvelope( { Z1K1: 'Z6', Z6K1: '13' }, null ) );
 		test(
 			'evaluated function call',
 			readJSON( './test/features/v1/test_data/evaluated.json' ),
@@ -315,6 +316,43 @@ describe( 'orchestrate', function () {
 					Z507K1: 'Function evaluation failed with status 500: "naw"'
 				}
 			}
+		);
+	}
+
+	{
+		cannedResponses.setEvaluator( 'Z1001',
+			readJSON( './test/features/v1/test_data/Z22-map-result-only.json' ),
+			null );
+		test(
+			/* name */ 'evaluated function call, result and simple map',
+			/* zobject */ readJSON( './test/features/v1/test_data/evaluated-map-result-only.json' ),
+			/* output */ { Z1K1: 'Z6', Z6K1: '13' },
+			/* error */ null
+		);
+	}
+
+	{
+		cannedResponses.setEvaluator( 'Z1002',
+			readJSON( './test/features/v1/test_data/Z22-map-basic.json' ),
+			null );
+		test(
+			/* name */ 'evaluated function call, result and simple map',
+			/* zobject */ readJSON( './test/features/v1/test_data/evaluated-map-basic.json' ),
+			/* output */ { Z1K1: 'Z6', Z6K1: '13' },
+			/* error */ null
+		);
+	}
+
+	{
+		const evaluatorResponse = readJSON( './test/features/v1/test_data/Z22-map-error.json' );
+		const errorTerm = normalError( [ error.not_wellformed_value ], [ 'Error placeholder' ] );
+		setZMapValue( evaluatorResponse.Z22K2, { Z1K1: 'Z6', Z6K1: 'errors' }, errorTerm );
+		cannedResponses.setEvaluator( 'Z1003', evaluatorResponse, null );
+		test(
+			/* name */ 'evaluated function call, void result',
+			/* zobject */ readJSON( './test/features/v1/test_data/evaluated-map-error.json' ),
+			/* output */ { Z1K1: 'Z9', Z9K1: 'Z24' },
+			/* error */ { Z1K1: 'Z5', Z5K1: { Z1K1: 'Z526', Z526K1: 'Error placeholder' } }
 		);
 	}
 
