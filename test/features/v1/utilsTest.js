@@ -3,7 +3,7 @@
 const assert = require( '../../utils/assert.js' );
 const { generateError, makeResultEnvelopeAndMaybeCanonicalise, returnOnFirstError } = require( '../../../src/utils.js' );
 
-describe( 'utils test', function () {
+describe( 'utils test', function () { // eslint-disable-line no-undef
 
 	const goodZ22 = makeResultEnvelopeAndMaybeCanonicalise(
 		{ Z1K1: 'Z6', Z6K1: 'dull but reliable sigma string' }, null
@@ -13,7 +13,7 @@ describe( 'utils test', function () {
 		null, generateError( 'extremely exciting but morally flawed error string' )
 	);
 
-	it( 'returnOnFirstError encounters error in first function', async () => {
+	it( 'returnOnFirstError encounters error in first function', async () => { // eslint-disable-line no-undef
 		const badFunction = () => {
 			return badZ22;
 		};
@@ -27,7 +27,7 @@ describe( 'utils test', function () {
 		assert.deepEqual( badZ22, result );
 	} );
 
-	it( 'returnOnFirstError encounters no errors', async () => {
+	it( 'returnOnFirstError encounters no errors', async () => { // eslint-disable-line no-undef
 		const theFunction = ( Z22K1 ) => {
 			const result = { ...Z22K1 };
 			result.Z6K1 = 'very ' + result.Z6K1;
@@ -41,7 +41,7 @@ describe( 'utils test', function () {
 		assert.deepEqual( 'very very very dull but reliable sigma string', result.Z22K1.Z6K1 );
 	} );
 
-	it( 'returnOnFirstError calls callback', async () => {
+	it( 'returnOnFirstError calls callback', async () => { // eslint-disable-line no-undef
 		let stoolPigeon = false;
 		const goodFunction = () => {
 			return goodZ22;
@@ -54,7 +54,7 @@ describe( 'utils test', function () {
 		assert.deepEqual( true, stoolPigeon );
 	} );
 
-	it( 'returnOnFirstError omits Z22 if requested', async () => {
+	it( 'returnOnFirstError omits Z22 if requested', async () => { // eslint-disable-line no-undef
 		let stoolPigeon = false;
 		const indicatorFunction = ( firstArgument = null ) => {
 			if ( firstArgument !== null ) {

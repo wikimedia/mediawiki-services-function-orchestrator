@@ -3,15 +3,15 @@
 const assert = require( '../../utils/assert.js' );
 const { ZWrapper } = require( '../../../src/ZWrapper' );
 
-describe( 'ZWrapper test', function () {
+describe( 'ZWrapper test', function () { // eslint-disable-line no-undef
 
-	it( 'ZWrapper class string construction', async () => {
+	it( 'ZWrapper class string construction', async () => { // eslint-disable-line no-undef
 		const stringIsNotAZWrapper = ZWrapper.create( 'Hello I am a test string' );
 
 		assert.deepEqual( stringIsNotAZWrapper, 'Hello I am a test string' );
 	} );
 
-	it( 'ZWrapper class construction', async () => {
+	it( 'ZWrapper class construction', async () => { // eslint-disable-line no-undef
 		let keyMap;
 
 		const emptyZWrapper = ZWrapper.create( {} );

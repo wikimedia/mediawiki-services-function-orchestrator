@@ -9,24 +9,24 @@ const { getMissingZ5 } = require( '../../../function-schemata/javascript/test/te
 const utils = require( '../../../src/utils.js' );
 const { readJSON } = require( '../../utils/read-json.js' );
 
-describe( 'orchestration endpoint', function () {
+describe( 'orchestration endpoint', function () { // eslint-disable-line no-undef
 
 	this.timeout( 20000 );
 
 	let uri = null;
 	const server = new Server();
 
-	before( () => {
+	before( () => { // eslint-disable-line no-undef
 		return server.start()
 			.then( () => {
 				uri = `${server.config.uri}wikifunctions.org/v1/evaluate/`;
 			} );
 	} );
 
-	after( () => server.stop() );
+	after( () => server.stop() ); // eslint-disable-line no-undef
 
 	const testFunctionCall = function ( name, input, output = null, error = null ) {
-		it( 'orchestration endpoint: ' + name, async function () {
+		it( 'orchestration endpoint: ' + name, async function () { // eslint-disable-line no-undef
 			if ( output !== null ) {
 				output = ( await canonicalize( output, /* withVoid= */ true ) ).Z22K1;
 			}
@@ -44,14 +44,16 @@ describe( 'orchestration endpoint', function () {
 			assert.contentType( result, 'application/json' );
 			assert.deepEqual(
 				result.body,
-				utils.makeResultEnvelopeAndMaybeCanonicalise( output, error, /* canonical= */ true ),
+				utils.makeResultEnvelopeAndMaybeCanonicalise(
+					output, error, /* canonical= */ true
+				),
 				name
 			);
 		} );
 	};
 
 	const testZ5 = function ( name, input, codes ) {
-		it( 'orchestration endpoint: ' + name, function () {
+		it( 'orchestration endpoint: ' + name, function () { // eslint-disable-line no-undef
 			return preq
 				.post( {
 					uri: uri,

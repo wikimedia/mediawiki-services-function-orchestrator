@@ -44,7 +44,7 @@ class Canned {
 
 }
 
-describe( 'orchestrate', function () {
+describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	const cannedResponses = new Canned();
 
 	const restHandlers = [
@@ -66,24 +66,26 @@ describe( 'orchestrate', function () {
 		} ),
 
 		// Silently forward GET requests to the API running at :6254.
-		rest.get( 'http://localhost:6254/*', ( req, res, ctx ) => {} )
+		rest.get( 'http://localhost:6254/*', ( req, res, ctx ) => {} ) // eslint-disable-line no-unused-vars
 	];
 	const mockServiceWorker = setupServer( ...restHandlers );
 
-	before( () => mockServiceWorker.listen() );
+	before( () => mockServiceWorker.listen() ); // eslint-disable-line no-undef
 
-	after( () => {
+	after( () => { // eslint-disable-line no-undef
 		return mockServiceWorker.resetHandlers();
 	} );
 
-	const test = function ( name, zobject, output = null, error = null, implementationSelector = null ) {
+	const test = function (
+		name, zobject, output = null, error = null, implementationSelector = null
+	) {
 		const input = {
 			zobject: zobject,
 			wikiUri: 'http://thewiki',
 			evaluatorUri: 'http://theevaluator',
 			doValidate: true
 		};
-		it( 'orchestrate msw: ' + name, async () => {
+		it( 'orchestrate msw: ' + name, async () => { // eslint-disable-line no-undef
 			if ( output !== null ) {
 				output = ( await canonicalize( output, /* withVoid= */ true ) ).Z22K1;
 			}
@@ -101,7 +103,8 @@ describe( 'orchestrate', function () {
 			assert.deepEqual( thrownError, null );
 			assert.deepEqual(
 				result,
-				utils.makeResultEnvelopeAndMaybeCanonicalise( output, error, /* canonical= */ true ),
+				utils.makeResultEnvelopeAndMaybeCanonicalise(
+					output, error, /* canonical= */ true ),
 				name
 			);
 		} );

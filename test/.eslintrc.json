@@ -1,9 +1,19 @@
 {
-	"extends": "../.eslintrc.json",
-	"env": { "mocha": true },
+	"root": true,
+	"extends": [
+		"wikimedia/server"
+	],
 	"rules": {
-		"max-len": "off",
-		"no-console": "off",
-		"no-invalid-this": "off"
-	}
+		"camelcase": "off",
+		"no-use-before-define": "off",
+		"no-shadow": "off",
+		"jsdoc/no-undefined-types": "off",
+		"no-underscore-dangle": "off"
+	},
+	"overrides": [
+		{
+			"files": "**/*.json",
+			"extends": "wikimedia/json"
+		}
+	]
 }

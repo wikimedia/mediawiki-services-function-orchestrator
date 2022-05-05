@@ -4,7 +4,7 @@ const preq = require( 'preq' );
 const assert = require( '../../utils/assert.js' );
 const Server = require( '../../utils/server.js' );
 
-describe( 'service information', function () {
+describe( 'service information', function () { // eslint-disable-line no-undef
 
 	this.timeout( 20000 );
 
@@ -12,14 +12,14 @@ describe( 'service information', function () {
 
 	const server = new Server();
 
-	before( () => {
+	before( () => { // eslint-disable-line no-undef
 		return server.start()
 			.then( () => {
 				infoUri = `${server.config.uri}_info/`;
 			} );
 	} );
 
-	after( () => server.stop() );
+	after( () => server.stop() ); // eslint-disable-line no-undef
 
 	// common function used for generating requests
 	// and checking their return values
@@ -37,15 +37,15 @@ describe( 'service information', function () {
 		} );
 	}
 
-	it( 'should get the service name', () => {
+	it( 'should get the service name', () => { // eslint-disable-line no-undef
 		return checkRet( 'name' );
 	} );
 
-	it( 'should get the service version', () => {
+	it( 'should get the service version', () => { // eslint-disable-line no-undef
 		return checkRet( 'version' );
 	} );
 
-	it( 'should redirect to the service home page', () => {
+	it( 'should redirect to the service home page', () => { // eslint-disable-line no-undef
 		return preq.get( {
 			uri: `${infoUri}home`,
 			followRedirect: false
@@ -55,7 +55,7 @@ describe( 'service information', function () {
 		} );
 	} );
 
-	it( 'should get the service info', () => {
+	it( 'should get the service info', () => { // eslint-disable-line no-undef
 		return preq.get( {
 			uri: infoUri
 		} ).then( ( res ) => {
@@ -70,5 +70,14 @@ describe( 'service information', function () {
 			assert.notDeepEqual( res.body.description, undefined, 'No description field returned!' );
 			assert.notDeepEqual( res.body.home, undefined, 'No home field returned!' );
 		} );
+	} );
+
+	it( 'should fail to get the service info for invalid endpoint', () => { // eslint-disable-line no-undef
+		return assert.fails(
+			preq.get( { uri: `${infoUri}zzz` } ),
+			( res ) => {
+				assert.deepEqual( res.status, 404 );
+			}
+		);
 	} );
 } );

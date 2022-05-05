@@ -1,2 +1,1 @@
-debian: 'debian:buster'
-
+debian: "debian:buster"

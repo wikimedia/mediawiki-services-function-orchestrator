@@ -37,7 +37,7 @@ class Canned {
 
 }
 
-describe( 'performTest', function () {
+describe( 'performTest', function () { // eslint-disable-line no-undef
 	const cannedResponses = new Canned();
 
 	const restHandlers = [
@@ -58,17 +58,17 @@ describe( 'performTest', function () {
 		} ),
 
 		// Silently forward GET requests to the API running at :6254.
-		rest.get( 'http://localhost:6254/*', ( req, res, ctx ) => {} )
+		rest.get( 'http://localhost:6254/*', ( req, res, ctx ) => {} ) // eslint-disable-line no-unused-vars
 	];
 	const mockServiceWorker = setupServer( ...restHandlers );
 
-	before( () => mockServiceWorker.listen() );
+	before( () => mockServiceWorker.listen() ); // eslint-disable-line no-undef
 
-	after( () => {
+	after( () => { // eslint-disable-line no-undef
 		return mockServiceWorker.resetHandlers();
 	} );
 
-	it( 'throws if you give it invalid JSON in the outer data structure', async () => {
+	it( 'throws if you give it invalid JSON in the outer data structure', async () => { // eslint-disable-line no-undef
 		// This covers the parse() function
 		let result;
 		try {
@@ -82,7 +82,7 @@ describe( 'performTest', function () {
 		assert.deepEqual( result, undefined );
 	} );
 
-	it( 'throws if you give it invalid JSON in the inner values', async () => {
+	it( 'throws if you give it invalid JSON in the inner values', async () => { // eslint-disable-line no-undef
 		// This covers bits of the getTestResults() function
 		let result;
 		try {
@@ -103,7 +103,7 @@ describe( 'performTest', function () {
 		assert.deepEqual( result, undefined );
 	} );
 
-	it( 'performs a test and validation, and returns the result.', async () => {
+	it( 'performs a test and validation, and returns the result.', async () => { // eslint-disable-line no-undef
 		cannedResponses.setWiki( 'Z10006', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10006' },

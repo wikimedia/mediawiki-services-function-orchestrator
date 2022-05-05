@@ -4,17 +4,17 @@ const preq = require( 'preq' );
 const assert = require( '../../utils/assert.js' );
 const Server = require( '../../utils/server.js' );
 
-describe( 'express app', function () {
+describe( 'express app', function () { // eslint-disable-line no-undef
 
 	this.timeout( 20000 );
 
 	const server = new Server();
 
-	before( () => server.start() );
+	before( () => server.start() ); // eslint-disable-line no-undef
 
-	after( () => server.stop() );
+	after( () => server.stop() ); // eslint-disable-line no-undef
 
-	it( 'should get robots.txt', () => {
+	it( 'should get robots.txt', () => { // eslint-disable-line no-undef
 		return preq.get( {
 			uri: `${server.config.uri}robots.txt`
 		} ).then( ( res ) => {
@@ -23,7 +23,7 @@ describe( 'express app', function () {
 		} );
 	} );
 
-	it( 'should set CORS headers', () => {
+	it( 'should set CORS headers', () => { // eslint-disable-line no-undef
 		if ( server.config.service.conf.cors === false ) {
 			return true;
 		}
@@ -37,7 +37,7 @@ describe( 'express app', function () {
 		} );
 	} );
 
-	it( 'should set CSP headers', () => {
+	it( 'should set CSP headers', () => { // eslint-disable-line no-undef
 		if ( server.config.service.conf.csp === false ) {
 			return true;
 		}
@@ -52,7 +52,7 @@ describe( 'express app', function () {
 		} );
 	} );
 
-	it( 'should get static content gzipped', () => {
+	it( 'should get static content gzipped', () => { // eslint-disable-line no-undef
 		return preq.get( {
 			uri: `${server.config.uri}static/index.html`,
 			headers: {
@@ -66,7 +66,7 @@ describe( 'express app', function () {
 		} );
 	} );
 
-	it( 'should get static content uncompressed', () => {
+	it( 'should get static content uncompressed', () => { // eslint-disable-line no-undef
 		return preq.get( {
 			uri: `${server.config.uri}static/index.html`,
 			headers: {

@@ -11,6 +11,12 @@
 			}
 		],
 		"jsdoc/no-undefined-types": "off",
+		"node/no-unsupported-features/node-builtins": [
+			"error", {
+				"version": ">=12.0.0",
+				"ignores": []
+			}
+		],
 		"no-shadow": "off",
 		"no-underscore-dangle": "off",
 		"no-unused-vars": [
