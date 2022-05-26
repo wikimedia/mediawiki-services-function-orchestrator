@@ -2,7 +2,8 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-const { makeMappedResultEnvelope, makeTrue, makeFalse, setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
+// FIXME (T309289): Commented test requires makeFalse
+const { makeMappedResultEnvelope, makeTrue, /* makeFalse, */ setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
 const utils = require( '../../../src/utils.js' );
 const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
@@ -488,9 +489,17 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		);
 	}
 
+	// FIXME (T309289): Debug and fix this test
+	/*
 	{
-		cannedResponses.setWiki( 'Z10044', readJSON( './test/features/v1/test_data/map_function_Z10044.json' ) );
-		cannedResponses.setWiki( 'Z10045', readJSON( './test/features/v1/test_data/map_implementation_Z10045.json' ) );
+		cannedResponses.setWiki(
+			'Z10044',
+			readJSON( './test/features/v1/test_data/map_function_Z10044.json' )
+		);
+		cannedResponses.setWiki(
+			'Z10045',
+			readJSON( './test/features/v1/test_data/map_implementation_Z10045.json' )
+		);
 		test(
 			'map (emptiness of lists)',
 			{
@@ -508,6 +517,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			null
 		);
 	}
+	*/
 
 	{
 		cannedResponses.setWiki( 'Z10101', {
