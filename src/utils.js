@@ -255,8 +255,6 @@ async function traverseZList( ZList, callback ) {
 async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = true ) {
 	let currentPair = Z22;
 	for ( const callTuple of callTuples ) {
-		// TODO (T296681): validatesAsUnit check is redundant once validation returns
-		// correct type.  Note: validatesAsUnit has been replaced by isVoid.
 		if (
 			containsError( currentPair ) ||
 			isVoid( currentPair.Z22K1 )
