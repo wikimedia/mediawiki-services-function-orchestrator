@@ -2,8 +2,7 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-// FIXME (T309289): Commented test requires makeFalse
-const { makeMappedResultEnvelope, makeTrue, /* makeFalse, */ setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
+const { makeMappedResultEnvelope, makeTrue, makeFalse, setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
 const utils = require( '../../../src/utils.js' );
 const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
@@ -489,8 +488,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		);
 	}
 
-	// FIXME (T309289): Debug and fix this test
-	/*
 	{
 		cannedResponses.setWiki(
 			'Z10044',
@@ -517,7 +514,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			null
 		);
 	}
-	*/
 
 	{
 		cannedResponses.setWiki( 'Z10101', {
