@@ -23,10 +23,12 @@ router.post( '/', async function ( req, res ) {
 } );
 
 router.get( '/test/:data', async function ( req, res ) {
-	req.params.data.wikiUri = wikiUri;
-	req.params.data.evaluatorUri = evaluatorUri;
+	// Leaving this 'right' way to do it commented-out rather than dropping it so that
+	// we remember to switch to it when updating this pipeline -- JDF 2022-06-02.
+	// req.params.data.wikiUri = wikiUri;
+	// req.params.data.evaluatorUri = evaluatorUri;
 
-	const result = await getTestResults( req.params.data );
+	const result = await getTestResults( req.params.data, wikiUri, evaluatorUri );
 	res.json( result );
 } );
 

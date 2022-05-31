@@ -73,7 +73,11 @@ describe( 'performTest', function () { // eslint-disable-line no-undef
 		let result;
 		try {
 			// We're passing invalid JSON so this should throw rather than return.
-			result = await performTest( '{ zfunction: "{}", zimplementations: "[{]", ztesters: "[]", wikiUri: "http://thewiki", evaluatorUri: "http://theevaluator", doValidate: false' );
+			result = await performTest(
+				'{ zfunction: "{}", zimplementations: "[{]", ztesters: "[]", doValidate: false',
+				'http://thewiki',
+				'http://theevaluator'
+			);
 		} catch ( error ) {
 			// This is the expected behaviour
 			assert.ok( 'Yay' );
@@ -87,14 +91,16 @@ describe( 'performTest', function () { // eslint-disable-line no-undef
 		let result;
 		try {
 			// We're passing invalid JSON so this should throw rather than return.
-			result = await performTest( JSON.stringify( {
-				zfunction: '{}',
-				zimplementations: '[{]',
-				ztesters: '[]',
-				wikiUri: 'http://thewiki',
-				evaluatorUri: 'http://theevaluator',
-				doValidate: false
-			} ) );
+			result = await performTest(
+				JSON.stringify( {
+					zfunction: '{}',
+					zimplementations: '[{]',
+					ztesters: '[]',
+					doValidate: false
+				} ),
+				'http://thewiki',
+				'http://theevaluator'
+			);
 		} catch ( error ) {
 			// This is the expected behaviour
 			assert.ok( 'Yay' );
@@ -122,14 +128,16 @@ describe( 'performTest', function () { // eslint-disable-line no-undef
 			Z2K2: readJSON( 'test/features/v1/test_data/Z10011.json' )
 		} );
 
-		const result = await performTest( JSON.stringify( {
-			zfunction: 'Z10006',
-			zimplementations: '[]',
-			ztesters: '[]',
-			wikiUri: 'http://thewiki',
-			evaluatorUri: 'http://theevaluator',
-			doValidate: false
-		} ) );
+		const result = await performTest(
+			JSON.stringify( {
+				zfunction: 'Z10006',
+				zimplementations: '[]',
+				ztesters: '[]',
+				doValidate: false
+			} ),
+			'http://thewiki',
+			'http://theevaluator'
+		);
 
 		delete result[ 0 ].duration;
 

@@ -26,13 +26,11 @@ function parse( str ) {
 	}
 }
 
-async function getTestResults( data ) {
+async function getTestResults( data, wikiUri, evaluatorUri ) {
 	const {
 		zfunction,
 		zimplementations,
 		ztesters,
-		wikiUri,
-		evaluatorUri,
 		doValidate
 	} = parse( data );
 
