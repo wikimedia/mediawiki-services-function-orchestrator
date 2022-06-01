@@ -10,7 +10,6 @@ const {
 	validatesAsType,
 	validatesAsReference
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const fs = require( 'fs' );
@@ -420,17 +419,16 @@ async function BUILTIN_SCHEMA_VALIDATOR_(
 	quotedObject, quotedType, invariants, scope ) {
 	// TODO (T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
 	const Z1 = quotedObject.Z99K1;
-	const Z4 = ( await resolveFunctionCallsAndReferences(
-		quotedType.Z99K1, invariants, scope,
-		/* originalObject= */null, /* key= */null, /* ignoreList= */null,
-		/* resolveInternals= */ false ) ).Z22K1;
+	const Z4 = ( await ( quotedType.Z99K1.resolve(
+		invariants, scope, /* originalObject= */null, /* key= */null, /* ignoreList= */null,
+		/* resolveInternals= */ false ) ) ).Z22K1;
 
 	// Ensure all internal type references are resolved.
 	// TODO (T297904): Also need to resolve generic types.
 	await traverseZList( Z4.Z4K2, async function ( Z3Tail ) {
-		await mutate(
-			Z3Tail, [ 'K1', 'Z3K1' ], invariants, scope,
-			/* ignoreList= */null, /* resolveInternals= */false );
+		await ( Z3Tail.resolveKey(
+			[ 'K1', 'Z3K1' ], invariants, scope,
+			/* ignoreList= */null, /* resolveInternals= */false ) );
 	} );
 	const theSchema = await createSchema( { Z1K1: Z4.asJSON() } );
 
@@ -596,10 +594,9 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants, scope ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
 	const Z11s = utils.convertZListToArray( Z1.Z12K1 );
-	const languages = await Promise.all( Z11s.map( async ( Z11 ) => await mutate(
-		Z11,
+	const languages = await Promise.all( Z11s.map( async ( Z11 ) => await ( Z11.resolveKey(
 		[ 'Z11K1', 'Z60K1', 'Z6K1' ],
-		invariants, scope ).Z22K1 ) );
+		invariants, scope ).Z22K1 ) ) );
 
 	const seen = new Set();
 	for ( let i = 0; i < languages.length; ++i ) {

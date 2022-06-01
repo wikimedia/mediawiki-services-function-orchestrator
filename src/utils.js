@@ -14,7 +14,6 @@ const { isUserDefined, getHead, getTail, makeMappedResultEnvelope, makeVoid, isV
 const normalFactory = SchemaFactory.NORMAL();
 const Z6Validator = normalFactory.create( 'Z6_literal' );
 const Z9Validator = normalFactory.create( 'Z9_literal' );
-const { ZWrapper } = require( './ZWrapper' );
 
 /**
  * Determines whether argument is a Z6 or Z9. These two types' Z1K1s are
@@ -25,6 +24,7 @@ const { ZWrapper } = require( './ZWrapper' );
  * @return {bool} true if Z1 validates as either Z6 or Z7
  */
 async function isRefOrString( Z1 ) {
+	const { ZWrapper } = require( './ZWrapper' );
 	if ( Z1 instanceof ZWrapper ) {
 		Z1 = Z1.asJSON();
 	}
@@ -35,6 +35,7 @@ async function isRefOrString( Z1 ) {
 }
 
 async function createZObjectKey( ZObject ) {
+	const { ZWrapper } = require( './ZWrapper' );
 	if ( ZObject instanceof ZWrapper ) {
 		ZObject = ZObject.asJSON();
 	}
@@ -45,6 +46,7 @@ async function createSchema( Z1 ) {
 	// TODO (T302032): Use function-schemata version of findIdentity to improve
 	// type inference here.
 	let Z1K1 = Z1.Z1K1;
+	const { ZWrapper } = require( './ZWrapper' );
 	if ( Z1K1 instanceof ZWrapper ) {
 		Z1K1 = Z1K1.asJSON();
 	}
@@ -87,6 +89,7 @@ async function isGenericType( Z1 ) {
 	// TODO (T296658): Use the GENERIC schema.
 	try {
 		let Z1K1 = Z1.Z1K1;
+		const { ZWrapper } = require( './ZWrapper' );
 		if ( Z1 instanceof ZWrapper ) {
 			Z1K1 = Z1.asJSON().Z1K1;
 		}
@@ -278,6 +281,7 @@ async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = tr
 }
 
 function quoteZObject( ZObject ) {
+	const { ZWrapper } = require( './ZWrapper' );
 	return ZWrapper.create( {
 		Z1K1: {
 			Z1K1: 'Z9',
@@ -288,6 +292,7 @@ function quoteZObject( ZObject ) {
 }
 
 function makeWrappedResultEnvelope( ...args ) {
+	const { ZWrapper } = require( './ZWrapper' );
 	return ZWrapper.create( makeMappedResultEnvelope( ...args ) );
 }
 

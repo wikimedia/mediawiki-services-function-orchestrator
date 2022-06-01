@@ -5,27 +5,41 @@ const { ZWrapper } = require( '../../../src/ZWrapper' );
 
 describe( 'ZWrapper test', function () { // eslint-disable-line no-undef
 
-	it( 'ZWrapper class string construction', async () => { // eslint-disable-line no-undef
+	it( 'ZWrapper class string construction', () => { // eslint-disable-line no-undef
 		const stringIsNotAZWrapper = ZWrapper.create( 'Hello I am a test string' );
 
 		assert.deepEqual( stringIsNotAZWrapper, 'Hello I am a test string' );
 	} );
 
-	it( 'ZWrapper class construction', async () => { // eslint-disable-line no-undef
-		let keyMap;
+	it( 'ZWrapper class construction', () => { // eslint-disable-line no-undef
+		const emptyObject = {};
+		const emptyZWrapper = ZWrapper.create( emptyObject );
+		assert.deepEqual( emptyZWrapper.asJSON(), emptyObject );
+		assert.deepEqual( new Set( emptyZWrapper.keys() ), new Set() );
 
-		const emptyZWrapper = ZWrapper.create( {} );
-		assert.deepEqual( emptyZWrapper.asJSON(), {} );
+		const aReference = { Z1K1: 'Z9', Z9K1: 'Z9' };
+		const aReferenceZWrapper = ZWrapper.create( aReference );
+		assert.deepEqual( aReferenceZWrapper.asJSON(), aReference );
+		assert.deepEqual( new Set( aReferenceZWrapper.keys() ), new Set( [ 'Z1K1', 'Z9K1' ] ) );
+		assert.deepEqual( aReferenceZWrapper.Z1K1, 'Z9' );
+	} );
 
-		keyMap = emptyZWrapper.names_;
-		assert.deepEqual( keyMap.size, 0 );
+	it( 'ZWrapper resolution', async () => { // eslint-disable-line no-undef
+		const theTrueTrue = {
+			Z1K1: {
+				Z1K1: 'Z9',
+				Z9K1: 'Z40'
+			},
+			Z40K1: {
+				Z1K1: 'Z9',
+				Z9K1: 'Z41'
+			}
+		};
+		const georgieWrapper = ZWrapper.create( theTrueTrue );
+		assert.deepEqual( georgieWrapper.original_.get( 'Z1K1' ).asJSON(), theTrueTrue.Z1K1 );
+		assert.deepEqual( georgieWrapper.resolved_.has( 'Z1K1' ), false );
 
-		const emptyListZWrapper = ZWrapper.create( { Z1K1: 'Z13' } );
-		assert.deepEqual( emptyListZWrapper.asJSON(), { Z1K1: 'Z13' } );
-
-		keyMap = emptyListZWrapper.names_;
-		assert.deepEqual( keyMap.size, 1 );
-		assert.ok( keyMap.has( 'Z1K1' ) );
-		assert.deepEqual( keyMap.get( 'Z1K1' ), 'Z13' );
+		await georgieWrapper.resolveKey( [ 'Z1K1' ], /* invariants= */ null );
+		assert.deepEqual( georgieWrapper.resolved_.get( 'Z1K1' ).asJSON(), theTrueTrue.Z1K1 );
 	} );
 } );
