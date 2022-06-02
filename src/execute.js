@@ -392,7 +392,7 @@ async function executeInternal(
 		implementations.push( Z14 );
 	}
 
-	if ( implementations === [] ) {
+	if ( implementations.length === 0 ) {
 		return makeWrappedResultEnvelope(
 			null,
 			normalError(
