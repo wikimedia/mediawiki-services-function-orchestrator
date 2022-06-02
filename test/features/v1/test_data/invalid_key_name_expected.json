@@ -1,18 +1,16 @@
-[
-	{
+{
+	"Z1K1": {
+		"Z1K1": "Z9",
+		"Z9K1": "Z5"
+	},
+	"Z5K1": {
 		"Z1K1": {
 			"Z1K1": "Z9",
-			"Z9K1": "Z5"
+			"Z9K1": "Z522"
 		},
-		"Z5K1": {
-			"Z1K1": {
-				"Z1K1": "Z9",
-				"Z9K1": "Z522"
-			},
-			"Z522K1": {
-				"Z1K1": "Z6",
-				"Z6K1": "Invalid key at index 1: string should start with Z803"
-			}
+		"Z522K1": {
+			"Z1K1": "Z6",
+			"Z6K1": "Invalid key at index 1: string should start with Z803"
 		}
 	}
-]
+}

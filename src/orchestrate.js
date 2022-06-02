@@ -2,10 +2,10 @@
 
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
-const { convertArrayToZList, makeMappedResultEnvelope,
-	maybeDowngradeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { makeMappedResultEnvelope, maybeDowngradeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
+const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
 const { containsError, isError, makeWrappedResultEnvelope, returnOnFirstError } = require( './utils.js' );
@@ -29,9 +29,14 @@ async function maybeValidate( zobject, doValidate, invariants ) {
 		const errors = (
 			await validate( zobject, invariants )
 		).map( ( errorWrapper ) => errorWrapper.asJSON() );
+
 		if ( errors.length > 0 ) {
-			// TODO (T296681): Wrap errors in a Z5.
-			return makeMappedResultEnvelope( null, await convertArrayToZList( errors ) );
+			return makeMappedResultEnvelope(
+				null,
+				errors.length === 1 ?
+					errors[ 0 ] :
+					ErrorFormatter.createZErrorList( errors )
+			);
 		}
 	}
 	return makeMappedResultEnvelope( zobject, null );
