@@ -1,7 +1,6 @@
 'use strict';
 
 const { execute } = require( './execute.js' );
-const { mutate } = require( './zobject.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { containsError, createSchema, createZObjectKey, quoteZObject } = require( './utils.js' );
@@ -73,7 +72,8 @@ async function runValidationFunction( Z8, invariants, scope, ...Z1s ) {
  * @return {Array} an array of Z5/Error
  */
 async function runTypeValidator( Z1, Z4, invariants, scope ) {
-	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
+	await ( Z4.resolveKey( [ 'Z4K3' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) );
+	const validationFunction = Z4.Z4K3;
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.
@@ -103,7 +103,8 @@ async function runTypeValidator( Z1, Z4, invariants, scope ) {
  * @return {Array} an array of Z5/Error
  */
 async function runTypeValidatorDynamic( Z1, Z4, invariants, scope ) {
-	const validationFunction = ( await mutate( Z4, [ 'Z4K3' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) ).Z22K1;
+	await ( Z4.resolveKey( [ 'Z4K3' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) );
+	const validationFunction = Z4.Z4K3;
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.

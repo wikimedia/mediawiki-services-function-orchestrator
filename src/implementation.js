@@ -2,7 +2,6 @@
 
 const builtins = require( './builtins.js' );
 const { containsError, traverseZList } = require( './utils.js' );
-const { mutate, resolveFunctionCallsAndReferences } = require( './zobject.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { convertArrayToZList, makeMappedResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
@@ -130,10 +129,10 @@ class Evaluated extends Implementation {
 		// to the function evaluator.
 		const Z7 = {};
 		Z7.Z1K1 = zobject.Z1K1.asJSON();
-		Z7.Z7K1 = (
-			await mutate( zobject, [ 'Z7K1' ], this.invariants_, this.scope_,
-			/* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ )
-		).Z22K1.asJSON();
+		Z7.Z7K1 = ( await ( zobject.Z7K1.resolve(
+			this.invariants_, this.scope_, /* ignoreList= */ null,
+			/* resolveInternals= */ true, this.doValidate_
+		) ) ).Z22K1.asJSON();
 		const Z8K4 = ZWrapper.create( await convertArrayToZList( [ this.Z14_.asJSON() ] ) );
 
 		const implementation = this;
@@ -141,17 +140,18 @@ class Evaluated extends Implementation {
 		// Implementation may need to be dereferenced.
 		await traverseZList( Z8K4, async function ( tail ) {
 			if ( tail.K1.Z14K3 !== undefined ) {
-				await mutate(
-					tail, [ 'K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.invariants_,
+				await ( tail.resolveKey(
+					[ 'K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.invariants_,
 					implementation.scope_, /* ignoreList= */ null,
-					/* resolveInternals= */ false, implementation.doValidate_ );
+					/* resolveInternals= */ false, implementation.doValidate_ ) );
 			}
 		} );
 		Z7.Z7K1.Z8K4 = Z8K4.asJSON();
 
 		// Return type may be a function call and must be resolved to allow for serialization.
-		const returnTypeEnvelope = await mutate( zobject, [ 'Z7K1', 'Z8K2' ], this.invariants_,
-			this.scope_, /* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ );
+		const returnTypeEnvelope = await (
+			zobject.resolveKey( [ 'Z7K1', 'Z8K2' ], this.invariants_, this.scope_,
+				/* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ ) );
 		if ( containsError( returnTypeEnvelope ) ) {
 			return returnTypeEnvelope;
 		}
@@ -193,10 +193,9 @@ class Composition extends Implementation {
 	}
 
 	async executeInternal() {
-		return await resolveFunctionCallsAndReferences(
-			this.composition_, this.invariants_, this.scope_,
-			/* originalObject= */ null, /* key= */ null, /* ignoreList= */ null,
-			/* resolveInternals= */ true, /* doValidate= */ this.doValidate_ );
+		return await this.composition_.resolve(
+			this.invariants_, this.scope_, /* ignoreList= */ null, /* resolveInternals= */ true,
+			/* doValidate= */ this.doValidate_ );
 	}
 
 }
