@@ -930,4 +930,14 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		);
 	}
 
+	{
+		const noScrubs = readJSON( './test/features/v1/test_data/no-implementations.json' );
+		test(
+			'no implementations',
+			noScrubs,
+			null,
+			readJSON( './test/features/v1/test_data/no-implementations-expected.json' )
+		);
+	}
+
 } );
