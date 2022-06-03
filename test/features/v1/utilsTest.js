@@ -1,15 +1,16 @@
 'use strict';
 
 const assert = require( '../../utils/assert.js' );
-const { generateError, makeResultEnvelopeAndMaybeCanonicalise, returnOnFirstError } = require( '../../../src/utils.js' );
+const { generateError, returnOnFirstError } = require( '../../../src/utils.js' );
+const { makeResultEnvelopeWithVoid } = require( '../../../function-schemata/javascript/src/utils.js' );
 
 describe( 'utils test', function () { // eslint-disable-line no-undef
 
-	const goodZ22 = makeResultEnvelopeAndMaybeCanonicalise(
+	const goodZ22 = makeResultEnvelopeWithVoid(
 		{ Z1K1: 'Z6', Z6K1: 'dull but reliable sigma string' }, null
 	);
 
-	const badZ22 = makeResultEnvelopeAndMaybeCanonicalise(
+	const badZ22 = makeResultEnvelopeWithVoid(
 		null, generateError( 'extremely exciting but morally flawed error string' )
 	);
 
@@ -31,7 +32,7 @@ describe( 'utils test', function () { // eslint-disable-line no-undef
 		const theFunction = ( Z22K1 ) => {
 			const result = { ...Z22K1 };
 			result.Z6K1 = 'very ' + result.Z6K1;
-			return makeResultEnvelopeAndMaybeCanonicalise( result, null );
+			return makeResultEnvelopeWithVoid( result, null );
 		};
 		const result = await returnOnFirstError(
 			goodZ22, [

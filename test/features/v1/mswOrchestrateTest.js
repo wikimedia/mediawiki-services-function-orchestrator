@@ -2,8 +2,7 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-const { makeMappedResultEnvelope, makeTrue, makeFalse, setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
-const utils = require( '../../../src/utils.js' );
+const { makeMappedResultEnvelope, makeResultEnvelopeWithVoid, makeTrue, makeFalse, setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
 const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
@@ -103,7 +102,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			assert.deepEqual( thrownError, null );
 			assert.deepEqual(
 				result,
-				utils.makeResultEnvelopeAndMaybeCanonicalise(
+				makeResultEnvelopeWithVoid(
 					output, error, /* canonical= */ true ),
 				name
 			);
