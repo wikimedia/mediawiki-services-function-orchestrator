@@ -7,8 +7,7 @@ const {
 	validatesAsReference,
 	ZObjectKeyFactory
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { isUserDefined, getHead, getTail, makeMappedResultEnvelope, makeVoid, isVoid,
-	isZMap, getZMapValue
+const { isUserDefined, getHead, getTail, makeMappedResultEnvelope, isVoid, isZMap, getZMapValue
 } = require( '../function-schemata/javascript/src/utils' );
 
 const normalFactory = SchemaFactory.NORMAL();
@@ -141,27 +140,6 @@ async function containsValue( pair ) {
 		( await validatesAsZObject( Z22K1 ) ).isValid() &&
 		!( isVoid( Z22K1 ) )
 	);
-}
-
-// TODO (T282891): Replace uses of this with upstream makeResultEnvelope
-// (which doesn't handle the third parameter)
-function makeResultEnvelopeAndMaybeCanonicalise(
-	goodResult = null, badResult = null, canonical = false
-) {
-	let Z1K1;
-	if ( canonical ) {
-		Z1K1 = 'Z22';
-	} else {
-		Z1K1 = {
-			Z1K1: 'Z9',
-			Z9K1: 'Z22'
-		};
-	}
-	return {
-		Z1K1: Z1K1,
-		Z22K1: goodResult === null ? makeVoid( canonical ) : goodResult,
-		Z22K2: badResult === null ? makeVoid( canonical ) : badResult
-	};
 }
 
 function makeBoolean( truthy = false, canonical = false ) {
@@ -306,7 +284,6 @@ module.exports = {
 	isGenericType,
 	isRefOrString,
 	makeBoolean,
-	makeResultEnvelopeAndMaybeCanonicalise,
 	makeWrappedResultEnvelope,
 	quoteZObject,
 	returnOnFirstError,

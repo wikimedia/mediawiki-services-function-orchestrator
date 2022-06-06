@@ -6,7 +6,7 @@ const assert = require( '../../utils/assert.js' );
 const Server = require( '../../utils/server.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
 const { getMissingZ5 } = require( '../../../function-schemata/javascript/test/testUtils.js' );
-const utils = require( '../../../src/utils.js' );
+const { makeResultEnvelopeWithVoid } = require( '../../../function-schemata/javascript/src/utils.js' );
 const { readJSON } = require( '../../utils/read-json.js' );
 
 describe( 'orchestration endpoint', function () { // eslint-disable-line no-undef
@@ -44,7 +44,7 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 			assert.contentType( result, 'application/json' );
 			assert.deepEqual(
 				result.body,
-				utils.makeResultEnvelopeAndMaybeCanonicalise(
+				makeResultEnvelopeWithVoid(
 					output, error, /* canonical= */ true
 				),
 				name
