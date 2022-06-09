@@ -420,8 +420,8 @@ async function BUILTIN_SCHEMA_VALIDATOR_(
 	// TODO (T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
 	const Z1 = quotedObject.Z99K1;
 	const Z4 = ( await ( quotedType.Z99K1.resolve(
-		invariants, scope, /* originalObject= */null, /* key= */null, /* ignoreList= */null,
-		/* resolveInternals= */ false ) ) ).Z22K1;
+		invariants, scope, /* originalObject= */null, /* ignoreList= */null,
+		/* resolveInternals= */ false, /* doValidate= */ false ) ) ).Z22K1;
 
 	// Ensure all internal type references are resolved.
 	// TODO (T297904): Also need to resolve generic types.
