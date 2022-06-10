@@ -18,8 +18,15 @@ const MutationType = Object.freeze( {
 	GENERIC_INSTANCE: Symbol( 'GENERIC_INSTANCE' )
 } );
 
+/**
+ * Wrapper around ZObjects that should be used instead of bare ZObjects during evaluation.
+ *
+ * The wrapper keeps track of the scope under which the object should be evaluated, and caches
+ * the results of resolving subobjects for future use.
+ */
 class ZWrapper {
 
+	// Private. Use {@link ZWrapper#create} instead.
 	constructor() {
 		this.original_ = new Map();
 		this.resolved_ = new Map();
@@ -27,6 +34,10 @@ class ZWrapper {
 		this.scope_ = null;
 	}
 
+	// Creates an equivalent ZWrapper representation for the given ZObject and its subobjects.
+	// The resulting ZWrapper has the same fields as the ZObject, each of which is itself a
+	// ZWrapper, and so on.
+	// TODO(T309635): We should probably always provide the scope when creating a ZWrapper.
 	static create( zobjectJSON ) {
 		if ( isString( zobjectJSON ) || zobjectJSON instanceof ZWrapper ) {
 			return zobjectJSON;
@@ -179,6 +190,21 @@ class ZWrapper {
 		return resultPair;
 	}
 
+	/**
+	 * Repeatedly evaluates the top-level object according to its evaluation rules.
+	 *
+	 * The returned object does not have any evaluation rule that applies to it (i.e. it is not a
+	 * reference, argument reference, function call, etc.) but the same is not true for its
+	 * subobjects; they should be resolved separately. Moreover, it is wrapped in a result envelope
+	 * to indicate any errors.
+	 *
+	 * @param {Invariants} invariants
+	 * @param {Frame} scope Doesn't seem needed since the scope is attached to the zobject?
+	 * @param {Set(MutationType)} ignoreList
+	 * @param {boolean} resolveInternals
+	 * @param {boolean} doValidate
+	 * @return {ZWrapper} A result envelope zobject representing the result.
+	 */
 	async resolve(
 		invariants, scope = null, ignoreList = null, resolveInternals = true, doValidate = true
 	) {
@@ -197,6 +223,23 @@ class ZWrapper {
 			invariants, scope, ignoreList, resolveInternals, doValidate );
 	}
 
+	/**
+	 * Recursively traverses and resolves the current object along the given keys, caching the
+	 * results for future calls.
+	 *
+	 * The returned object does not have any evaluation rule that applies to it (i.e. it is not a
+	 * reference, argument reference, function call, etc.) but the same is not true for its
+	 * subobjects; they should be resolved separately. Moreover, it is wrapped in a result envelope
+	 * to indicate any errors.
+	 *
+	 * @param {Array(string)} keys Path of subobjects to resolve
+	 * @param {Invariants} invariants
+	 * @param {Frame} scope Doesn't seem needed since the scope is attached to the zobject?
+	 * @param {Set(MutationType)} ignoreList
+	 * @param {booleanl} resolveInternals
+	 * @param {boolean} doValidate
+	 * @return {ZWrapper} A result envelope zobject representing the result.
+	 */
 	async resolveKey(
 		keys, invariants, scope = null, ignoreList = null,
 		resolveInternals = true, doValidate = true ) {

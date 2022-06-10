@@ -339,6 +339,18 @@ async function validateReturnType( result, zobject, invariants, scope ) {
 	return result;
 }
 
+/**
+ * Same as {@link execute} but assumes a new frame has already been created in the scope and does
+ * not recursively resolve the subobjects.
+ *
+ * @param {ZWrapper} zobject
+ * @param {Invariants} invariants
+ * @param {Frame} scope
+ * @param {boolean} doValidate
+ * @param {ImplementationSelector} implementationSelector
+ * @param {boolean} resolveInternals
+ * @return {ZWrapper}
+ */
 async function executeInternal(
 	zobject, invariants, scope, doValidate = true,
 	implementationSelector = null, resolveInternals = true ) {
@@ -494,10 +506,10 @@ async function resolveDanglingReferences( zobject, invariants, scope ) {
 }
 
 /**
- * Accepts a function call, retrieves the appropriate implementation, and tries
- * to execute with supplied arguments.
+ * Given ZWrapper representing a function call ZObject, resolves the function, selects an
+ * implementation, and executes it with the supplied arguments.
  *
- * @param {Object} zobject object describing a function call
+ * @param {ZWrapper} zobject object describing a function call
  * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @param {Frame} oldScope current variable bindings
  * @param {boolean} doValidate whether to validate types of arguments and return value
@@ -505,7 +517,7 @@ async function resolveDanglingReferences( zobject, invariants, scope ) {
  * @param {boolean} resolveInternals if false, will evaluate typed lists via shortcut
  *      and will not validate attributes of Z7s
  * @param {boolean} topLevel whether this is the top-level Z7 sent to the orchestrator
- * @return {Object} result of executing function call
+ * @return {ZWrapper} result of executing function call
  */
 execute = async function (
 	zobject, invariants, oldScope = null, doValidate = true,
