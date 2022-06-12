@@ -2,7 +2,8 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-const { makeMappedResultEnvelope, makeResultEnvelopeWithVoid, makeTrue, makeFalse, setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
+const { makeMappedResultEnvelope, makeTrue, makeFalse, setZMapValue, getError } =
+	require( '../../../function-schemata/javascript/src/utils.js' );
 const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
@@ -85,12 +86,9 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			doValidate: true
 		};
 		it( 'orchestrate msw: ' + name, async () => { // eslint-disable-line no-undef
-			if ( output !== null ) {
-				output = ( await canonicalize( output, /* withVoid= */ true ) ).Z22K1;
-			}
-			if ( error !== null ) {
-				error = ( await canonicalize( error, /* withVoid= */ true ) ).Z22K1;
-			}
+			const noncanonical = makeMappedResultEnvelope( output, error );
+			const expected =
+				( await canonicalize( noncanonical, /* withVoid= */ true, false ) ).Z22K1;
 			let result = {};
 			let thrownError = null;
 			try {
@@ -100,12 +98,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 				thrownError = err;
 			}
 			assert.deepEqual( thrownError, null );
-			assert.deepEqual(
-				result,
-				makeResultEnvelopeWithVoid(
-					output, error, /* canonical= */ true ),
-				name
-			);
+			assert.deepEqual( result.Z22K1, expected.Z22K1, name );
+			assert.deepEqual( getError( result, false ), getError( expected, false ), name );
 		} );
 	};
 
@@ -326,7 +320,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			readJSON( './test/features/v1/test_data/Z22-map-result-only.json' ),
 			null );
 		test(
-			/* name */ 'evaluated function call, result and simple map',
+			/* name */ 'evaluated function call, result and empty map',
 			/* zobject */ readJSON( './test/features/v1/test_data/evaluated-map-result-only.json' ),
 			/* output */ { Z1K1: 'Z6', Z6K1: '13' },
 			/* error */ null

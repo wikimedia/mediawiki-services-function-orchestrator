@@ -6,7 +6,7 @@ const assert = require( '../../utils/assert.js' );
 const Server = require( '../../utils/server.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
 const { getMissingZ5 } = require( '../../../function-schemata/javascript/test/testUtils.js' );
-const { makeResultEnvelopeWithVoid } = require( '../../../function-schemata/javascript/src/utils.js' );
+const { makeMappedResultEnvelope, getError } = require( '../../../function-schemata/javascript/src/utils.js' );
 const { readJSON } = require( '../../utils/read-json.js' );
 
 describe( 'orchestration endpoint', function () { // eslint-disable-line no-undef
@@ -27,12 +27,9 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 
 	const testFunctionCall = function ( name, input, output = null, error = null ) {
 		it( 'orchestration endpoint: ' + name, async function () { // eslint-disable-line no-undef
-			if ( output !== null ) {
-				output = ( await canonicalize( output, /* withVoid= */ true ) ).Z22K1;
-			}
-			if ( error !== null ) {
-				error = ( await canonicalize( error, /* withVoid= */ true ) ).Z22K1;
-			}
+			const noncanonical = makeMappedResultEnvelope( output, error );
+			const expected =
+				( await canonicalize( noncanonical, /* withVoid= */ true, false ) ).Z22K1;
 			const result = await preq.post( {
 				uri: uri,
 				headers: {
@@ -42,13 +39,9 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 			} );
 			assert.status( result, 200 );
 			assert.contentType( result, 'application/json' );
-			assert.deepEqual(
-				result.body,
-				makeResultEnvelopeWithVoid(
-					output, error, /* canonical= */ true
-				),
-				name
-			);
+			const actual = result.body;
+			assert.deepEqual( actual.Z22K1, expected.Z22K1, name );
+			assert.deepEqual( getError( actual, false ), getError( expected, false ), name );
 		} );
 	};
 
