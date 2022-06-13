@@ -9,6 +9,7 @@ const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
 const { readJSON, readZObjectsFromDirectory } = require( '../../utils/read-json.js' );
 const { normalError, error } = require( '../../../function-schemata/javascript/src/error.js' );
+const { makeVoid } = require( '../../../function-schemata/javascript/src/utils' );
 
 class Canned {
 
@@ -86,9 +87,16 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			doValidate: true
 		};
 		it( 'orchestrate msw: ' + name, async () => { // eslint-disable-line no-undef
-			const noncanonical = makeMappedResultEnvelope( output, error );
-			const expected =
-				( await canonicalize( noncanonical, /* withVoid= */ true, false ) ).Z22K1;
+			if ( output === null ) {
+				output = makeVoid( /* canonical */ true );
+			} else {
+				output = ( await canonicalize( output, /* withVoid= */ true ) ).Z22K1;
+			}
+			if ( error === null ) {
+				error = makeVoid( /* canonical */ true );
+			} else {
+				error = ( await canonicalize( error, /* withVoid= */ true ) ).Z22K1;
+			}
 			let result = {};
 			let thrownError = null;
 			try {
@@ -98,8 +106,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 				thrownError = err;
 			}
 			assert.deepEqual( thrownError, null );
-			assert.deepEqual( result.Z22K1, expected.Z22K1, name );
-			assert.deepEqual( getError( result, false ), getError( expected, false ), name );
+			assert.deepEqual( result.Z22K1, output, name );
+			assert.deepEqual( getError( result, false ), error, name );
 		} );
 	};
 
