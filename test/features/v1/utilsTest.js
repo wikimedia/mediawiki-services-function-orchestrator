@@ -2,15 +2,15 @@
 
 const assert = require( '../../utils/assert.js' );
 const { generateError, returnOnFirstError } = require( '../../../src/utils.js' );
-const { makeResultEnvelopeWithVoid } = require( '../../../function-schemata/javascript/src/utils.js' );
+const { makeMappedResultEnvelope } = require( '../../../function-schemata/javascript/src/utils.js' );
 
 describe( 'utils test', function () { // eslint-disable-line no-undef
 
-	const goodZ22 = makeResultEnvelopeWithVoid(
+	const goodZ22 = makeMappedResultEnvelope(
 		{ Z1K1: 'Z6', Z6K1: 'dull but reliable sigma string' }, null
 	);
 
-	const badZ22 = makeResultEnvelopeWithVoid(
+	const badZ22 = makeMappedResultEnvelope(
 		null, generateError( 'extremely exciting but morally flawed error string' )
 	);
 
@@ -32,7 +32,7 @@ describe( 'utils test', function () { // eslint-disable-line no-undef
 		const theFunction = ( Z22K1 ) => {
 			const result = { ...Z22K1 };
 			result.Z6K1 = 'very ' + result.Z6K1;
-			return makeResultEnvelopeWithVoid( result, null );
+			return makeMappedResultEnvelope( result, null );
 		};
 		const result = await returnOnFirstError(
 			goodZ22, [
