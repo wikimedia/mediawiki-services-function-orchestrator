@@ -129,10 +129,14 @@ class Evaluated extends Implementation {
 		// to the function evaluator.
 		const Z7 = {};
 		Z7.Z1K1 = zobject.Z1K1.asJSON();
-		Z7.Z7K1 = ( await ( zobject.Z7K1.resolve(
+		await ( zobject.resolveKey(
+			[ 'Z7K1', 'Z8K2' ], this.invariants_, this.scope_, /* ignoreList= */ null,
+			/* resolveInternals= */ true, this.doValidate_ ) );
+		const Z7K1Envelope = await ( zobject.Z7K1.resolve(
 			this.invariants_, this.scope_, /* ignoreList= */ null,
-			/* resolveInternals= */ true, this.doValidate_
-		) ) ).Z22K1.asJSON();
+			/* resolveInternals= */ true, this.doValidate_ ) );
+		const Z7K1 = Z7K1Envelope.Z22K1;
+		Z7.Z7K1 = Z7K1.asJSON();
 		const Z8K4 = ZWrapper.create( await convertArrayToZList( [ this.Z14_.asJSON() ] ) );
 
 		const implementation = this;
@@ -141,7 +145,7 @@ class Evaluated extends Implementation {
 		await traverseZList( Z8K4, async function ( tail ) {
 			if ( tail.K1.Z14K3 !== undefined ) {
 				await ( tail.resolveKey(
-					[ 'K1', 'Z14K3', 'Z16K2', 'Z6K1' ], implementation.invariants_,
+					[ 'K1', 'Z14K3', 'Z16K2' ], implementation.invariants_,
 					implementation.scope_, /* ignoreList= */ null,
 					/* resolveInternals= */ false, implementation.doValidate_ ) );
 			}
@@ -149,9 +153,9 @@ class Evaluated extends Implementation {
 		Z7.Z7K1.Z8K4 = Z8K4.asJSON();
 
 		// Return type may be a function call and must be resolved to allow for serialization.
-		const returnTypeEnvelope = await (
-			zobject.resolveKey( [ 'Z7K1', 'Z8K2' ], this.invariants_, this.scope_,
-				/* ignoreList= */ null, /* resolveInternals= */ true, this.doValidate_ ) );
+		const returnTypeEnvelope = await ( Z7K1.Z8K2.resolve(
+			this.invariants_, this.scope_, /* ignoreList= */ null,
+			/* resolveInternals= */ true, this.doValidate_ ) );
 		if ( containsError( returnTypeEnvelope ) ) {
 			return returnTypeEnvelope;
 		}

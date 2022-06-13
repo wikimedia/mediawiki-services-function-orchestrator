@@ -244,17 +244,23 @@ class Frame extends BaseFrame {
  */
 async function getArgumentStates( zobject, invariants, scope, doValidate = true ) {
 	const argumentStates = [];
-	const Z7K1Envelope = await ( zobject.resolveKey( [ 'Z7K1' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
+	let Z7K1Envelope = await ( zobject.resolveKey(
+		[ 'Z7K1' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
 	if ( containsError( Z7K1Envelope ) ) {
 		return [ ArgumentState.ERROR( 'Could not dereference Z7K1' ) ];
 	}
-	const Z8K1Envelope = await ( zobject.Z7K1.resolveKey( [ 'Z8K1' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
+	Z7K1Envelope = await ( zobject.Z7K1.resolve(
+		invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
+	const Z7K1 = Z7K1Envelope.Z22K1;
+	const Z8K1Envelope = await ( Z7K1.resolveKey(
+		[ 'Z8K1' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
 	// This usually happens because dereferencing can't occur during validation
 	// (and is expected).
 	if ( containsError( Z8K1Envelope ) ) {
 		return [ ArgumentState.ERROR( 'Could not dereference Z8K1' ) ];
 	}
-	const Z8K1 = zobject.Z7K1.Z8K1;
+	// const Z8K1 = Z8K1Envelope.Z22K1;
+	const Z8K1 = Z7K1.Z8K1;
 	const foundKeys = new Set( zobject.keys() );
 	foundKeys.delete( 'Z1K1' );
 	foundKeys.delete( 'Z7K1' );
@@ -378,13 +384,18 @@ async function executeInternal(
 
 	// Ensure Z8 (Z7K1) is dereferenced. Also ensure implementations are
 	// dereferenced (Z8K4 and all elements thereof).
-	const Z8K4Envelope = await ( zobject.resolveKey(
-		[ 'Z7K1', 'Z8K4' ], invariants, scope, /* ignoreList= */ null,
-		/* resolveInternals= */ false, doValidate ) );
+	const Z7K1Envelope = await ( zobject.Z7K1.resolve(
+		invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
+	if ( containsError( Z7K1Envelope ) ) {
+		return Z7K1Envelope;
+	}
+	const Z7K1 = Z7K1Envelope.Z22K1;
+	const Z8K4Envelope = await ( Z7K1.Z8K4.resolve(
+		invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
 	if ( containsError( Z8K4Envelope ) ) {
 		return Z8K4Envelope;
 	}
-	const Z8K4 = zobject.Z7K1.Z8K4;
+	const Z8K4 = Z8K4Envelope.Z22K1;
 	const implementations = [];
 
 	for ( let Z14 of convertZListToArray( Z8K4 ) ) {
@@ -480,8 +491,8 @@ async function resolveDanglingReferences( zobject, invariants, scope ) {
 			oldValueJSON = oldValueJSON.asJSON();
 		}
 		if ( ( await validatesAsArgumentReference( oldValueJSON ) ).isValid() ) {
-			const valueEnvelope = await ( zobject.resolveKey(
-				[ key ], invariants, scope, /* ignoreList= */ new Set( [
+			const valueEnvelope = await ( oldValue.resolve(
+				invariants, scope, /* ignoreList= */ new Set( [
 					MutationType.REFERENCE, MutationType.FUNCTION_CALL,
 					MutationType.GENERIC_INSTANCE
 				] ), /* resolveInternals= */ false, /* doValidate= */ true ) );
@@ -490,7 +501,9 @@ async function resolveDanglingReferences( zobject, invariants, scope ) {
 			// and unassigned variables. This will constrain further the errors
 			// that we let slide here.
 			if ( !containsError( valueEnvelope ) ) {
-				if ( valueEnvelope.Z22K1 instanceof ZWrapper ) {
+				const newValue = valueEnvelope.Z22K1;
+				zobject.setName( key, newValue );
+				if ( newValue instanceof ZWrapper ) {
 					let newScope;
 					if ( oldValue instanceof ZWrapper ) {
 						newScope = oldValue.getScope();

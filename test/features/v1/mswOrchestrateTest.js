@@ -78,13 +78,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	} );
 
 	const test = function (
-		name, zobject, output = null, error = null, implementationSelector = null
+		name, zobject, output = null, error = null, implementationSelector = null, doValidate = true
 	) {
 		const input = {
 			zobject: zobject,
 			wikiUri: 'http://thewiki',
 			evaluatorUri: 'http://theevaluator',
-			doValidate: true
+			doValidate: doValidate
 		};
 		it( 'orchestrate msw: ' + name, async () => { // eslint-disable-line no-undef
 			if ( output === null ) {
@@ -603,6 +603,20 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			'map key can be Z6/String',
 			mapCall,
 			expected
+		);
+	}
+
+	{
+		const mapCall = readJSON( './test/features/v1/test_data/map-Z10043.json' );
+		test(
+			'map "echo" function to a list of items',
+			mapCall,
+			[
+				'acab'
+			],
+			/* error= */ null,
+			/* implementationSelector= */ null,
+			/* doValidate= */ false
 		);
 	}
 

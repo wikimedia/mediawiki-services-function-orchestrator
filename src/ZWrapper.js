@@ -67,9 +67,25 @@ class ZWrapper {
 		return this.original_.get( key );
 	}
 
+	setName( key, value ) {
+		this.resolved_.set( key, value );
+	}
+
 	// private
 	async resolveInternal_( invariants, scope, ignoreList, resolveInternals, doValidate ) {
+		if ( ignoreList === null ) {
+			ignoreList = new Set();
+		}
+		let innerScope = this.getScope();
+		if ( innerScope === null ) {
+			innerScope = new EmptyFrame();
+		}
+		if ( scope === null ) {
+			scope = new EmptyFrame();
+		}
+		scope = innerScope.mergedCopy( scope );
 		let nextObject = this;
+		let setObject = nextObject;
 		while ( true ) {
 			let nextJSON = nextObject;
 			if ( nextJSON instanceof ZWrapper ) {
@@ -83,7 +99,7 @@ class ZWrapper {
 						refKey, invariants, /* lazily= */ false, doValidate,
 						resolveInternals, ignoreList );
 					if ( dereferenced.state === 'ERROR' ) {
-						return makeWrappedResultEnvelope( null, dereferenced.error );
+						return [ makeWrappedResultEnvelope( null, dereferenced.error ), setObject ];
 					}
 					nextObject = dereferenced.argumentDict.argument;
 					continue;
@@ -98,6 +114,7 @@ class ZWrapper {
 					const refKey = nextObject.Z9K1;
 					const dereferenced = await invariants.resolver.dereference( [ refKey ] );
 					nextObject = dereferenced[ refKey ].Z2K2;
+					setObject = nextObject;
 					continue;
 				}
 			}
@@ -109,43 +126,47 @@ class ZWrapper {
 						nextObject, invariants, scope, doValidate,
 						/* implementationSelector= */ null, resolveInternals );
 					if ( containsError( Z22 ) ) {
-						return Z22;
+						return [ Z22, setObject ];
 					}
 					nextObject = Z22.Z22K1;
+					setObject = nextObject;
 					continue;
 				}
 			}
 			if ( await isGenericType( nextObject ) ) {
 				const executionResult = await nextObject.resolveKey( [ 'Z1K1' ], invariants, scope, ignoreList, resolveInternals, doValidate );
 				if ( containsError( executionResult ) ) {
-					return executionResult;
+					return [ executionResult, setObject ];
 				}
 				const Z4 = nextObject.Z1K1;
 				const typeStatus = await validatesAsType( Z4.asJSON() );
 				if ( !typeStatus.isValid() ) {
 					// TODO (T2966681): Return typeStatus.getZ5() as part of this result.
-					return makeWrappedResultEnvelope(
-						null,
-						normalError(
-							[ error.argument_type_mismatch ],
-							[ 'Generic type function did not return a Z4: ' + JSON.stringify( Z4 ) ] ) );
+					return [
+						makeWrappedResultEnvelope(
+							null,
+							normalError(
+								[ error.argument_type_mismatch ],
+								[ 'Generic type function did not return a Z4: ' + JSON.stringify( Z4 ) ] ) ),
+						setObject ];
 				}
 				continue;
 			}
 			break;
 		}
-		return makeWrappedResultEnvelope( nextObject, null );
+		return [ makeWrappedResultEnvelope( nextObject, null ), setObject ];
 	}
 
 	// private
 	async resolveKeyInternal_(
 		key, invariants, scope, ignoreList, resolveInternals, doValidate ) {
-
-		let newValue, resultPair;
+		let newValue, resultPair, setObject;
 		const currentValue = this.getName( key );
 		if ( currentValue instanceof ZWrapper ) {
-			resultPair = await ( currentValue.resolve(
+			const resultTuple = await ( currentValue.resolveInternal_(
 				invariants, scope, ignoreList, resolveInternals, doValidate ) );
+			resultPair = resultTuple[ 0 ];
+			setObject = resultTuple[ 1 ];
 			if ( containsError( resultPair ) ) {
 				return resultPair;
 			}
@@ -186,7 +207,9 @@ class ZWrapper {
 				}
 			}
 		}
-		this.resolved_.set( key, newValue );
+		if ( setObject !== null ) {
+			this.setName( key, setObject );
+		}
 		return resultPair;
 	}
 
@@ -208,19 +231,9 @@ class ZWrapper {
 	async resolve(
 		invariants, scope = null, ignoreList = null, resolveInternals = true, doValidate = true
 	) {
-		if ( ignoreList === null ) {
-			ignoreList = new Set();
-		}
-		let innerScope = this.getScope();
-		if ( innerScope === null ) {
-			innerScope = new EmptyFrame();
-		}
-		if ( scope === null ) {
-			scope = new EmptyFrame();
-		}
-		scope = innerScope.mergedCopy( scope );
-		return await this.resolveInternal_(
+		const result = await this.resolveInternal_(
 			invariants, scope, ignoreList, resolveInternals, doValidate );
+		return result[ 0 ];
 	}
 
 	/**
@@ -251,9 +264,6 @@ class ZWrapper {
 		if ( !( this.keys_.has( key ) ) ) {
 			// TODO (T309809): Return an error in this case.
 			return makeWrappedResultEnvelope( this, null );
-		}
-		if ( ignoreList === null ) {
-			ignoreList = new Set();
 		}
 		if ( !this.resolved_.has( key ) ) {
 			result = await this.resolveKeyInternal_(
