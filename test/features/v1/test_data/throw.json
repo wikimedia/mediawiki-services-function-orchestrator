@@ -5,7 +5,9 @@
 		"Z1K1": "Z5",
 		"Z5K1": {
 			"Z1K1": "Z50",
-			"Z50K1": []
+			"Z50K1": [
+				"Z1"
+			]
 		},
 		"Z5K2": "This is a real error; you're in trouble"
 	}

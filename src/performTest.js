@@ -4,10 +4,10 @@ const { ReferenceResolver } = require( './db.js' );
 const { generateError } = require( './utils' );
 const orchestrate = require( './orchestrate.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
-const { convertZListToArray } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToItemArray, convertItemArrayToZList } = require( '../function-schemata/javascript/src/utils.js' );
 
 async function resolveListOfReferences( listOfReferences, resolver ) {
-	const ZIDs = convertZListToArray( listOfReferences ).map( ( Z9 ) => ( Z9.Z9K1 ) );
+	const ZIDs = convertZListToItemArray( listOfReferences ).map( ( Z9 ) => ( Z9.Z9K1 ) );
 	const resolved = await resolver.dereference( ZIDs );
 	const result = [];
 	for ( const ZID of ZIDs ) {
@@ -113,7 +113,7 @@ async function getTestResults( data, wikiUri, evaluatorUri ) {
 		const validator = JSON.parse( JSON.stringify( zTester.Z2K2.Z20K3 ) );
 
 		test.Z7K1 = zFunction.Z2K2;
-		test.Z7K1.Z8K4 = [ implementation ];
+		test.Z7K1.Z8K4 = await convertItemArrayToZList( [ implementation ] );
 
 		const testResponse = ( await normalize(
 			await orchestrate( {
@@ -148,6 +148,9 @@ async function getTestResults( data, wikiUri, evaluatorUri ) {
 				const actual = testResult;
 				const expected = validator[ validatorFn + 'K2' ];
 
+				// FIXME (T311163): replace the hardcoded validationResponse.Z22K2
+				// with makeMappedResultEnvelope and a specific error type
+				// about test failure
 				validationResponse.Z22K2 = {
 					Z1K1: {
 						Z1K1: 'Z9',

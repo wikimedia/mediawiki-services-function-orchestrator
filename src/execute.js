@@ -8,7 +8,7 @@ const { containsError, containsValue, createZObjectKey, isRefOrString, makeWrapp
 const { MutationType, ZWrapper } = require( './ZWrapper' );
 const { resolveListType } = require( './builtins.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
-const { convertZListToArray, getError } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToItemArray, getError } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsArgumentReference, validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
 
 let execute = null;
@@ -264,7 +264,7 @@ async function getArgumentStates( zobject, invariants, scope, doValidate = true 
 	const foundKeys = new Set( zobject.keys() );
 	foundKeys.delete( 'Z1K1' );
 	foundKeys.delete( 'Z7K1' );
-	for ( const Z17 of convertZListToArray( Z8K1 ) ) {
+	for ( const Z17 of convertZListToItemArray( Z8K1 ) ) {
 		const argumentDict = {};
 		await ( Z17.resolveKey(
 			[ 'Z17K2' ], invariants, scope,
@@ -302,6 +302,8 @@ async function getArgumentStates( zobject, invariants, scope, doValidate = true 
 
 /**
  * Ensure that result of a function call comports with declared type.
+ *
+ * FIXME (T311055): validateReturn might require normal form. Check and document.
  *
  * @param {Object} result
  * @param {Object} zobject
@@ -398,7 +400,7 @@ async function executeInternal(
 	const Z8K4 = Z8K4Envelope.Z22K1;
 	const implementations = [];
 
-	for ( let Z14 of convertZListToArray( Z8K4 ) ) {
+	for ( let Z14 of convertZListToItemArray( Z8K4 ) ) {
 		Z14 = ( await ( Z14.resolve(
 			invariants, scope, /* ignoreList= */null, /* resolveInternals= */ false, doValidate
 		) ) ).Z22K1;

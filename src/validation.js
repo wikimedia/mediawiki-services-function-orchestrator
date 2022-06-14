@@ -6,7 +6,7 @@ const { ZWrapper } = require( './ZWrapper' );
 const { containsError, createSchema, createZObjectKey, quoteZObject } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
-const { convertZListToArray, isString, makeMappedResultEnvelope, getError } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToItemArray, isString, makeMappedResultEnvelope, getError } = require( '../function-schemata/javascript/src/utils.js' );
 
 const validators = new Map();
 
@@ -37,7 +37,7 @@ async function getSchemaValidator( Z1 ) {
 function createValidatorZ7( Z8, ...Z1s ) {
 	// throw new Error('nope');
 	// Z8 = Z8.asJSON();
-	const argumentDeclarations = convertZListToArray( Z8.Z8K1 );
+	const argumentDeclarations = convertZListToItemArray( Z8.Z8K1 );
 	if ( argumentDeclarations.length !== Z1s.length ) {
 		// TODO (T2926668): Call BUILTIN_FUNCTION_CALL_VALIDATOR_ on result to
 		// avoid argument mismatches.
@@ -232,7 +232,7 @@ async function validate( zobject, invariants ) {
 
 			// if this is a Z509/Multiple errors it will be flattened
 			if ( error.Z5K1.Z9K1 === 'Z509' ) {
-				errors.push.apply( errors, convertZListToArray( error.Z5K2.Z509K1 ) );
+				errors.push.apply( errors, convertZListToItemArray( error.Z5K2.Z509K1 ) );
 			} else {
 				errors.push( error );
 			}

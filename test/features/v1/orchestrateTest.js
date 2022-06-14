@@ -47,7 +47,7 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 			assert.status( result, 200 );
 			assert.contentType( result, 'application/json' );
 			assert.deepEqual( result.body.Z22K1, output, name );
-			assert.deepEqual( getError( result.body, false ), error, name );
+			assert.deepEqual( getError( result.body ), error, name );
 		} );
 	};
 
@@ -310,12 +310,6 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 	);
 
 	testFunctionCall(
-		'function call (short form) for Z811/Head with non-empty Z10',
-		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z811_Z10_explicit.json' ) },
-		{ Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
-	);
-
-	testFunctionCall(
 		'function call (short form) for Z811/Head with non-empty Z881',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z811_full_Z881.json' ) },
 		{ Z1K1: 'Z6', Z6K1: 'i met a traveler from an antique land' }
@@ -357,7 +351,7 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 	testFunctionCall(
 		'function call (short form) for Z812/Tail with non-empty List',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z812.json' ) },
-		[ 'specific ZObject' ]
+		[ 'Z6', 'specific ZObject' ]
 	);
 
 	testFunctionCall(
@@ -376,7 +370,7 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 	testFunctionCall(
 		'function call for Z812/Tail with reference to Z912 and non-empty List',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z912.json' ) },
-		[ 'specific ZObject' ]
+		[ 'Z6', 'specific ZObject' ]
 	);
 
 	testFunctionCall(

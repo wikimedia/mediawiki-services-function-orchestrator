@@ -147,7 +147,7 @@ class ZWrapper {
 							null,
 							normalError(
 								[ error.argument_type_mismatch ],
-								[ 'Generic type function did not return a Z4: ' + JSON.stringify( Z4 ) ] ) ),
+								[ 'Generic type function did not return a Z4: ' + JSON.stringify( Z4.asJSON() ) ] ) ),
 						setObject ];
 				}
 				continue;

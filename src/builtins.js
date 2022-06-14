@@ -89,12 +89,13 @@ function Z9For( typeZID ) {
  * wrapping the label (in JSON form, not ZWrapper)
  */
 async function Z12For( name ) {
+	const typeZ11 = { Z1K1: 'Z9', Z9K1: 'Z11' };
 	return {
 		Z1K1: {
 			Z1K1: 'Z9',
 			Z9K1: 'Z12'
 		},
-		Z12K1: await ( utils.convertArrayToZList )( [
+		Z12K1: await ( utils.convertArrayToKnownTypedList )( [
 			{
 				Z1K1: {
 					Z1K1: 'Z9',
@@ -109,7 +110,7 @@ async function Z12For( name ) {
 					Z6K1: name
 				}
 			}
-		] )
+		], typeZ11 )
 	};
 }
 
@@ -146,7 +147,7 @@ function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
 }
 
 async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
-	const keyrefs = utils.convertZListToArray( Z39s );
+	const keyrefs = utils.convertZListToItemArray( Z39s );
 	const pairType = {
 		Z1K1: Z9For( 'Z7' ),
 		Z7K1: Z9For( 'Z882' ),
@@ -174,7 +175,7 @@ async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
 			[ 'Object did not contain key(s): ' + missing ] );
 		return makeMappedResultEnvelope( null, badResult );
 	} else {
-		const pairList = await utils.convertArrayToZList( pairArray );
+		const pairList = await utils.convertArrayToKnownTypedList( pairArray, pairType );
 		const mapType = {
 			Z1K1: Z9For( 'Z7' ),
 			Z7K1: Z9For( 'Z883' ),
@@ -220,7 +221,7 @@ async function reifyRecursive( Z1 ) {
 			K2: value
 		} );
 	}
-	return await utils.convertArrayToZList( result );
+	return await utils.convertArrayToKnownTypedList( result, pairType );
 }
 
 async function BUILTIN_REIFY_( Z1 ) {
@@ -232,7 +233,7 @@ function abstractRecursive( ZList ) {
 		return ZList.Z6K1;
 	}
 	const result = {};
-	const arrayOfPairs = utils.convertZListToArray( ZList );
+	const arrayOfPairs = utils.convertZListToItemArray( ZList );
 	for ( const pair of arrayOfPairs ) {
 		const Z39 = pair.K1;
 		result[ Z39.Z39K1.Z6K1 ] = abstractRecursive( pair.K2 );
@@ -246,18 +247,20 @@ function BUILTIN_ABSTRACT_( ZList ) {
 	return makeMappedResultEnvelope( abstractRecursive( ZList ), null );
 }
 
+// FIXME (T311164): Remove Z10 leftovers
 async function BUILTIN_CONS_( Z1, Z10 ) {
 	let result;
 	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
-		result = await utils.convertArrayToZList( [ Z1 ] );
+		result = await utils.convertItemArrayToZList( [ Z1 ] );
 		result.Z10K2 = Z10;
 	} else {
-		result = await utils.convertArrayToZList( [ Z1 ] );
+		result = await utils.convertItemArrayToZList( [ Z1 ] );
 		result.K2 = Z10;
 	}
 	return makeMappedResultEnvelope( result, null );
 }
 
+// FIXME (T311164): Remove Z10 leftovers
 function BUILTIN_HEAD_( Z10 ) {
 	if ( utils.isEmptyZList( Z10 ) ) {
 		return makeMappedResultEnvelope(
@@ -274,6 +277,7 @@ function BUILTIN_HEAD_( Z10 ) {
 	return makeMappedResultEnvelope( Z10.K1, null );
 }
 
+// FIXME (T311164): Remove Z10 leftovers
 function BUILTIN_TAIL_( Z10 ) {
 	if ( utils.isEmptyZList( Z10 ) ) {
 		return makeMappedResultEnvelope(
@@ -290,6 +294,7 @@ function BUILTIN_TAIL_( Z10 ) {
 	return makeMappedResultEnvelope( Z10.K2, null );
 }
 
+// FIXME (T311164): Remove Z10 leftovers
 function BUILTIN_EMPTY_( Z10 ) {
 	let result;
 	if ( utils.isEmptyZList( Z10 ) ) {
@@ -352,13 +357,14 @@ function BUILTIN_EQUALS_STRING_( Z6_1, Z6_2 ) {
 
 async function stringToCharsInternal( characterArray ) {
 	const Z86Array = [];
+	const typeZ86 = { Z1K1: 'Z9', Z9K1: 'Z86' };
 	for ( const character of characterArray ) {
 		Z86Array.push( {
 			Z1K1: { Z1K1: 'Z9', Z9K1: 'Z86' },
 			Z86K1: { Z1K1: 'Z6', Z6K1: character }
 		} );
 	}
-	return await utils.convertArrayToZList( Z86Array );
+	return await utils.convertArrayToKnownTypedList( Z86Array, typeZ86 );
 }
 
 async function BUILTIN_STRING_TO_CHARS_( Z6 ) {
@@ -367,8 +373,9 @@ async function BUILTIN_STRING_TO_CHARS_( Z6 ) {
 		null );
 }
 
+// FIXME (T311164): Remove Z10 leftovers
 function charsToStringInternal( Z10 ) {
-	const Z10Array = utils.convertZListToArray( Z10 );
+	const Z10Array = utils.convertZListToItemArray( Z10 );
 	const result = [];
 	for ( const Z86 of Z10Array ) {
 		result.push( Z86.Z6K1 || Z86.Z86K1.Z6K1 );
@@ -376,6 +383,7 @@ function charsToStringInternal( Z10 ) {
 	return result;
 }
 
+// FIXME (T311164): Remove Z10 leftovers
 function BUILTIN_CHARS_TO_STRING_( Z10 ) {
 	// TODO (T294482): Validate input is a List(Z86).
 	return makeMappedResultEnvelope(
@@ -452,6 +460,8 @@ function BUILTIN_EMPTY_VALIDATOR_( Z1 ) {
  * Validates the keys of a normal Z10/List. This functions looks for duplicate or non-sequential
  * keys and keys that don't follow the expected format of (Z)?<identity>Kn.
  *
+ * FIXME (T311164): Remove references to Z10 in documentation and variable names
+ *
  * @param {Object} Z10 the Z10/List being validated.
  * @param {Function} key a function to get the key of a list element.
  * @param {string} identity the identity of the Z10's parent.
@@ -459,7 +469,7 @@ function BUILTIN_EMPTY_VALIDATOR_( Z1 ) {
  * @return {Object} a Z10/List of Z5/Error.
  */
 function arrayValidator( Z10, key, identity ) {
-	const keys = utils.convertZListToArray( Z10 ).map( key );
+	const keys = utils.convertZListToItemArray( Z10 ).map( key );
 	const messages = [];
 
 	const seen = new Set();
@@ -593,7 +603,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, invariants, scope ) {
 async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants, scope ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
-	const Z11s = utils.convertZListToArray( Z1.Z12K1 );
+	const Z11s = utils.convertZListToItemArray( Z1.Z12K1 );
 	const languages = await Promise.all( Z11s.map( async ( Z11 ) => await ( Z11.resolveKey(
 		[ 'Z11K1', 'Z60K1', 'Z6K1' ],
 		invariants, scope ).Z22K1 ) ) );
@@ -618,7 +628,7 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants, scope ) {
 function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_( Z99 ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
-	const Z31s = utils.convertZListToArray( Z1.Z32K1 );
+	const Z31s = utils.convertZListToItemArray( Z1.Z32K1 );
 	const languages = Z31s.map( ( Z31 ) => Z31.Z31K1.Z60K1.Z6K1 );
 
 	const seen = new Set();
@@ -646,6 +656,7 @@ async function resolveListType( typeZ4 ) {
 	if ( typeZ4 instanceof ZWrapper ) {
 		typeZ4 = typeZ4.asJSON();
 	}
+	const typeZ3 = { Z1K1: 'Z9', Z9K1: 'Z3' };
 	const itsMe = {
 		Z1K1: {
 			Z1K1: 'Z9',
@@ -663,10 +674,10 @@ async function resolveListType( typeZ4 ) {
 			Z9K1: 'Z4'
 		},
 		Z4K1: itsMe,
-		Z4K2: await utils.convertArrayToZList( [
+		Z4K2: await utils.convertArrayToKnownTypedList( [
 			Z3For( typeZ4, { Z1K1: 'Z6', Z6K1: 'K1' }, await Z12For( 'head' ) ),
 			Z3For( itsMe, { Z1K1: 'Z6', Z6K1: 'K2' }, await Z12For( 'tail' ) )
-		] ),
+		], typeZ3 ),
 		Z4K3: {
 			Z1K1: 'Z9',
 			Z9K1: 'Z831'
@@ -680,6 +691,7 @@ async function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
 }
 
 async function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
+	const typeZ3 = { Z1K1: 'Z9', Z9K1: 'Z3' };
 	const itsMe = {
 		Z1K1: {
 			Z1K1: 'Z9',
@@ -698,10 +710,10 @@ async function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 			Z9K1: 'Z4'
 		},
 		Z4K1: itsMe,
-		Z4K2: await utils.convertArrayToZList( [
+		Z4K2: await utils.convertArrayToKnownTypedList( [
 			Z3For( firstType, { Z1K1: 'Z6', Z6K1: 'K1' }, await Z12For( 'first' ) ),
 			Z3For( secondType, { Z1K1: 'Z6', Z6K1: 'K2' }, await Z12For( 'second' ) )
-		] ),
+		], typeZ3 ),
 		Z4K3: {
 			Z1K1: 'Z9',
 			Z9K1: 'Z831'
@@ -746,15 +758,16 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants, scope 
 	const listType = (
 		await execute( ZWrapper.create( listFunctionCall ), noEvaluator, null )
 	).Z22K1.asJSON();
+	const typeZ3 = { Z1K1: 'Z9', Z9K1: 'Z3' };
 	const Z4 = {
 		Z1K1: {
 			Z1K1: 'Z9',
 			Z9K1: 'Z4'
 		},
 		Z4K1: itsMe,
-		Z4K2: await utils.convertArrayToZList( [
+		Z4K2: await utils.convertArrayToKnownTypedList( [
 			Z3For( listType, { Z1K1: 'Z6', Z6K1: 'K1' }, await Z12For( 'elements' ) )
-		] ),
+		], typeZ3 ),
 		Z4K3: {
 			Z1K1: 'Z9',
 			Z9K1: 'Z831'
@@ -919,17 +932,19 @@ async function createArgument( ZType, argumentName ) {
 async function createZ8( identity, argumentList, returnType, builtinName ) {
 	return ( await normalize( {
 		Z1K1: 'Z8',
-		Z8K1: argumentList,
+		Z8K1: [].concat( [ 'Z17' ], argumentList ),
 		Z8K2: returnType,
 		Z8K3: [],
-		Z8K4: [ {
-			Z1K1: 'Z14',
-			Z14K1: identity,
-			Z14K4: {
-				Z1K1: 'Z6',
-				Z6K1: builtinName
-			}
-		} ],
+		Z8K4: [
+			'Z14',
+			{
+				Z1K1: 'Z14',
+				Z14K1: identity,
+				Z14K4: {
+					Z1K1: 'Z6',
+					Z6K1: builtinName
+				}
+			} ],
 		Z8K5: identity
 	}, /* generically= */true, /* withVoid= */ true ) ).Z22K1;
 }

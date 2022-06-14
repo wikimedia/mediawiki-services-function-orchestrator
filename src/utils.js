@@ -130,6 +130,10 @@ function containsError( envelope ) {
 
 /**
  * Determines whether a pair contains a value (i.e., a non-Void first element).
+ * The input pair should be in normal form.
+ *
+ * FIXME (T311055): containsValue might require normal form, as validateAsZObject
+ * is a normal validator. Check and document.
  *
  * @param {Object} pair a Z22
  * @return {bool} true if Z22K1 is not Z24 / Void; false otherwise

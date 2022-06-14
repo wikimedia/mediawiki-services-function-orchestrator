@@ -3,7 +3,7 @@
 const builtins = require( './builtins.js' );
 const { containsError, traverseZList } = require( './utils.js' );
 const { ZWrapper } = require( './ZWrapper' );
-const { convertArrayToZList, makeMappedResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertItemArrayToZList, makeMappedResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../function-schemata/javascript/src/utils' );
 
@@ -137,7 +137,7 @@ class Evaluated extends Implementation {
 			/* resolveInternals= */ true, this.doValidate_ ) );
 		const Z7K1 = Z7K1Envelope.Z22K1;
 		Z7.Z7K1 = Z7K1.asJSON();
-		const Z8K4 = ZWrapper.create( await convertArrayToZList( [ this.Z14_.asJSON() ] ) );
+		const Z8K4 = ZWrapper.create( await convertItemArrayToZList( [ this.Z14_.asJSON() ] ) );
 
 		const implementation = this;
 

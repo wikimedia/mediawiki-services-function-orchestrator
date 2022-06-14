@@ -2,6 +2,7 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
+const normalize = require( '../../../function-schemata/javascript/src/normalize.js' );
 const { makeMappedResultEnvelope, makeTrue, setZMapValue, getError } =
 	require( '../../../function-schemata/javascript/src/utils.js' );
 const { rest } = require( 'msw' );
@@ -28,10 +29,10 @@ class Canned {
 		this.dict_.wiki[ key ] = value;
 	}
 
-	setEvaluator( key, value, statusCode = 200 ) {
+	async setEvaluator( key, value, statusCode = 200 ) {
 		this.dict_.evaluator[ key ] = {
 			statusCode: statusCode,
-			value: value
+			value: ( await normalize( value ) ).Z22K1
 		};
 	}
 
@@ -71,7 +72,27 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	];
 	const mockServiceWorker = setupServer( ...restHandlers );
 
-	before( () => mockServiceWorker.listen() ); // eslint-disable-line no-undef
+	before( async () => { // eslint-disable-line no-undef
+		// Set evaluator response for test "evaluated function call"
+		await cannedResponses.setEvaluator( 'Z1000', makeMappedResultEnvelope( { Z1K1: 'Z6', Z6K1: '13' }, null ) );
+		// Set evaluator response for test "failed evaluated function call"
+		await cannedResponses.setEvaluator( 'Z420420', 'naw', 500 );
+		// Set evaluator response for test "evaluated function call, result and empty map"
+		await cannedResponses.setEvaluator( 'Z1001',
+			readJSON( './test/features/v1/test_data/Z22-map-result-only.json' ),
+			null );
+		// Set evaluator response for test "evaluated function call, result and simple map"
+		await cannedResponses.setEvaluator( 'Z1002',
+			readJSON( './test/features/v1/test_data/Z22-map-basic.json' ),
+			null );
+		// Set evaluator response for test "evaluated function call, void result"
+		const evaluatorResponse = readJSON( './test/features/v1/test_data/Z22-map-error.json' );
+		const errorTerm = normalError( [ error.not_wellformed_value ], [ 'Error placeholder' ] );
+		setZMapValue( evaluatorResponse.Z22K2, { Z1K1: 'Z6', Z6K1: 'errors' }, errorTerm );
+		await cannedResponses.setEvaluator( 'Z1003', evaluatorResponse, null );
+
+		return mockServiceWorker.listen();
+	} );
 
 	after( () => { // eslint-disable-line no-undef
 		return mockServiceWorker.resetHandlers();
@@ -97,7 +118,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			} else {
 				error = ( await canonicalize( error, /* withVoid= */ true ) ).Z22K1;
 			}
-
 			let result = {};
 			let thrownError = null;
 			try {
@@ -109,7 +129,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 			assert.isNull( thrownError, name + ' throws no execution/validation error' );
 			assert.deepEqual( result.Z22K1, output, name + ' returns the expected output, if any' );
-			assert.deepEqual( getError( result, false ), error, name + ' returns the expected error, if any' );
+			assert.deepEqual( getError( result ), error, name + ' returns the expected error, if any' );
 		} );
 	};
 
@@ -204,7 +224,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		const theFunctionCall = readJSON( './test/features/v1/test_data/composition-returns-type.json' );
 		const returnedType = readJSON( './test/features/v1/test_data/type-returned-by-composition.json' );
 		// Set the argument to the composition (which internally calls "echo").
-		theFunctionCall.Z7K1.Z8K4[ 0 ].Z14K2.Z801K1 = { ...returnedType };
+		theFunctionCall.Z7K1.Z8K4[ 1 ].Z14K2.Z801K1 = { ...returnedType };
 		// In the actual return value, the generic type will be expanded.
 		returnedType.Z4K1.Z7K1 = Z10122;
 		test(
@@ -300,7 +320,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setEvaluator( 'Z1000', makeMappedResultEnvelope( { Z1K1: 'Z6', Z6K1: '13' }, null ) );
 		test(
 			'evaluated function call',
 			readJSON( './test/features/v1/test_data/evaluated.json' ),
@@ -310,7 +329,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setEvaluator( 'Z420420', 'naw', 500 );
 		test(
 			'failed evaluated function call',
 			readJSON( './test/features/v1/test_data/evaluated-failed.json' ),
@@ -319,16 +337,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 				Z1K1: 'Z5',
 				Z5K1: {
 					Z1K1: 'Z507',
-					Z507K1: 'Function evaluation failed with status 500: "naw"'
+					Z507K1: 'Function evaluation failed with status 500: {"Z1K1":"Z6","Z6K1":"naw"}'
 				}
 			}
 		);
 	}
 
 	{
-		cannedResponses.setEvaluator( 'Z1001',
-			readJSON( './test/features/v1/test_data/Z22-map-result-only.json' ),
-			null );
 		test(
 			/* name */ 'evaluated function call, result and empty map',
 			/* zobject */ readJSON( './test/features/v1/test_data/evaluated-map-result-only.json' ),
@@ -338,9 +353,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setEvaluator( 'Z1002',
-			readJSON( './test/features/v1/test_data/Z22-map-basic.json' ),
-			null );
 		test(
 			/* name */ 'evaluated function call, result and simple map',
 			/* zobject */ readJSON( './test/features/v1/test_data/evaluated-map-basic.json' ),
@@ -350,10 +362,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		const evaluatorResponse = readJSON( './test/features/v1/test_data/Z22-map-error.json' );
-		const errorTerm = normalError( [ error.not_wellformed_value ], [ 'Error placeholder' ] );
-		setZMapValue( evaluatorResponse.Z22K2, { Z1K1: 'Z6', Z6K1: 'errors' }, errorTerm );
-		cannedResponses.setEvaluator( 'Z1003', evaluatorResponse, null );
 		test(
 			/* name */ 'evaluated function call, void result',
 			/* zobject */ readJSON( './test/features/v1/test_data/evaluated-map-error.json' ),
@@ -587,6 +595,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			'map "echo" function to a list of items',
 			mapCall,
 			[
+				'Z6',
 				'acab'
 			],
 			/* error= */ null,
@@ -843,6 +852,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 				Z100920K1: 'Z6'
 			},
 			Z4K2: [
+				'Z3',
 				{
 					Z1K1: 'Z3',
 					Z3K1: 'Z6',
@@ -851,7 +861,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 						Z6K1: 'K1'
 					},
 					Z3K3: {
-						Z12K1: [],
+						Z12K1: [ 'Z11' ],
 						Z1K1: 'Z12'
 					}
 				}
