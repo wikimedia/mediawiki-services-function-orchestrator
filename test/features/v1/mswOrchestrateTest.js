@@ -97,6 +97,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			} else {
 				error = ( await canonicalize( error, /* withVoid= */ true ) ).Z22K1;
 			}
+
 			let result = {};
 			let thrownError = null;
 			try {
@@ -105,9 +106,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 				console.trace();
 				thrownError = err;
 			}
-			assert.deepEqual( thrownError, null );
-			assert.deepEqual( result.Z22K1, output, name );
-			assert.deepEqual( getError( result, false ), error, name );
+
+			assert.isNull( thrownError, name + ' throws no execution/validation error' );
+			assert.deepEqual( result.Z22K1, output, name + ' returns the expected output, if any' );
+			assert.deepEqual( getError( result, false ), error, name + ' returns the expected error, if any' );
 		} );
 	};
 
