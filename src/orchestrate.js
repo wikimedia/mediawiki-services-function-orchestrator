@@ -2,7 +2,7 @@
 
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
-const { makeMappedResultEnvelope, maybeDowngradeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { makeMappedResultEnvelope, setMetadataValue, maybeDowngradeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
 const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
@@ -73,6 +73,7 @@ async function Z7OrError( zobject ) {
  * @return {Object} a Z22 containing the result of function evaluation or a Z5
  */
 async function orchestrate( input, implementationSelector = null ) {
+	const startTime = new Date();
 
 	let zobject = input.zobject;
 	if ( zobject === undefined ) {
@@ -116,6 +117,15 @@ async function orchestrate( input, implementationSelector = null ) {
 	if ( currentPair instanceof ZWrapper ) {
 		currentPair = currentPair.asJSON();
 	}
+
+	const endTime = new Date();
+	const duration = endTime.getTime() - startTime.getTime();
+	const startTimeStr = startTime.toISOString();
+	const endTimeStr = endTime.toISOString();
+	const durationStr = duration + 'ms';
+	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationStartTime' }, { Z1K1: 'Z6', Z6K1: startTimeStr } );
+	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationEndTime' }, { Z1K1: 'Z6', Z6K1: endTimeStr } );
+	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationDuration' }, { Z1K1: 'Z6', Z6K1: durationStr } );
 
 	currentPair = maybeDowngradeResultEnvelope( currentPair );
 
