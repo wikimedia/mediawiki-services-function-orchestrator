@@ -2,7 +2,7 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-const { makeMappedResultEnvelope, makeTrue, makeFalse, setZMapValue, getError } =
+const { makeMappedResultEnvelope, makeTrue, setZMapValue, getError } =
 	require( '../../../function-schemata/javascript/src/utils.js' );
 const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
@@ -487,33 +487,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 					Z9K1: 'Z42'
 				}
 			},
-			null
-		);
-	}
-
-	{
-		cannedResponses.setWiki(
-			'Z10044',
-			readJSON( './test/features/v1/test_data/map_function_Z10044.json' )
-		);
-		cannedResponses.setWiki(
-			'Z10045',
-			readJSON( './test/features/v1/test_data/map_implementation_Z10045.json' )
-		);
-		test(
-			'map (emptiness of lists)',
-			{
-				Z1K1: 'Z7',
-				Z7K1: 'Z10044',
-				Z10044K1: 'Z813',
-				Z10044K2: [
-					[],
-					[ 'I am here!' ],
-					[ 'I am not :(' ],
-					[]
-				]
-			},
-			[ makeTrue(), makeFalse(), makeFalse(), makeTrue() ],
 			null
 		);
 	}
