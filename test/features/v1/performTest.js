@@ -5,6 +5,7 @@ const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
 const performTest = require( '../../../src/performTest.js' );
 const { readJSON, readZObjectsFromDirectory } = require( '../../utils/read-json.js' );
+const { getError, makeVoid } = require( '../../../function-schemata/javascript/src/utils.js' );
 
 class Canned {
 
@@ -140,6 +141,10 @@ describe( 'performTest', function () { // eslint-disable-line no-undef
 		);
 
 		delete result[ 0 ].duration;
+		// We don't  deepEqual against Z22K2 because it contains metrics with arbitrary values
+		assert.strictEqual( getError( result[ 0 ].validationResponse ),
+			makeVoid( /* canonical */ true ) );
+		delete result[ 0 ].validationResponse.Z22K2;
 
 		assert.deepEqual( result, [
 			{
@@ -151,8 +156,7 @@ describe( 'performTest', function () { // eslint-disable-line no-undef
 					Z22K1: {
 						Z1K1: 'Z40',
 						Z40K1: 'Z41'
-					},
-					Z22K2: 'Z24'
+					}
 				}
 			}
 		] );
