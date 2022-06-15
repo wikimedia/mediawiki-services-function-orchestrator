@@ -2,7 +2,7 @@
 
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
-const { makeMappedResultEnvelope, setMetadataValue, maybeDowngradeResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
+const { makeMappedResultEnvelope, setMetadataValue } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error' );
 const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
@@ -126,8 +126,6 @@ async function orchestrate( input, implementationSelector = null ) {
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationStartTime' }, { Z1K1: 'Z6', Z6K1: startTimeStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationEndTime' }, { Z1K1: 'Z6', Z6K1: endTimeStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationDuration' }, { Z1K1: 'Z6', Z6K1: durationStr } );
-
-	currentPair = maybeDowngradeResultEnvelope( currentPair );
 
 	const canonicalized = await canonicalize( currentPair, /* withVoid= */ true );
 
