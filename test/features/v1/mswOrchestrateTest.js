@@ -99,7 +99,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	} );
 
 	const test = function (
-		name, zobject, output = null, error = null, implementationSelector = null, doValidate = true
+		name, zobject, output = null, error = null, implementationSelector = null,
+		doValidate = true, skip = false
 	) {
 		const input = {
 			zobject: zobject,
@@ -107,7 +108,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			evaluatorUri: 'http://theevaluator',
 			doValidate: doValidate
 		};
-		it( 'orchestrate msw: ' + name, async () => { // eslint-disable-line no-undef
+		( skip ? it.skip : it )( 'orchestrate msw: ' + name, async () => { // eslint-disable-line no-undef
 			if ( output === null ) {
 				output = makeVoid( /* canonical */ true );
 			} else {
@@ -824,10 +825,15 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			Z30086K2: makeTrue(),
 			Z30086K3: makeTrue()
 		};
+		// TODO(T309195): Re-enable this test.
 		test(
 			'curry',
 			curryCall,
-			makeTrue()
+			makeTrue(),
+			/* error */ undefined,
+			/* implementationSelector */ undefined,
+			/* doValidate */ undefined,
+			/* skip */ true
 		);
 	}
 
