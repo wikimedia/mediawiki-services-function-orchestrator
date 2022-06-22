@@ -9,6 +9,7 @@ const {
 } = require( '../function-schemata/javascript/src/schema.js' );
 const { isUserDefined, getHead, getTail, makeMappedResultEnvelope, isVoid, isZMap, getZMapValue
 } = require( '../function-schemata/javascript/src/utils' );
+const { EmptyFrame } = require( './frame.js' );
 
 const normalFactory = SchemaFactory.NORMAL();
 const Z6Validator = normalFactory.create( 'Z6_literal' );
@@ -264,18 +265,23 @@ async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = tr
 
 function quoteZObject( ZObject ) {
 	const { ZWrapper } = require( './ZWrapper' );
+	// Use an empty scope for the outer object, the nested object should already have its own
+	// scope, if any.
 	return ZWrapper.create( {
 		Z1K1: {
 			Z1K1: 'Z9',
 			Z9K1: 'Z99'
 		},
 		Z99K1: ZObject
-	} );
+	},
+	new EmptyFrame() );
 }
 
 function makeWrappedResultEnvelope( ...args ) {
 	const { ZWrapper } = require( './ZWrapper' );
-	return ZWrapper.create( makeMappedResultEnvelope( ...args ) );
+	// Use an empty scope for the outer object, the nested object should already have its own
+	// scope, if any.
+	return ZWrapper.create( makeMappedResultEnvelope( ...args ), new EmptyFrame() );
 }
 
 module.exports = {

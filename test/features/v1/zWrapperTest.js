@@ -2,23 +2,24 @@
 
 const assert = require( '../../utils/assert.js' );
 const { ZWrapper } = require( '../../../src/ZWrapper' );
+const { EmptyFrame } = require( '../../../src/frame.js' );
 
 describe( 'ZWrapper test', function () { // eslint-disable-line no-undef
 
 	it( 'ZWrapper class string construction', () => { // eslint-disable-line no-undef
-		const stringIsNotAZWrapper = ZWrapper.create( 'Hello I am a test string' );
+		const stringIsNotAZWrapper = ZWrapper.create( 'Hello I am a test string', new EmptyFrame() );
 
 		assert.deepEqual( stringIsNotAZWrapper, 'Hello I am a test string' );
 	} );
 
 	it( 'ZWrapper class construction', () => { // eslint-disable-line no-undef
 		const emptyObject = {};
-		const emptyZWrapper = ZWrapper.create( emptyObject );
+		const emptyZWrapper = ZWrapper.create( emptyObject, new EmptyFrame() );
 		assert.deepEqual( emptyZWrapper.asJSON(), emptyObject );
 		assert.deepEqual( new Set( emptyZWrapper.keys() ), new Set() );
 
 		const aReference = { Z1K1: 'Z9', Z9K1: 'Z9' };
-		const aReferenceZWrapper = ZWrapper.create( aReference );
+		const aReferenceZWrapper = ZWrapper.create( aReference, new EmptyFrame() );
 		assert.deepEqual( aReferenceZWrapper.asJSON(), aReference );
 		assert.deepEqual( new Set( aReferenceZWrapper.keys() ), new Set( [ 'Z1K1', 'Z9K1' ] ) );
 		assert.deepEqual( aReferenceZWrapper.Z1K1, 'Z9' );
@@ -35,7 +36,7 @@ describe( 'ZWrapper test', function () { // eslint-disable-line no-undef
 				Z9K1: 'Z41'
 			}
 		};
-		const georgieWrapper = ZWrapper.create( theTrueTrue );
+		const georgieWrapper = ZWrapper.create( theTrueTrue, new EmptyFrame() );
 		assert.deepEqual( georgieWrapper.original_.get( 'Z1K1' ).asJSON(), theTrueTrue.Z1K1 );
 		assert.deepEqual( georgieWrapper.resolved_.has( 'Z1K1' ), false );
 

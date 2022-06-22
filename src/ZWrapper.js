@@ -1,6 +1,5 @@
 'use strict';
 
-const { EmptyFrame } = require( './frame.js' );
 const { containsError, createSchema, isGenericType, makeWrappedResultEnvelope } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { isString, isUserDefined } = require( '../function-schemata/javascript/src/utils' );
@@ -28,6 +27,9 @@ class ZWrapper {
 
 	// Private. Use {@link ZWrapper#create} instead.
 	constructor() {
+		// Each value in original_ (and eventually in resolved_) points to another ZWrapper
+		// representing the corresponding subobject with its own scope. Initially they all point
+		// to the same scope, but they diverge as subobjects get resolved.
 		this.original_ = new Map();
 		this.resolved_ = new Map();
 		this.keys_ = new Set();
@@ -37,23 +39,23 @@ class ZWrapper {
 	// Creates an equivalent ZWrapper representation for the given ZObject and its subobjects.
 	// The resulting ZWrapper has the same fields as the ZObject, each of which is itself a
 	// ZWrapper, and so on.
-	// TODO(T309635): We should probably always provide the scope when creating a ZWrapper.
-	static create( zobjectJSON ) {
+	static create( zobjectJSON, scope ) {
+		if ( scope === null ) {
+			throw new Error( 'Missing scope argument' );
+		}
 		if ( isString( zobjectJSON ) || zobjectJSON instanceof ZWrapper ) {
 			return zobjectJSON;
 		}
 		const result = new ZWrapper();
+		result.scope_ = scope;
 		for ( const key of Object.keys( zobjectJSON ) ) {
-			const value = ZWrapper.create( zobjectJSON[ key ] );
+			const value = ZWrapper.create( zobjectJSON[ key ], scope );
 			result.original_.set( key, value );
 			result.keys_.add( key );
 			Object.defineProperty( result, key, {
 				get: function () {
-					const result = this.getName( key );
-					if ( result instanceof ZWrapper && result.getScope() === null ) {
-						result.setScope( this.getScope() );
-					}
-					return result;
+					return this.getName( key );
+
 				}
 			} );
 		}
@@ -72,18 +74,10 @@ class ZWrapper {
 	}
 
 	// private
-	async resolveInternal_( invariants, scope, ignoreList, resolveInternals, doValidate ) {
+	async resolveInternal_( invariants, ignoreList, resolveInternals, doValidate ) {
 		if ( ignoreList === null ) {
 			ignoreList = new Set();
 		}
-		let innerScope = this.getScope();
-		if ( innerScope === null ) {
-			innerScope = new EmptyFrame();
-		}
-		if ( scope === null ) {
-			scope = new EmptyFrame();
-		}
-		scope = innerScope.mergedCopy( scope );
 		let nextObject = this;
 		while ( true ) {
 			let nextJSON = nextObject;
@@ -92,9 +86,9 @@ class ZWrapper {
 			}
 			if ( !ignoreList.has( MutationType.ARGUMENT_REFERENCE ) ) {
 				const argumentReferenceStatus = await validatesAsArgumentReference( nextJSON );
-				if ( argumentReferenceStatus.isValid() && scope !== null ) {
+				if ( argumentReferenceStatus.isValid() ) {
 					const refKey = nextObject.Z18K1.Z6K1;
-					const dereferenced = await scope.retrieveArgument(
+					const dereferenced = await this.scope_.retrieveArgument(
 						refKey, invariants, /* lazily= */ false, doValidate,
 						resolveInternals, ignoreList );
 					if ( dereferenced.state === 'ERROR' ) {
@@ -121,7 +115,7 @@ class ZWrapper {
 				if ( functionCallStatus.isValid() ) {
 					const { execute } = require( './execute.js' );
 					const Z22 = await execute(
-						nextObject, invariants, scope, doValidate,
+						nextObject, invariants, doValidate,
 						/* implementationSelector= */ null, resolveInternals );
 					if ( containsError( Z22 ) ) {
 						return Z22;
@@ -131,7 +125,7 @@ class ZWrapper {
 				}
 			}
 			if ( await isGenericType( nextObject ) ) {
-				const executionResult = await nextObject.resolveKey( [ 'Z1K1' ], invariants, scope, ignoreList, resolveInternals, doValidate );
+				const executionResult = await nextObject.resolveKey( [ 'Z1K1' ], invariants, ignoreList, resolveInternals, doValidate );
 				if ( containsError( executionResult ) ) {
 					return executionResult;
 				}
@@ -154,12 +148,12 @@ class ZWrapper {
 
 	// private
 	async resolveKeyInternal_(
-		key, invariants, scope, ignoreList, resolveInternals, doValidate ) {
+		key, invariants, ignoreList, resolveInternals, doValidate ) {
 		let newValue, resultPair;
 		const currentValue = this.getName( key );
 		if ( currentValue instanceof ZWrapper ) {
 			resultPair = await ( currentValue.resolveInternal_(
-				invariants, scope, ignoreList, resolveInternals, doValidate ) );
+				invariants, ignoreList, resolveInternals, doValidate ) );
 			if ( containsError( resultPair ) ) {
 				return resultPair;
 			}
@@ -213,18 +207,17 @@ class ZWrapper {
 	 * to indicate any errors.
 	 *
 	 * @param {Invariants} invariants
-	 * @param {Frame} scope Doesn't seem needed since the scope is attached to the zobject?
 	 * @param {Set(MutationType)} ignoreList
 	 * @param {boolean} resolveInternals
 	 * @param {boolean} doValidate
 	 * @return {ZWrapper} A result envelope zobject representing the result.
 	 */
 	async resolve(
-		invariants, scope = null, ignoreList = null, resolveInternals = true, doValidate = true
+		invariants, ignoreList = null, resolveInternals = true, doValidate = true
 	) {
 		// TODO: Remove this intermediate call?
 		return this.resolveInternal_(
-			invariants, scope, ignoreList, resolveInternals, doValidate );
+			invariants, ignoreList, resolveInternals, doValidate );
 	}
 
 	/**
@@ -238,14 +231,13 @@ class ZWrapper {
 	 *
 	 * @param {Array(string)} keys Path of subobjects to resolve
 	 * @param {Invariants} invariants
-	 * @param {Frame} scope Doesn't seem needed since the scope is attached to the zobject?
 	 * @param {Set(MutationType)} ignoreList
 	 * @param {booleanl} resolveInternals
 	 * @param {boolean} doValidate
 	 * @return {ZWrapper} A result envelope zobject representing the result.
 	 */
 	async resolveKey(
-		keys, invariants, scope = null, ignoreList = null,
+		keys, invariants, ignoreList = null,
 		resolveInternals = true, doValidate = true ) {
 		let result;
 		if ( keys.length <= 0 ) {
@@ -258,7 +250,7 @@ class ZWrapper {
 		}
 		if ( !this.resolved_.has( key ) ) {
 			result = await this.resolveKeyInternal_(
-				key, invariants, scope, ignoreList, resolveInternals, doValidate );
+				key, invariants, ignoreList, resolveInternals, doValidate );
 			if ( containsError( result ) ) {
 				return result;
 			}
@@ -267,12 +259,19 @@ class ZWrapper {
 		if ( nextValue instanceof ZWrapper ) {
 			result = await (
 				nextValue.resolveKey(
-					keys, invariants, scope, ignoreList, resolveInternals, doValidate )
+					keys, invariants, ignoreList, resolveInternals, doValidate )
 			);
 		}
 		return result;
 	}
 
+	// Returns the JSON representation of the zobject.
+	// WARNING: The resulting object loses all information in the attached scopes and may therefore
+	// have unbound argument references. In particular, if subobjects have already been resolved
+	// with `resolveKey()`, their scope might have diverged. This means that `zwrapper.asJSON()` may
+	// have argument references that are not captured even in `zwrapper.getScope()`. Using this
+	// method should hence only be used judiciously where such effects can be taken into account.
+	// You have been warned.
 	asJSON() {
 		const result = {};
 		for ( const key of this.keys() ) {

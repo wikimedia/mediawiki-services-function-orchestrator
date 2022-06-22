@@ -27,7 +27,7 @@ class Implementation {
 	}
 
 	async execute( zobject, argumentList ) {
-		return ZWrapper.create( await this.executeInternal( zobject, argumentList ) );
+		return ZWrapper.create( await this.executeInternal( zobject, argumentList ), this.scope_ );
 	}
 
 	setScope( scope ) {
@@ -104,14 +104,8 @@ class BuiltIn extends Implementation {
 			callArgs.push( nameToArgument.get( key ) );
 		}
 		callArgs.push( this.invariants_ );
-		callArgs.push( this.scope_ );
 		return this.functor_( ...callArgs );
 	}
-
-	async execute( zobject, argumentList ) {
-		return ZWrapper.create( await this.executeInternal( zobject, argumentList ) );
-	}
-
 }
 
 class Evaluated extends Implementation {
@@ -130,14 +124,16 @@ class Evaluated extends Implementation {
 		const Z7 = {};
 		Z7.Z1K1 = zobject.Z1K1.asJSON();
 		await ( zobject.resolveKey(
-			[ 'Z7K1', 'Z8K2' ], this.invariants_, this.scope_, /* ignoreList= */ null,
+			[ 'Z7K1', 'Z8K2' ], this.invariants_, /* ignoreList= */ null,
 			/* resolveInternals= */ true, this.doValidate_ ) );
 		const Z7K1Envelope = await ( zobject.Z7K1.resolve(
-			this.invariants_, this.scope_, /* ignoreList= */ null,
+			this.invariants_, /* ignoreList= */ null,
 			/* resolveInternals= */ true, this.doValidate_ ) );
 		const Z7K1 = Z7K1Envelope.Z22K1;
 		Z7.Z7K1 = Z7K1.asJSON();
-		const Z8K4 = ZWrapper.create( await convertItemArrayToZList( [ this.Z14_.asJSON() ] ) );
+		// TODO: Eliminate this back-and-forth ZWrapper conversion if possible.
+		const Z8K4 = ZWrapper.create(
+			await convertItemArrayToZList( [ this.Z14_.asJSON() ] ), this.Z14_.scope_ );
 
 		const implementation = this;
 
@@ -146,7 +142,7 @@ class Evaluated extends Implementation {
 			if ( tail.K1.Z14K3 !== undefined ) {
 				await ( tail.resolveKey(
 					[ 'K1', 'Z14K3', 'Z16K2' ], implementation.invariants_,
-					implementation.scope_, /* ignoreList= */ null,
+					/* ignoreList= */ null,
 					/* resolveInternals= */ false, implementation.doValidate_ ) );
 			}
 		} );
@@ -154,7 +150,7 @@ class Evaluated extends Implementation {
 
 		// Return type may be a function call and must be resolved to allow for serialization.
 		const returnTypeEnvelope = await ( Z7K1.Z8K2.resolve(
-			this.invariants_, this.scope_, /* ignoreList= */ null,
+			this.invariants_, /* ignoreList= */ null,
 			/* resolveInternals= */ true, this.doValidate_ ) );
 		if ( containsError( returnTypeEnvelope ) ) {
 			return returnTypeEnvelope;
@@ -193,12 +189,12 @@ class Composition extends Implementation {
 
 	constructor( Z14 ) {
 		super( Z14 );
-		this.composition_ = ZWrapper.create( Z14.Z14K2.asJSON() );
+		this.composition_ = Z14.Z14K2.asJSON();
 	}
 
 	async executeInternal() {
-		return await this.composition_.resolve(
-			this.invariants_, this.scope_, /* ignoreList= */ null, /* resolveInternals= */ true,
+		return await ZWrapper.create( this.composition_, this.scope_ ).resolve(
+			this.invariants_, /* ignoreList= */ null, /* resolveInternals= */ true,
 			/* doValidate= */ this.doValidate_ );
 	}
 

@@ -3,10 +3,11 @@
 const { execute } = require( './execute.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ZWrapper } = require( './ZWrapper' );
-const { containsError, createSchema, createZObjectKey, quoteZObject } = require( './utils.js' );
+const { containsError, createSchema, createZObjectKey, quoteZObject, makeWrappedResultEnvelope } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
-const { convertZListToItemArray, isString, makeMappedResultEnvelope, getError } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToItemArray, isString, getError } = require( '../function-schemata/javascript/src/utils.js' );
+const { EmptyFrame } = require( './frame.js' );
 
 const validators = new Map();
 
@@ -51,15 +52,22 @@ function createValidatorZ7( Z8, ...Z1s ) {
 	};
 	// TBD: Possibly arrange to convert to ZWrapper here instead of below
 	for ( const argument of argumentDeclarations ) {
-		const nextZ1 = ZWrapper.create( Z1s.shift().asJSON() );
+		// TODO: Eliminate this back-and-forth ZWrapper conversion if possible.
+		// Currently this conversion makes a separate copy of the ZWrapper object, so that resolving
+		// things in it does not affect the original object. Whether this is a wanted feature or
+		// whether we are ok with that side-effect is TBD.
+		let nextZ1 = Z1s.shift();
+		nextZ1 = ZWrapper.create( nextZ1.asJSON(), nextZ1.getScope() );
 		result[ argument.Z17K2.Z6K1 ] = nextZ1;
 	}
-	return ZWrapper.create( result );
+	// Use an empty scope for the outer object, the nested objects should already have their own
+	// scope, if any.
+	return ZWrapper.create( result, new EmptyFrame() );
 }
 
-async function runValidationFunction( Z8, invariants, scope, ...Z1s ) {
+async function runValidationFunction( Z8, invariants, ...Z1s ) {
 	const validatorZ7 = createValidatorZ7( Z8, ...Z1s );
-	return await execute( validatorZ7, invariants, scope, /* doValidate= */ false );
+	return await execute( validatorZ7, invariants, /* doValidate= */ false );
 }
 
 /**
@@ -68,24 +76,23 @@ async function runValidationFunction( Z8, invariants, scope, ...Z1s ) {
  * @param {Object} Z1 the Z1/Object
  * @param {Object} Z4 the type ZObject
  * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
- * @param {Scope} scope current variable bindings
  * @return {Array} an array of Z5/Error
  */
-async function runTypeValidator( Z1, Z4, invariants, scope ) {
-	await ( Z4.resolveKey( [ 'Z4K3' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) );
+async function runTypeValidator( Z1, Z4, invariants ) {
+	await ( Z4.resolveKey( [ 'Z4K3' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ false ) );
 	const validationFunction = Z4.Z4K3;
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.
 		return await runValidationFunction(
-			validationFunction, invariants, scope, quoteZObject( Z1 ),
+			validationFunction, invariants, quoteZObject( Z1 ),
 			quoteZObject( Z4 ) );
 	} catch ( err ) {
 		console.error( err );
-		return ZWrapper.create( makeMappedResultEnvelope( null, normalError(
+		return makeWrappedResultEnvelope( null, normalError(
 			[ error.zid_not_found ],
 			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
-		) ) );
+		) );
 	}
 }
 
@@ -99,23 +106,22 @@ async function runTypeValidator( Z1, Z4, invariants, scope ) {
  * @param {Object} Z1 the Z1/Object
  * @param {Object} Z4 the type ZObject
  * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
- * @param {Scope} scope current variable bindings
  * @return {Array} an array of Z5/Error
  */
-async function runTypeValidatorDynamic( Z1, Z4, invariants, scope ) {
-	await ( Z4.resolveKey( [ 'Z4K3' ], invariants, scope, /* ignoreList= */ null, /* resolveInternals= */ false ) );
+async function runTypeValidatorDynamic( Z1, Z4, invariants ) {
+	await ( Z4.resolveKey( [ 'Z4K3' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ false ) );
 	const validationFunction = Z4.Z4K3;
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.
 		return await runValidationFunction(
-			validationFunction, invariants, scope, Z1, Z4 );
+			validationFunction, invariants, Z1, Z4 );
 	} catch ( err ) {
 		console.error( err );
-		return ZWrapper.create( makeMappedResultEnvelope( null, normalError(
+		return makeWrappedResultEnvelope( null, normalError(
 			[ error.zid_not_found ],
 			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
-		) ) );
+		) );
 	}
 }
 
@@ -191,9 +197,10 @@ async function validate( zobject, invariants ) {
 			} catch ( error ) {
 				console.error( 'Attempting to validate Z1', Z1, 'produced error', error );
 				errors.push(
+					// Use an empty scope as the error should not refer to any local variable.
 					ZWrapper.create( normalError(
 						[ error.zid_not_found ],
-						[ error.message ] ) ) );
+						[ error.message ] ), new EmptyFrame() ) );
 				return;
 			}
 			const {
@@ -209,14 +216,15 @@ async function validate( zobject, invariants ) {
 			}
 			const theStatus = await schemaValidator.validateStatus( Z1.asJSON() );
 			if ( !theStatus.isValid() ) {
-				errors.push( ZWrapper.create( theStatus.getZ5() ) );
+				// Use an empty scope as the error should not refer to any local variable.
+				errors.push( ZWrapper.create( theStatus.getZ5(), new EmptyFrame() ) );
 			} else {
 				// TODO (T307244): Use ignoreList instead of setting evaluator
 				// to null.
 				const noEvaluator = new Invariants( null, invariants.resolver );
 				typeValidatorPromises.push(
 					runTypeValidator(
-						Z1, ZObjectTypes[ typeKey.asString() ].Z2K2, noEvaluator, /* scope= */null )
+						Z1, ZObjectTypes[ typeKey.asString() ].Z2K2, noEvaluator )
 				);
 			}
 		} )() );

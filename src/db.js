@@ -6,6 +6,7 @@ const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { containsError } = require( './utils.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { getError } = require( '../function-schemata/javascript/src/utils.js' );
+const { EmptyFrame } = require( './frame' );
 
 fetch.Promise = Bluebird;
 
@@ -42,8 +43,10 @@ class ReferenceResolver {
 				unresolved.delete( ZID );
 				// stringify / parse are used here to create a deep copy. Otherwise, we'd
 				// end up with circular references in some of the results here.
+				// Dereferenced objects are created in an empty scope because they are not supposed
+				// to refer to any local variable.
 				dereferenced[ ZID ] = ZWrapper.create(
-					JSON.parse( JSON.stringify( dereferencedZObject ) ) );
+					JSON.parse( JSON.stringify( dereferencedZObject ) ), new EmptyFrame() );
 			}
 		}
 
@@ -59,9 +62,11 @@ class ReferenceResolver {
 
 			await Promise.all( [ ...unresolved ].map( async ( ZID ) => {
 				const zobject = JSON.parse( result[ ZID ].wikilambda_fetch );
+				// Dereferenced objects are created in an empty scope because they are not supposed
+				// to refer to any local variable.
 				const normalized =
 					ZWrapper.create( await normalize( zobject,
-						/* generically= */true, /* withVoid= */ true ) );
+						/* generically= */true, /* withVoid= */ true ), new EmptyFrame() );
 				// TODO (T304971): We should include the entire Z22 in the result.
 				// We should also generate Z22s when the call to the wiki fails.
 				// Given that the wiki will return no results if any single ZID

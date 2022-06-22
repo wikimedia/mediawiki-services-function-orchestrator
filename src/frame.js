@@ -10,16 +10,6 @@ class BaseFrame {
 		this.names_ = new Map();
 	}
 
-	mergedCopy( otherFrame ) {
-		if ( this.isEmpty() ) {
-			return otherFrame.copy();
-		}
-		const lastFrame = this.lastFrame_.mergedCopy( otherFrame );
-		const myCopy = this.copy( lastFrame );
-		myCopy.lastFrame_ = lastFrame;
-		return myCopy;
-	}
-
 	isEmpty() {
 		return false;
 	}
@@ -37,10 +27,6 @@ class EmptyFrame extends BaseFrame {
 				// TODO (T287919): Reconsider error type.
 				[ error.invalid_key ],
 				[ 'No argument called ' + argumentName + ' in scope.' ] ) );
-	}
-
-	copy() {
-		return new EmptyFrame();
 	}
 
 	isEmpty() {

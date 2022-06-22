@@ -415,18 +415,18 @@ function makeValidatorResultEnvelope( Z1, errors ) {
 }
 
 async function BUILTIN_SCHEMA_VALIDATOR_(
-	quotedObject, quotedType, invariants, scope ) {
+	quotedObject, quotedType, invariants ) {
 	// TODO (T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
 	const Z1 = quotedObject.Z99K1;
 	const Z4 = ( await ( quotedType.Z99K1.resolve(
-		invariants, scope, /* originalObject= */null, /* ignoreList= */null,
+		invariants, /* originalObject= */null, /* ignoreList= */null,
 		/* resolveInternals= */ false, /* doValidate= */ false ) ) ).Z22K1;
 
 	// Ensure all internal type references are resolved.
 	// TODO (T297904): Also need to resolve generic types.
 	await traverseZList( Z4.Z4K2, async function ( Z3Tail ) {
 		await ( Z3Tail.resolveKey(
-			[ 'K1', 'Z3K1' ], invariants, scope,
+			[ 'K1', 'Z3K1' ], invariants,
 			/* ignoreList= */null, /* resolveInternals= */false ) );
 	} );
 	const theSchema = await createSchema( { Z1K1: Z4.asJSON() } );
@@ -516,10 +516,10 @@ function BUILTIN_Z4_TYPE_VALIDATOR_( Z99 ) {
 }
 
 async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
-	Z99, errors, invariants, scope ) {
+	Z99, errors, invariants ) {
 	const Z1 = Z99.Z99K1;
 	const { getArgumentStates } = require( './execute.js' );
-	const argumentStates = await getArgumentStates( Z1, invariants, scope, true );
+	const argumentStates = await getArgumentStates( Z1, invariants, true );
 	const dictDict = {};
 	for ( const argumentState of argumentStates ) {
 		if ( argumentState.state === 'ERROR' ) {
@@ -582,20 +582,20 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 	}
 }
 
-async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, invariants, scope ) {
+async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, invariants ) {
 	const errors = [];
-	await BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_( Z99, errors, invariants, scope );
+	await BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_( Z99, errors, invariants );
 
 	return makeValidatorResultEnvelope( Z99, errors );
 }
 
-async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants, scope ) {
+async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
 	const Z11s = utils.convertZListToItemArray( Z1.Z12K1 );
 	const languages = await Promise.all( Z11s.map( async ( Z11 ) => await ( Z11.resolveKey(
 		[ 'Z11K1', 'Z60K1', 'Z6K1' ],
-		invariants, scope ).Z22K1 ) ) );
+		invariants ).Z22K1 ) ) );
 
 	const seen = new Set();
 	for ( let i = 0; i < languages.length; ++i ) {
@@ -711,7 +711,7 @@ async function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 	return makeMappedResultEnvelope( Z4, null );
 }
 
-async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants, scope ) {
+async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants ) {
 	// TODO (T302015) When ZMap keys are extended beyond Z6/String, update accordingly
 	const allowedKeyTypes = [ 'Z6', 'Z39' ];
 	if ( !allowedKeyTypes.includes( keyType.Z9K1 ) ) {
