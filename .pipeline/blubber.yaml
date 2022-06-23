@@ -8,7 +8,7 @@ runs:
 variants:
   build:
     copies: [local]
-    apt: { packages: [git, build-essential, python, pkg-config] }
+    apt: { packages: [git, build-essential, python, pkg-config, wmf-certificates] }
     node: { requirements: [package.json, package-lock.json, function-schemata/package.json, function-schemata/package-lock.json] }
     runs:
       # Allow the application to write to the filesystem so we can generate coverage reports
