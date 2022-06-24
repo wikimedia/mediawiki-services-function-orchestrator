@@ -8,7 +8,8 @@ const { makeMappedResultEnvelope, makeTrue, makeFalse } = require( '../function-
 const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
 const {
 	validatesAsType,
-	validatesAsReference
+	validatesAsReference,
+	validatesAsFunctionCall
 } = require( '../function-schemata/javascript/src/schema.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ZWrapper } = require( './ZWrapper' );
@@ -247,57 +248,50 @@ function BUILTIN_ABSTRACT_( ZList ) {
 	return makeMappedResultEnvelope( abstractRecursive( ZList ), null );
 }
 
-// FIXME (T311164): Remove Z10 leftovers
-async function BUILTIN_CONS_( Z1, Z10 ) {
-	let result;
-	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
-		result = await utils.convertItemArrayToZList( [ Z1 ] );
-		result.Z10K2 = Z10;
-	} else {
-		result = await utils.convertItemArrayToZList( [ Z1 ] );
-		result.K2 = Z10;
+async function BUILTIN_CONS_( Z1, list ) {
+	let itemType = { Z1K1: 'Z9', Z9K1: 'Z1' };
+
+	// if validates as type, type is expanded, itemType is at list.Z1K1.Z4K1.Z881K1
+	if ( ( await validatesAsType( list.Z1K1.asJSON() ) ).isValid() && ( list.Z1K1.Z4K1.Z7K1.Z9K1 === 'Z881' ) ) {
+		itemType = list.Z1K1.Z4K1.Z881K1;
 	}
-	return makeMappedResultEnvelope( result, null );
+
+	// if validates as function call, type is not expanded, itemType is at list.Z1K1.Z881K1
+	if ( ( await validatesAsFunctionCall( list.Z1K1.asJSON() ) ).isValid() && ( list.Z1K1.Z7K1.Z9K1 === 'Z881' ) ) {
+		itemType = list.Z1K1.Z881K1;
+	}
+
+	const typedList = await utils.convertArrayToKnownTypedList( [ Z1 ], itemType );
+	typedList.K2 = list;
+
+	return makeMappedResultEnvelope( typedList, null );
 }
 
-// FIXME (T311164): Remove Z10 leftovers
-function BUILTIN_HEAD_( Z10 ) {
-	if ( utils.isEmptyZList( Z10 ) ) {
+function BUILTIN_HEAD_( list ) {
+	if ( utils.isEmptyZList( list ) ) {
 		return makeMappedResultEnvelope(
 			null,
 			normalError(
 				[ error.argument_type_mismatch ],
 				[ 'An empty list has no head.' ] ) );
 	}
-
-	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
-		return makeMappedResultEnvelope( Z10.Z10K1, null );
-	}
-
-	return makeMappedResultEnvelope( Z10.K1, null );
+	return makeMappedResultEnvelope( list.K1, null );
 }
 
-// FIXME (T311164): Remove Z10 leftovers
-function BUILTIN_TAIL_( Z10 ) {
-	if ( utils.isEmptyZList( Z10 ) ) {
+function BUILTIN_TAIL_( list ) {
+	if ( utils.isEmptyZList( list ) ) {
 		return makeMappedResultEnvelope(
 			null,
 			normalError(
 				[ error.argument_type_mismatch ],
 				[ 'An empty list has no tail.' ] ) );
 	}
-
-	if ( Z10.Z1K1.Z9K1 === 'Z10' ) {
-		return makeMappedResultEnvelope( Z10.Z10K2, null );
-	}
-
-	return makeMappedResultEnvelope( Z10.K2, null );
+	return makeMappedResultEnvelope( list.K2, null );
 }
 
-// FIXME (T311164): Remove Z10 leftovers
-function BUILTIN_EMPTY_( Z10 ) {
+function BUILTIN_EMPTY_( list ) {
 	let result;
-	if ( utils.isEmptyZList( Z10 ) ) {
+	if ( utils.isEmptyZList( list ) ) {
 		result = makeTrue();
 	} else {
 		result = makeFalse();
@@ -373,23 +367,21 @@ async function BUILTIN_STRING_TO_CHARS_( Z6 ) {
 		null );
 }
 
-// FIXME (T311164): Remove Z10 leftovers
-function charsToStringInternal( Z10 ) {
-	const Z10Array = utils.convertZListToItemArray( Z10 );
+function charsToStringInternal( list ) {
+	const Z86Array = utils.convertZListToItemArray( list );
 	const result = [];
-	for ( const Z86 of Z10Array ) {
+	for ( const Z86 of Z86Array ) {
 		result.push( Z86.Z6K1 || Z86.Z86K1.Z6K1 );
 	}
 	return result;
 }
 
-// FIXME (T311164): Remove Z10 leftovers
-function BUILTIN_CHARS_TO_STRING_( Z10 ) {
+function BUILTIN_CHARS_TO_STRING_( list ) {
 	// TODO (T294482): Validate input is a List(Z86).
 	return makeMappedResultEnvelope(
 		{
 			Z1K1: 'Z6',
-			Z6K1: charsToStringInternal( Z10 ).join( '' )
+			Z6K1: charsToStringInternal( list ).join( '' )
 		},
 		null
 	);
@@ -457,19 +449,17 @@ function BUILTIN_EMPTY_VALIDATOR_( Z1 ) {
 }
 
 /**
- * Validates the keys of a normal Z10/List. This functions looks for duplicate or non-sequential
+ * Validates the keys of a normal Typed List. This functions looks for duplicate or non-sequential
  * keys and keys that don't follow the expected format of (Z)?<identity>Kn.
  *
- * FIXME (T311164): Remove references to Z10 in documentation and variable names
- *
- * @param {Object} Z10 the Z10/List being validated.
+ * @param {Object} list the Typed List being validated.
  * @param {Function} key a function to get the key of a list element.
- * @param {string} identity the identity of the Z10's parent.
+ * @param {string} identity the identity of the list's parent.
  *
- * @return {Object} a Z10/List of Z5/Error.
+ * @return {Object} a Typed List of Z5/Error.
  */
-function arrayValidator( Z10, key, identity ) {
-	const keys = utils.convertZListToItemArray( Z10 ).map( key );
+function arrayValidator( list, key, identity ) {
+	const keys = utils.convertZListToItemArray( list ).map( key );
 	const messages = [];
 
 	const seen = new Set();
@@ -1149,11 +1139,17 @@ const builtinReferences = new Map();
 		], ( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' },
 			/* generically= */true, /* withVoid= */ true ) ).Z22K1, 'Z931'
 	) );
+	builtinReferences.set( 'Z110', await createZ8(
+		'Z110',
+		[ await createArgument( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' }, 'Z110K1' ) ],
+		( await normalize( { Z1K1: 'Z7', Z7K1: 'Z881', Z881K1: 'Z1' },
+			/* generically= */true, /* withVoid= */ true ) ).Z22K1, 'Z210'
+	) );
 }() ).then();
 
 ( async function setValidatorsReferences() {
 	const CORE_TYPES = [
-		'Z1', 'Z2', 'Z3', 'Z4', 'Z5', 'Z6', 'Z7', 'Z8', 'Z9', 'Z10', 'Z11', 'Z12', 'Z13', 'Z14', 'Z16', 'Z17', 'Z18',
+		'Z1', 'Z2', 'Z3', 'Z4', 'Z5', 'Z6', 'Z7', 'Z8', 'Z9', 'Z11', 'Z12', 'Z13', 'Z14', 'Z16', 'Z17', 'Z18',
 		'Z20', 'Z21', 'Z22', 'Z23', 'Z39', 'Z40', 'Z41', 'Z42', 'Z50', 'Z60', 'Z61', 'Z70', 'Z80', 'Z86', 'Z99'
 	];
 
