@@ -234,7 +234,7 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 		'function call for Z903 (value by key) with bad key',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z903_bad_key.json' ) },
 		null,
-		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z507', Z507K1: 'Object did not contain key "Z10K5"' } }
+		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z507', Z507K1: 'Object did not contain key "Z10000K5"' } }
 	);
 
 	testFunctionCall(
@@ -394,8 +394,8 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 	);
 
 	testFunctionCall(
-		'function call (short form) for Z813/Empty with an empty List',
-		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z813_empty_Z10.json' ) },
+		'function call (short form) for Z813/Empty with an empty List (benjamin)',
+		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z813_empty_benjamin.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
 	);
 
@@ -412,8 +412,14 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 	);
 
 	testFunctionCall(
-		'function call for Z813/Empty with reference to Z913 and an empty List',
-		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z913_empty_Z10.json' ) },
+		'function call (short form) for Z813/Empty with a non-empty List (benjamin)',
+		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z813_full_benjamin.json' ) },
+		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
+	);
+
+	testFunctionCall(
+		'function call for Z813/Empty with reference to Z913 and an empty List (benjamin)',
+		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z913_empty_benjamin.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z41' } }
 	);
 
@@ -424,8 +430,8 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 	);
 
 	testFunctionCall(
-		'function call for Z813/Empty with reference to Z913 and a non-empty List',
-		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z913_full_Z10.json' ) },
+		'function call for Z813/Empty with reference to Z913 and a non-empty List (benjamin)',
+		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z913_full_benjamin.json' ) },
 		{ Z1K1: { Z1K1: 'Z9', Z9K1: 'Z40' }, Z40K1: { Z1K1: 'Z9', Z9K1: 'Z42' } }
 	);
 
@@ -552,13 +558,13 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 	testFunctionCall(
 		'function call for Z899 with reference to Z999',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z899.json' ) },
-		{ Z1K1: 'Z9', Z9K1: 'Z10' }
+		{ Z1K1: 'Z9', Z9K1: 'Z11' }
 	);
 
 	testFunctionCall(
 		'function call for Z999 (unquote)',
 		{ doValidate: true, zobject: readJSON( './test/features/v1/test_data/Z999.json' ) },
-		{ Z1K1: 'Z9', Z9K1: 'Z10' }
+		{ Z1K1: 'Z9', Z9K1: 'Z11' }
 	);
 
 	testFunctionCall(
