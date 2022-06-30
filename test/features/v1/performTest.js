@@ -161,4 +161,60 @@ describe( 'performTest', function () { // eslint-disable-line no-undef
 			}
 		] );
 	} );
+
+	it( 'performs a test and validation, and returns failed test result.', async () => { // eslint-disable-line no-undef
+		cannedResponses.setWiki( 'Z10006', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10006' },
+			Z2K2: readJSON( 'test/features/v1/test_data/Z10006.json' )
+		} );
+
+		cannedResponses.setWiki( 'Z10008', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10008' },
+			Z2K2: readJSON( 'test/features/v1/test_data/Z10008.json' )
+		} );
+
+		cannedResponses.setWiki( 'Z10012', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10012' },
+			Z2K2: readJSON( 'test/features/v1/test_data/Z10012.json' )
+		} );
+
+		const result = await performTest(
+			JSON.stringify( {
+				zfunction: 'Z10006',
+				zimplementations: '[]',
+				ztesters: '[ "Z10012" ]',
+				doValidate: false
+			} ),
+			'http://thewiki',
+			'http://theevaluator'
+		);
+
+		const testError = result[ 0 ].validationResponse.Z22K2;
+		assert.deepEqual(
+			testError,
+			readJSON( './test/features/v1/test_data/Z10012_test_error.json' )
+		);
+
+		delete result[ 0 ].duration;
+		delete result[ 0 ].validationResponse.Z22K2;
+
+		assert.deepEqual( result, [
+			{
+				zFunctionId: 'Z10006',
+				zImplementationId: 'Z10008',
+				zTesterId: 'Z10012',
+				validationResponse: {
+					Z1K1: 'Z22',
+					Z22K1: {
+						Z1K1: 'Z40',
+						Z40K1: 'Z42'
+					}
+				}
+			}
+		] );
+	} );
+
 } );

@@ -3,8 +3,9 @@
 const { ReferenceResolver } = require( './db.js' );
 const { generateError } = require( './utils' );
 const orchestrate = require( './orchestrate.js' );
+const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
-const { convertZListToItemArray, convertItemArrayToZList } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToItemArray, convertItemArrayToZList, makeFalse, wrapInQuote } = require( '../function-schemata/javascript/src/utils.js' );
 
 async function resolveListOfReferences( listOfReferences, resolver ) {
 	const ZIDs = convertZListToItemArray( listOfReferences ).map( ( Z9 ) => ( Z9.Z9K1 ) );
@@ -144,33 +145,14 @@ async function getTestResults( data, wikiUri, evaluatorUri ) {
 
 			payload.duration = end - start;
 
-			if ( validationResponse.Z22K1.Z40K1 === 'Z42' ) {
+			if ( validationResponse.Z22K1.Z40K1 === makeFalse().Z40K1.Z9K1 ) {
 				const actual = testResult;
 				const expected = validator[ validatorFn + 'K2' ];
-
-				// FIXME (T311163): replace the hardcoded validationResponse.Z22K2
-				// with makeMappedResultEnvelope and a specific error type
-				// about test failure
-				validationResponse.Z22K2 = {
-					Z1K1: {
-						Z1K1: 'Z9',
-						Z9K1: 'Z5'
-					},
-					Z5K2: {
-						Z1K1: {
-							Z1K1: 'Z9',
-							Z9K1: 'Z10'
-						},
-						Z10K1: expected,
-						Z10K2: {
-							Z1K1: {
-								Z1K1: 'Z9',
-								Z9K1: 'Z10'
-							},
-							Z10K1: actual
-						}
-					}
-				};
+				const testFailedError = normalError(
+					[ error.test_failed ],
+					[ wrapInQuote( expected ), wrapInQuote( actual ) ]
+				);
+				validationResponse.Z22K2 = testFailedError;
 			}
 
 			payload.validationResponse = validationResponse;

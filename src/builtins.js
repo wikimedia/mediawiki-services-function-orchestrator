@@ -20,7 +20,7 @@ const fs = require( 'fs' );
  */
 
 /**
- * Returns true iff the input is equivalent to the builtin true value.
+ * Returns true if the input is equivalent to the builtin true value.
  *
  * @param {Object} Z40 A Z40
  * @return {bool} whether Z40 corresponds to Z41 (true) or not
