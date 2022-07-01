@@ -400,21 +400,14 @@ async function executeInternal(
 	const Z8K4 = Z8K4Envelope.Z22K1;
 	const implementations = [];
 
-	for ( let Z14 of convertZListToItemArray( Z8K4 ) ) {
-		Z14 = ( await ( Z14.resolve(
+	for ( const Z14 of convertZListToItemArray( Z8K4 ) ) {
+		const Z14Envelope = ( await ( Z14.resolve(
 			invariants, scope, /* ignoreList= */null, /* resolveInternals= */ false, doValidate
-		) ) ).Z22K1;
-		for ( const key of [ 'Z14K2', 'Z14K3', 'Z14K4' ] ) {
-			if ( Z14[ key ] !== undefined ) {
-				const implementationInternalEnvelope = await ( Z14.resolveKey(
-					[ key ], invariants, scope, /* ignoreList= */null,
-					/* resolveInternals= */ true, doValidate ) );
-				if ( containsError( implementationInternalEnvelope ) ) {
-					return implementationInternalEnvelope;
-				}
-			}
+		) ) );
+		if ( containsError( Z14Envelope ) ) {
+			return Z14Envelope;
 		}
-		implementations.push( Z14 );
+		implementations.push( Z14Envelope.Z22K1 );
 	}
 
 	if ( implementations.length === 0 ) {
