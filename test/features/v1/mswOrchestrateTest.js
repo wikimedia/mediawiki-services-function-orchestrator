@@ -125,6 +125,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 				result = await orchestrate( input, implementationSelector );
 			} catch ( err ) {
 				console.trace();
+				console.log( err );
 				thrownError = err;
 			}
 
