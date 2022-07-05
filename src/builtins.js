@@ -11,7 +11,6 @@ const {
 	validatesAsReference,
 	validatesAsFunctionCall
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { Invariants } = require( './Invariants.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const fs = require( 'fs' );
 
@@ -722,32 +721,14 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants, scope 
 		);
 		return makeMappedResultEnvelope( null, newError );
 	}
-	const { execute } = require( './execute.js' );
 	const itsMe = {
 		Z1K1: Z9For( 'Z7' ),
 		Z7K1: Z9For( 'Z883' ),
 		Z883K1: keyType,
 		Z883K2: valueType
 	};
-	const pairFunctionCall = {
-		Z1K1: Z9For( 'Z7' ),
-		Z7K1: Z9For( 'Z882' ),
-		Z882K1: keyType,
-		Z882K2: valueType
-	};
-
-	const noEvaluator = new Invariants( null, invariants.resolver );
-	const pairType = (
-		await execute( ZWrapper.create( pairFunctionCall ), noEvaluator, null )
-	).Z22K1.asJSON();
-	const listFunctionCall = {
-		Z1K1: Z9For( 'Z7' ),
-		Z7K1: Z9For( 'Z881' ),
-		Z881K1: pairType
-	};
-	const listType = (
-		await execute( ZWrapper.create( listFunctionCall ), noEvaluator, null )
-	).Z22K1.asJSON();
+	const pairType = ( await BUILTIN_GENERIC_PAIR_TYPE_( keyType, valueType ) ).Z22K1;
+	const listType = ( await BUILTIN_GENERIC_LIST_TYPE_( pairType ) ).Z22K1;
 	const typeZ3 = { Z1K1: 'Z9', Z9K1: 'Z3' };
 	const Z4 = {
 		Z1K1: {
