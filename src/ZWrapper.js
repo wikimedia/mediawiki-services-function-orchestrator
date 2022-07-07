@@ -85,7 +85,6 @@ class ZWrapper {
 		}
 		scope = innerScope.mergedCopy( scope );
 		let nextObject = this;
-		let setObject = nextObject;
 		while ( true ) {
 			let nextJSON = nextObject;
 			if ( nextJSON instanceof ZWrapper ) {
@@ -99,7 +98,7 @@ class ZWrapper {
 						refKey, invariants, /* lazily= */ false, doValidate,
 						resolveInternals, ignoreList );
 					if ( dereferenced.state === 'ERROR' ) {
-						return [ makeWrappedResultEnvelope( null, dereferenced.error ), setObject ];
+						return makeWrappedResultEnvelope( null, dereferenced.error );
 					}
 					nextObject = dereferenced.argumentDict.argument;
 					continue;
@@ -114,7 +113,6 @@ class ZWrapper {
 					const refKey = nextObject.Z9K1;
 					const dereferenced = await invariants.resolver.dereference( [ refKey ] );
 					nextObject = dereferenced[ refKey ].Z2K2;
-					setObject = nextObject;
 					continue;
 				}
 			}
@@ -126,47 +124,42 @@ class ZWrapper {
 						nextObject, invariants, scope, doValidate,
 						/* implementationSelector= */ null, resolveInternals );
 					if ( containsError( Z22 ) ) {
-						return [ Z22, setObject ];
+						return Z22;
 					}
 					nextObject = Z22.Z22K1;
-					setObject = nextObject;
 					continue;
 				}
 			}
 			if ( await isGenericType( nextObject ) ) {
 				const executionResult = await nextObject.resolveKey( [ 'Z1K1' ], invariants, scope, ignoreList, resolveInternals, doValidate );
 				if ( containsError( executionResult ) ) {
-					return [ executionResult, setObject ];
+					return executionResult;
 				}
 				const Z4 = nextObject.Z1K1;
 				const typeStatus = await validatesAsType( Z4.asJSON() );
 				if ( !typeStatus.isValid() ) {
 					// TODO (T2966681): Return typeStatus.getZ5() as part of this result.
-					return [
-						makeWrappedResultEnvelope(
-							null,
-							normalError(
-								[ error.argument_type_mismatch ],
-								[ 'Generic type function did not return a Z4: ' + JSON.stringify( Z4.asJSON() ) ] ) ),
-						setObject ];
+					return makeWrappedResultEnvelope(
+						null,
+						normalError(
+							[ error.argument_type_mismatch ],
+							[ 'Generic type function did not return a Z4: ' + JSON.stringify( Z4.asJSON() ) ] ) );
 				}
 				continue;
 			}
 			break;
 		}
-		return [ makeWrappedResultEnvelope( nextObject, null ), setObject ];
+		return makeWrappedResultEnvelope( nextObject, null );
 	}
 
 	// private
 	async resolveKeyInternal_(
 		key, invariants, scope, ignoreList, resolveInternals, doValidate ) {
-		let newValue, resultPair, setObject;
+		let newValue, resultPair;
 		const currentValue = this.getName( key );
 		if ( currentValue instanceof ZWrapper ) {
-			const resultTuple = await ( currentValue.resolveInternal_(
+			resultPair = await ( currentValue.resolveInternal_(
 				invariants, scope, ignoreList, resolveInternals, doValidate ) );
-			resultPair = resultTuple[ 0 ];
-			setObject = resultTuple[ 1 ];
 			if ( containsError( resultPair ) ) {
 				return resultPair;
 			}
@@ -207,9 +200,7 @@ class ZWrapper {
 				}
 			}
 		}
-		if ( setObject !== null ) {
-			this.setName( key, setObject );
-		}
+		this.setName( key, newValue );
 		return resultPair;
 	}
 
@@ -231,9 +222,9 @@ class ZWrapper {
 	async resolve(
 		invariants, scope = null, ignoreList = null, resolveInternals = true, doValidate = true
 	) {
-		const result = await this.resolveInternal_(
+		// TODO: Remove this intermediate call?
+		return this.resolveInternal_(
 			invariants, scope, ignoreList, resolveInternals, doValidate );
-		return result[ 0 ];
 	}
 
 	/**
