@@ -592,6 +592,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
+		cannedResponses.setWiki( 'Z10044', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10044' },
+			Z2K2: readJSON( './test/features/v1/test_data/map-Z10044.json' )
+		} );
 		const mapCall = readJSON( './test/features/v1/test_data/map-Z10043.json' );
 		test(
 			'map "echo" function to a list of items',
@@ -599,10 +604,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			[
 				'Z6',
 				'acab'
-			],
-			/* error= */ null,
-			/* implementationSelector= */ null,
-			/* doValidate= */ false
+			]
 		);
 	}
 
