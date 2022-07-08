@@ -9,6 +9,8 @@ const {
 	validatesAsArgumentReference,
 	validatesAsType
 } = require( '../function-schemata/javascript/src/schema.js' );
+const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
+const util = require( 'util' );
 
 const MutationType = Object.freeze( {
 	REFERENCE: Symbol( 'REFERENCE' ),
@@ -282,6 +284,28 @@ class ZWrapper {
 			result[ key ] = value;
 		}
 		return result;
+	}
+
+	// Returns a view of the ZWrapper object suitable for debugging:
+	// * ZObjects are canonicalized
+	// * Scopes are flattened
+	// See also `ZWrapper.debug()`.
+	async debugObject() {
+		const object_ = ( await canonicalize( this.asJSON() ) ).Z22K1;
+		const scope_ = await this.scope_.debugObject();
+		return { object_, scope_ };
+	}
+
+	// Helper function for logging the debug representation of the ZWrapper. With it, one can write:
+	// `console.log( 'executing:', await zwrapper.debug() );`
+	// to log the debug representation of the ZWrapper object without truncating it due to depth.
+	async debug() {
+		const debugObject = await this.debugObject();
+		return { [ util.inspect.custom ]: ( _, options, inspect ) => {
+			return util.inspect( debugObject, Object.assign( {}, options, {
+				depth: null
+			} ) );
+		} };
 	}
 
 	keys() {
