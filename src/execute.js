@@ -280,6 +280,9 @@ async function getArgumentStates( zobject, invariants, scope, doValidate = true 
 		}
 
 		const argument = zobject[ key ];
+		if ( argument instanceof ZWrapper ) {
+			argument.setScope( scope );
+		}
 
 		if ( argument === undefined ) {
 			argumentStates.push( ArgumentState.ERROR( `Could not find argument ${argumentName}.` ) );
@@ -378,7 +381,6 @@ async function executeInternal(
 				)
 			);
 		}
-		scope.setArgument( argumentState.argumentDict.name, argumentState );
 	}
 
 	// Ensure Z8 (Z7K1) is dereferenced. Also ensure implementations are
@@ -433,6 +435,11 @@ async function executeInternal(
 		);
 	}
 
+	const newScope = new Frame( implementationZObject.getScope() );
+	for ( const argumentState of argumentStates ) {
+		newScope.setArgument( argumentState.argumentDict.name, argumentState );
+	}
+
 	const argumentInstantiations = [];
 	if ( !( implementation instanceof Composition ) ) {
 		// Populate arguments from scope.
@@ -440,7 +447,7 @@ async function executeInternal(
 		for ( const argumentState of argumentStates ) {
 			const argumentDict = argumentState.argumentDict;
 			instantiationPromises.push(
-				scope.retrieveArgument(
+				newScope.retrieveArgument(
 					argumentDict.name, invariants,
 					implementation.hasLazyVariable( argumentDict.name ),
 					doValidate
@@ -455,7 +462,7 @@ async function executeInternal(
 	}
 
 	// Equip the implementation for its journey and execute.
-	implementation.setScope( scope );
+	implementation.setScope( newScope );
 	implementation.setInvariants( invariants );
 	implementation.setDoValidate( doValidate );
 	let result = await implementation.execute( zobject, argumentInstantiations );
@@ -463,12 +470,14 @@ async function executeInternal(
 	// Execute result if implementation is lazily evaluated.
 	if ( implementation.returnsLazy() ) {
 		await ( result.resolveKey(
-			[ 'Z22K1' ], invariants, scope, /* ignoreList= */ null,
+			[ 'Z22K1' ], invariants, newScope, /* ignoreList= */ null,
 			/* resolveInternals= */ true, doValidate ) );
 	}
 	if ( doValidate && resolveInternals ) {
-		result = await validateReturnType( result, zobject, invariants, scope );
+		result = await validateReturnType( result, zobject, invariants, newScope );
 	}
+	// Keep the new scope so as not to lose any bindings.
+	result.setScope( newScope );
 	return result;
 }
 
@@ -516,7 +525,7 @@ async function resolveDanglingReferences( zobject, invariants, scope ) {
  *
  * @param {ZWrapper} zobject object describing a function call
  * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
- * @param {Frame} oldScope current variable bindings
+ * @param {Frame} scope current variable bindings
  * @param {boolean} doValidate whether to validate types of arguments and return value
  * @param {ImplementationSelector} implementationSelector
  * @param {boolean} resolveInternals if false, will evaluate typed lists via shortcut
@@ -525,13 +534,11 @@ async function resolveDanglingReferences( zobject, invariants, scope ) {
  * @return {ZWrapper} result of executing function call
  */
 execute = async function (
-	zobject, invariants, oldScope = null, doValidate = true,
+	zobject, invariants, scope = null, doValidate = true,
 	implementationSelector = null, resolveInternals = true, topLevel = false ) {
-	const scope = new Frame( oldScope );
 	const result = ZWrapper.create( await executeInternal(
 		zobject, invariants, scope, doValidate,
 		implementationSelector, resolveInternals ) );
-	result.setScope( scope );
 	if ( topLevel ) {
 		await resolveDanglingReferences( result.Z22K1, invariants, scope );
 	}

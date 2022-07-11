@@ -13,6 +13,7 @@ const { Evaluator } = require( './Evaluator.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ReferenceResolver } = require( './db.js' );
 const { ZWrapper } = require( './ZWrapper' );
+const { EmptyFrame } = require( './frame.js' );
 
 /**
  * Decides whether to validate a function. Returns the pair
@@ -105,7 +106,7 @@ async function orchestrate( input, implementationSelector = null ) {
 		[ maybeValidate, [ doValidate, invariants ], 'maybeValidate' ],
 		[
 			execute, [
-				invariants, /* oldScope= */null, /* doValidate= */true,
+				invariants, /* oldScope= */new EmptyFrame(), /* doValidate= */true,
 				/* implementationSelector= */implementationSelector,
 				/* resolveInternals= */true, /* topLevel= */true ],
 			'execute'

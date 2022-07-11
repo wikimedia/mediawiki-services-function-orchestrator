@@ -828,15 +828,45 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			Z30086K2: makeTrue(),
 			Z30086K3: makeTrue()
 		};
-		// TODO(T309195): Re-enable this test.
 		test(
 			'curry',
 			curryCall,
-			makeTrue(),
-			/* error */ undefined,
-			/* implementationSelector */ undefined,
-			/* doValidate */ undefined,
-			/* skip */ true
+			makeTrue()
+		);
+	}
+
+	{
+		// Given:
+		// g(f) = if(f(false),f(false),f(false)
+		// (calling argument f multiple times to make sure nothing funny is happening with the
+		// caching)
+		// h(x) = lambda y: x
+		cannedResponses.setWiki( 'Z10001', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10001' },
+			Z2K2: readJSON( './test/features/v1/test_data/save-argument-scope-Z10001.json' )
+		} );
+		cannedResponses.setWiki( 'Z10002', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10002' },
+			Z2K2: readJSON( './test/features/v1/test_data/save-argument-scope-Z10002.json' )
+		} );
+
+		// Expect:
+		// g(h(true)) = true
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z10001',
+			Z10001K1: {
+				Z1K1: 'Z7',
+				Z7K1: 'Z10002',
+				Z10002K1: 'Z41'
+			}
+		};
+		test(
+			'save argument scope',
+			call,
+			makeTrue()
 		);
 	}
 
