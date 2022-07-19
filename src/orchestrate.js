@@ -13,6 +13,7 @@ const { Evaluator } = require( './Evaluator.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ReferenceResolver } = require( './db.js' );
 const { ZWrapper } = require( './ZWrapper' );
+const { cpuUsage, memoryUsage } = require( 'node:process' );
 
 /**
  * Decides whether to validate a function. Returns the pair
@@ -74,6 +75,7 @@ async function Z7OrError( zobject ) {
  */
 async function orchestrate( input, implementationSelector = null ) {
 	const startTime = new Date();
+	const startUsage = cpuUsage();
 
 	let zobject = input.zobject;
 	if ( zobject === undefined ) {
@@ -118,11 +120,15 @@ async function orchestrate( input, implementationSelector = null ) {
 		currentPair = currentPair.asJSON();
 	}
 
+	const cpuUsageStats = cpuUsage( startUsage );
+	const cpuUsageStr = ( ( cpuUsageStats.user + cpuUsageStats.system ) / 1000 ) + ' ms';
+	const memoryUsageStr = Math.round( memoryUsage.rss() / 1024 / 1024 * 100 ) / 100 + ' MiB';
 	const endTime = new Date();
-	const duration = endTime.getTime() - startTime.getTime();
 	const startTimeStr = startTime.toISOString();
 	const endTimeStr = endTime.toISOString();
-	const durationStr = duration + 'ms';
+	const durationStr = ( endTime.getTime() - startTime.getTime() ) + ' ms';
+	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationMemoryUsage' }, { Z1K1: 'Z6', Z6K1: memoryUsageStr } );
+	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationCpuUsage' }, { Z1K1: 'Z6', Z6K1: cpuUsageStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationStartTime' }, { Z1K1: 'Z6', Z6K1: startTimeStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationEndTime' }, { Z1K1: 'Z6', Z6K1: endTimeStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationDuration' }, { Z1K1: 'Z6', Z6K1: durationStr } );
