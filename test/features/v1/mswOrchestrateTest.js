@@ -29,10 +29,10 @@ class Canned {
 		this.dict_.wiki[ key ] = value;
 	}
 
-	async setEvaluator( key, value, statusCode = 200 ) {
+	async setEvaluator( key, callback, statusCode = 200 ) {
 		this.dict_.evaluator[ key ] = {
 			statusCode: statusCode,
-			value: ( await normalize( value ) ).Z22K1
+			callback: callback
 		};
 	}
 
@@ -61,9 +61,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			return res( ctx.status( 200 ), ctx.json( result ) );
 		} ),
 
-		rest.post( 'http://theevaluator', ( req, res, ctx ) => {
+		rest.post( 'http://theevaluator', async ( req, res, ctx ) => {
 			const ZID = req.body.Z7K1.Z8K5.Z9K1;
-			const { statusCode, value } = cannedResponses.getEvaluator( ZID );
+			const { statusCode, callback } = cannedResponses.getEvaluator( ZID );
+			const value = ( await normalize( callback( req.body ) ) ).Z22K1;
 			return res( ctx.status( statusCode ), ctx.json( value ) );
 		} ),
 
@@ -74,22 +75,25 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	before( async () => { // eslint-disable-line no-undef
 		// Set evaluator response for test "evaluated function call"
-		await cannedResponses.setEvaluator( 'Z1000', makeMappedResultEnvelope( { Z1K1: 'Z6', Z6K1: '13' }, null ) );
+		await cannedResponses.setEvaluator( 'Z1000', ( unused ) => makeMappedResultEnvelope( { Z1K1: 'Z6', Z6K1: '13' }, null ) ); // eslint-disable-line no-unused-vars
 		// Set evaluator response for test "failed evaluated function call"
-		await cannedResponses.setEvaluator( 'Z420420', 'naw', 500 );
+		await cannedResponses.setEvaluator( 'Z420420', ( unused ) => 'naw', 500 ); // eslint-disable-line no-unused-vars
 		// Set evaluator response for test "evaluated function call, result and empty map"
-		await cannedResponses.setEvaluator( 'Z1001',
+		await cannedResponses.setEvaluator( 'Z1001', ( unused ) => // eslint-disable-line no-unused-vars
 			readJSON( './test/features/v1/test_data/Z22-map-result-only.json' ),
-			null );
+		null );
 		// Set evaluator response for test "evaluated function call, result and simple map"
-		await cannedResponses.setEvaluator( 'Z1002',
+		await cannedResponses.setEvaluator( 'Z1002', ( unused ) => // eslint-disable-line no-unused-vars
 			readJSON( './test/features/v1/test_data/Z22-map-basic.json' ),
-			null );
+		null );
 		// Set evaluator response for test "evaluated function call, void result"
 		const evaluatorResponse = readJSON( './test/features/v1/test_data/Z22-map-error.json' );
 		const errorTerm = normalError( [ error.not_wellformed_value ], [ 'Error placeholder' ] );
 		setZMapValue( evaluatorResponse.Z22K2, { Z1K1: 'Z6', Z6K1: 'errors' }, errorTerm );
-		await cannedResponses.setEvaluator( 'Z1003', evaluatorResponse, null );
+		await cannedResponses.setEvaluator( 'Z1003', ( unused ) => evaluatorResponse, null ); // eslint-disable-line no-unused-vars
+		// Set evaluator response for string numeral increment function.
+		// Used in scott numeral tests to convert scott numerals to strings.
+		await cannedResponses.setEvaluator( 'Z40002', ( zobject ) => makeMappedResultEnvelope( ( parseInt( zobject.Z40002K1.Z6K1 ) + 1 ).toString(), null ) );
 
 		return mockServiceWorker.listen();
 	} );
@@ -976,6 +980,120 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			noScrubs,
 			null,
 			readJSON( './test/features/v1/test_data/no-implementations-expected.json' )
+		);
+	}
+
+	{
+		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z40002',
+			Z40002K1: '41'
+		};
+		test(
+			'Increment string numeral',
+			call,
+			'42',
+			null
+		);
+	}
+
+	{
+		cannedResponses.setWiki( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
+		cannedResponses.setWiki( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
+		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		cannedResponses.setWiki( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z40003',
+			Z40003K1: 'Z40000'
+		};
+		test(
+			'Scott numeral zero',
+			call,
+			'0',
+			null
+		);
+	}
+
+	{
+		cannedResponses.setWiki( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
+		cannedResponses.setWiki( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
+		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		cannedResponses.setWiki( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z40003',
+			Z40003K1: {
+				Z1K1: 'Z7',
+				Z7K1: 'Z40001',
+				Z40001K1: 'Z40000'
+			}
+		};
+		test(
+			'Scott numeral one',
+			call,
+			'1',
+			null
+		);
+	}
+
+	{
+		cannedResponses.setWiki( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
+		cannedResponses.setWiki( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
+		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		cannedResponses.setWiki( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z40003',
+			Z40003K1: {
+				Z1K1: 'Z7',
+				Z7K1: 'Z40001',
+				Z40001K1: {
+					Z1K1: 'Z7',
+					Z7K1: 'Z40001',
+					Z40001K1: 'Z40000'
+				}
+			}
+		};
+		test(
+			'Scott numeral two',
+			call,
+			'2',
+			null
+		);
+	}
+
+	{
+		// TODO(T310093): Speed this up until and bump up the input values, e.g. to Ackermann(2, 2).
+		cannedResponses.setWiki( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
+		cannedResponses.setWiki( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
+		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		cannedResponses.setWiki( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		cannedResponses.setWiki( 'Z40004', readJSON( './test/features/v1/test_data/scott-numeral-ack-Z40004.json' ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z40003',
+			Z40003K1: {
+				Z1K1: 'Z7',
+				Z7K1: 'Z40004',
+				Z40004K1: {
+					Z1K1: 'Z7',
+					Z7K1: 'Z40001',
+					Z40001K1: 'Z40000'
+				},
+				Z40004K2: {
+					Z1K1: 'Z7',
+					Z7K1: 'Z40001',
+					Z40001K1: 'Z40000'
+				}
+			}
+		};
+		test(
+			'Scott numeral Ackermann(1, 1)',
+			call,
+			'3',
+			null
 		);
 	}
 
