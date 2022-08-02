@@ -15,14 +15,14 @@ describe( 'ZWrapper test', function () { // eslint-disable-line no-undef
 	it( 'ZWrapper class construction', () => { // eslint-disable-line no-undef
 		const emptyObject = {};
 		const emptyZWrapper = ZWrapper.create( emptyObject, new EmptyFrame() );
-		assert.deepEqual( emptyZWrapper.asJSON(), emptyObject );
-		assert.deepEqual( new Set( emptyZWrapper.keys() ), new Set() );
+		assert.deepEqual( emptyObject, emptyZWrapper.asJSON() );
+		assert.deepEqual( new Set(), new Set( emptyZWrapper.keys() ) );
 
 		const aReference = { Z1K1: 'Z9', Z9K1: 'Z9' };
 		const aReferenceZWrapper = ZWrapper.create( aReference, new EmptyFrame() );
-		assert.deepEqual( aReferenceZWrapper.asJSON(), aReference );
-		assert.deepEqual( new Set( aReferenceZWrapper.keys() ), new Set( [ 'Z1K1', 'Z9K1' ] ) );
-		assert.deepEqual( aReferenceZWrapper.Z1K1, 'Z9' );
+		assert.deepEqual( aReference, aReferenceZWrapper.asJSON() );
+		assert.deepEqual( new Set( [ 'Z1K1', 'Z9K1' ] ), new Set( aReferenceZWrapper.keys() ) );
+		assert.deepEqual( 'Z9', aReferenceZWrapper.Z1K1 );
 	} );
 
 	it( 'ZWrapper resolution', async () => { // eslint-disable-line no-undef
@@ -37,10 +37,10 @@ describe( 'ZWrapper test', function () { // eslint-disable-line no-undef
 			}
 		};
 		const georgieWrapper = ZWrapper.create( theTrueTrue, new EmptyFrame() );
-		assert.deepEqual( georgieWrapper.original_.get( 'Z1K1' ).asJSON(), theTrueTrue.Z1K1 );
-		assert.deepEqual( georgieWrapper.resolved_.has( 'Z1K1' ), false );
+		assert.deepEqual( theTrueTrue.Z1K1, georgieWrapper.original_.get( 'Z1K1' ).asJSON() );
+		assert.deepEqual( false, georgieWrapper.resolved_.has( 'Z1K1' ) );
 
 		await georgieWrapper.resolveKey( [ 'Z1K1' ], /* invariants= */ null );
-		assert.deepEqual( georgieWrapper.resolved_.get( 'Z1K1' ).asJSON(), theTrueTrue.Z1K1 );
+		assert.deepEqual( theTrueTrue.Z1K1, georgieWrapper.resolved_.get( 'Z1K1' ).asJSON() );
 	} );
 } );

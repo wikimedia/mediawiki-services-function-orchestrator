@@ -46,8 +46,8 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 			} );
 			assert.status( result, 200 );
 			assert.contentType( result, 'application/json' );
-			assert.deepEqual( result.body.Z22K1, output, name );
-			assert.deepEqual( getError( result.body ), error, name );
+			assert.deepEqual( output, result.body.Z22K1, name );
+			assert.deepEqual( error, getError( result.body ), name );
 		} );
 	};
 

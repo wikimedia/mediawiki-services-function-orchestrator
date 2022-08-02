@@ -134,8 +134,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			}
 
 			assert.isNull( thrownError, name + ' throws no execution/validation error' );
-			assert.deepEqual( result.Z22K1, output, name + ' returns the expected output, if any' );
-			assert.deepEqual( getError( result ), error, name + ' returns the expected error, if any' );
+			assert.deepEqual( output, result.Z22K1, name + ' returns the expected output, if any' );
+			assert.deepEqual( error, getError( result ), name + ' returns the expected error, if any' );
 		} );
 	};
 
