@@ -8,7 +8,7 @@ const { makeMappedResultEnvelope, makeTrue, setZMapValue, getError } =
 const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
-const { readJSON, readZObjectsFromDirectory } = require( '../../utils/read-json.js' );
+const { readJSON, readZObjectsFromDirectory } = require( '../../../src/read-json.js' );
 const { normalError, error } = require( '../../../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../../../function-schemata/javascript/src/utils' );
 

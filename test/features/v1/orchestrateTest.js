@@ -7,7 +7,7 @@ const Server = require( '../../utils/server.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
 const { getMissingZ5 } = require( '../../../function-schemata/javascript/test/testUtils.js' );
 const { getError, makeVoid } = require( '../../../function-schemata/javascript/src/utils.js' );
-const { readJSON } = require( '../../utils/read-json.js' );
+const { readJSON } = require( '../../../src/read-json.js' );
 
 describe( 'orchestration endpoint', function () { // eslint-disable-line no-undef
 
