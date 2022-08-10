@@ -242,6 +242,157 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
+		const Z50000 = readJSON( './test/features/v1/test_data/generic-composition.json' );
+		cannedResponses.setWiki( 'Z50000', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50000' },
+			Z2K2: Z50000
+		} );
+		const Z50001 = readJSON( './test/features/v1/test_data/generic-composition-implementation.json' );
+		cannedResponses.setWiki( 'Z50001', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50001' },
+			Z2K2: Z50001
+		} );
+
+		// A type containing K1: list of strings and K2: Boolean.
+		const theType = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z50000',
+			Z50000K1: {
+				Z1K1: 'Z7',
+				Z7K1: 'Z881',
+				Z881K1: 'Z6'
+			},
+			Z50000K2: 'Z40'
+		};
+
+		// The input has the above-specified type.
+		const theInput = {
+			Z1K1: theType,
+			K1: [ 'Z6' ],
+			K2: {
+				Z1K1: 'Z40',
+				Z40K1: 'Z42'
+			}
+		};
+
+		const resolvedType = readJSON( './test/features/v1/test_data/type-returned-by-generic-composition.json' );
+		const expectedOutput = {
+			Z1K1: resolvedType,
+			K1: [ 'Z6' ],
+			K2: {
+				Z1K1: 'Z40',
+				Z40K1: 'Z42'
+			}
+		};
+
+		// Call <Echo> (Z801) on the input.
+		const theFunctionCall = {
+			Z1K1: 'Z7',
+			Z7K1: {
+				Z1K1: 'Z8',
+				Z8K1: [
+					'Z17'
+				],
+				Z8K2: theType,
+				Z8K3: [ 'Z20' ],
+				Z8K4: [
+					'Z14',
+					{
+						Z1K1: 'Z14',
+						Z14K1: 'Z50002',
+						Z14K2: {
+							Z1K1: 'Z7',
+							Z7K1: 'Z801',
+							Z801K1: theInput
+						}
+					}
+				],
+				Z8K5: 'Z50002'
+			}
+		};
+
+		test(
+			'good generic defined as composition',
+			theFunctionCall,
+			expectedOutput
+		);
+	}
+
+	{
+		const Z50000 = readJSON( './test/features/v1/test_data/generic-composition.json' );
+		cannedResponses.setWiki( 'Z50000', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50000' },
+			Z2K2: Z50000
+		} );
+		const Z50001 = readJSON( './test/features/v1/test_data/generic-composition-implementation.json' );
+		cannedResponses.setWiki( 'Z50001', {
+			Z1K1: 'Z2',
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50001' },
+			Z2K2: Z50001
+		} );
+
+		// A type containing K1: list of strings and K2: Boolean.
+		const theType = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z50000',
+			Z50000K1: {
+				Z1K1: 'Z7',
+				Z7K1: 'Z881',
+				Z881K1: 'Z6'
+			},
+			Z50000K2: 'Z40'
+		};
+
+		// The input has the above-specified type but fails to be one.
+		const theInput = {
+			Z1K1: theType,
+			K1: 'Not a list of Z6',
+			K2: {
+				Z1K1: 'Z40',
+				Z40K1: 'Z42'
+			}
+		};
+
+		// Call <Echo> (Z801) on the input.
+		const theFunctionCall = {
+			Z1K1: 'Z7',
+			Z7K1: {
+				Z1K1: 'Z8',
+				Z8K1: [
+					'Z17'
+				],
+				Z8K2: theType,
+				Z8K3: [ 'Z20' ],
+				Z8K4: [
+					'Z14',
+					{
+						Z1K1: 'Z14',
+						Z14K1: 'Z50002',
+						Z14K2: {
+							Z1K1: 'Z7',
+							Z7K1: 'Z801',
+							Z801K1: theInput
+						}
+					}
+				],
+				Z8K5: 'Z50002'
+			}
+		};
+
+		const expectedError = readJSON( './test/features/v1/test_data/bad_generic_composition_expected.json' );
+
+		test(
+			'bad generic defined as composition',
+			theFunctionCall,
+			null,
+			expectedError
+		);
+	}
+
+	{
 		cannedResponses.setWiki( 'Z12422', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12422' },
