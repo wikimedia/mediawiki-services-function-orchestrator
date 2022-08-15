@@ -57,7 +57,37 @@ class ZWrapper {
 			Object.defineProperty( result, key, {
 				get: function () {
 					return this.getName( key );
+				}
+			} );
+		}
+		return result;
+	}
 
+	// Copy this object.
+	copy() {
+		const result = new ZWrapper();
+		result.scope_ = this.getScope();
+		for ( const entry of this.original_.entries() ) {
+			const key = entry[ 0 ];
+			let originalValue = entry[ 1 ];
+			if ( originalValue instanceof ZWrapper ) {
+				originalValue = originalValue.copy();
+			}
+			result.original_.set( key, originalValue );
+		}
+		for ( const entry of this.resolved_.entries() ) {
+			const key = entry[ 0 ];
+			let resolvedValue = entry[ 1 ];
+			if ( resolvedValue instanceof ZWrapper ) {
+				resolvedValue = resolvedValue.copy();
+			}
+			result.resolved_.set( key, resolvedValue );
+		}
+		for ( const key of this.keys() ) {
+			result.keys_.add( key );
+			Object.defineProperty( result, key, {
+				get: function () {
+					return this.getName( key );
 				}
 			} );
 		}

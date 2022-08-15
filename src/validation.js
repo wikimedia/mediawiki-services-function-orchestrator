@@ -36,8 +36,6 @@ async function getSchemaValidator( Z1 ) {
 }
 
 function createValidatorZ7( Z8, ...Z1s ) {
-	// throw new Error('nope');
-	// Z8 = Z8.asJSON();
 	const argumentDeclarations = convertZListToItemArray( Z8.Z8K1 );
 	if ( argumentDeclarations.length !== Z1s.length ) {
 		// TODO (T2926668): Call BUILTIN_FUNCTION_CALL_VALIDATOR_ on result to
@@ -52,12 +50,12 @@ function createValidatorZ7( Z8, ...Z1s ) {
 	};
 	// TBD: Possibly arrange to convert to ZWrapper here instead of below
 	for ( const argument of argumentDeclarations ) {
-		// TODO: Eliminate this back-and-forth ZWrapper conversion if possible.
-		// Currently this conversion makes a separate copy of the ZWrapper object, so that resolving
-		// things in it does not affect the original object. Whether this is a wanted feature or
-		// whether we are ok with that side-effect is TBD.
+		// TODO (T315232): Eliminate this ZWrapper copy if possible.
+		// Currently this separate copy of the ZWrapper object avoids allowing
+		// resolution to affect the original object. Whether this is desirable
+		// (or whether, alternatively, we are ok with that side-effect) is TBD.
 		let nextZ1 = Z1s.shift();
-		nextZ1 = ZWrapper.create( nextZ1.asJSON(), nextZ1.getScope() );
+		nextZ1 = nextZ1.copy();
 		result[ argument.Z17K2.Z6K1 ] = nextZ1;
 	}
 	// Use an empty scope for the outer object, the nested objects should already have their own
