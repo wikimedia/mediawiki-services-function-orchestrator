@@ -61,10 +61,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			return res( ctx.status( 200 ), ctx.json( result ) );
 		} ),
 
-		rest.post( 'http://theevaluator', async ( req, res, ctx ) => {
+		rest.post( 'http://theevaluator', ( req, res, ctx ) => {
 			const ZID = req.body.Z7K1.Z8K5.Z9K1;
 			const { statusCode, callback } = cannedResponses.getEvaluator( ZID );
-			const value = ( await normalize( callback( req.body ) ) ).Z22K1;
+			const value = normalize( callback( req.body ) ).Z22K1;
 			return res( ctx.status( statusCode ), ctx.json( value ) );
 		} ),
 
@@ -116,12 +116,12 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			if ( output === null ) {
 				output = makeVoid( /* canonical */ true );
 			} else {
-				output = ( await canonicalize( output, /* withVoid= */ true ) ).Z22K1;
+				output = canonicalize( output, /* withVoid= */ true ).Z22K1;
 			}
 			if ( error === null ) {
 				error = makeVoid( /* canonical */ true );
 			} else {
-				error = ( await canonicalize( error, /* withVoid= */ true ) ).Z22K1;
+				error = canonicalize( error, /* withVoid= */ true ).Z22K1;
 			}
 			let result = {};
 			let thrownError = null;

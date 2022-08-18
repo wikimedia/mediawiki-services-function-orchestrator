@@ -102,14 +102,14 @@ function Z9For( typeZID ) {
  * @return {Object} a Z12/Multilingual String containing a single Z11
  * wrapping the label (in JSON form, not ZWrapper)
  */
-async function Z12For( name ) {
+function Z12For( name ) {
 	const typeZ11 = { Z1K1: 'Z9', Z9K1: 'Z11' };
 	return {
 		Z1K1: {
 			Z1K1: 'Z9',
 			Z9K1: 'Z12'
 		},
-		Z12K1: await ( convertArrayToKnownTypedList )( [
+		Z12K1: convertArrayToKnownTypedList( [
 			{
 				Z1K1: {
 					Z1K1: 'Z9',
@@ -160,7 +160,7 @@ function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
 	return makeMappedResultEnvelope( goodResult, badResult );
 }
 
-async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
+function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
 	const keyrefs = convertZListToItemArray( Z39s );
 	const pairType = {
 		Z1K1: Z9For( 'Z7' ),
@@ -189,7 +189,7 @@ async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
 			[ 'Object did not contain key(s): ' + missing ] );
 		return makeMappedResultEnvelope( null, badResult );
 	} else {
-		const pairList = await convertArrayToKnownTypedList( pairArray, pairType );
+		const pairList = convertArrayToKnownTypedList( pairArray, pairType );
 		const mapType = {
 			Z1K1: Z9For( 'Z7' ),
 			Z7K1: Z9For( 'Z883' ),
@@ -204,7 +204,7 @@ async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
 	}
 }
 
-async function reifyRecursive( Z1 ) {
+function reifyRecursive( Z1 ) {
 	if ( isString( Z1 ) ) {
 		return {
 			Z1K1: 'Z6',
@@ -219,7 +219,7 @@ async function reifyRecursive( Z1 ) {
 	};
 	const result = [];
 	for ( const key of Z1.keys() ) {
-		const value = await reifyRecursive( Z1[ key ] );
+		const value = reifyRecursive( Z1[ key ] );
 		result.push( {
 			Z1K1: pairType,
 			K1: {
@@ -235,11 +235,11 @@ async function reifyRecursive( Z1 ) {
 			K2: value
 		} );
 	}
-	return await convertArrayToKnownTypedList( result, pairType );
+	return convertArrayToKnownTypedList( result, pairType );
 }
 
-async function BUILTIN_REIFY_( Z1 ) {
-	return makeMappedResultEnvelope( await reifyRecursive( Z1 ), null );
+function BUILTIN_REIFY_( Z1 ) {
+	return makeMappedResultEnvelope( reifyRecursive( Z1 ), null );
 }
 
 function abstractRecursive( ZList ) {
@@ -261,20 +261,20 @@ function BUILTIN_ABSTRACT_( ZList ) {
 	return makeMappedResultEnvelope( abstractRecursive( ZList ), null );
 }
 
-async function BUILTIN_CONS_( Z1, list ) {
+function BUILTIN_CONS_( Z1, list ) {
 	let itemType = { Z1K1: 'Z9', Z9K1: 'Z1' };
 
 	// if validates as type, type is expanded, itemType is at list.Z1K1.Z4K1.Z881K1
-	if ( ( await validatesAsType( list.Z1K1.asJSON() ) ).isValid() && ( list.Z1K1.Z4K1.Z7K1.Z9K1 === 'Z881' ) ) {
+	if ( validatesAsType( list.Z1K1.asJSON() ).isValid() && ( list.Z1K1.Z4K1.Z7K1.Z9K1 === 'Z881' ) ) {
 		itemType = list.Z1K1.Z4K1.Z881K1;
 	}
 
 	// if validates as function call, type is not expanded, itemType is at list.Z1K1.Z881K1
-	if ( ( await validatesAsFunctionCall( list.Z1K1.asJSON() ) ).isValid() && ( list.Z1K1.Z7K1.Z9K1 === 'Z881' ) ) {
+	if ( validatesAsFunctionCall( list.Z1K1.asJSON() ).isValid() && ( list.Z1K1.Z7K1.Z9K1 === 'Z881' ) ) {
 		itemType = list.Z1K1.Z881K1;
 	}
 
-	const typedList = await convertArrayToKnownTypedList( [ Z1 ], itemType );
+	const typedList = convertArrayToKnownTypedList( [ Z1 ], itemType );
 	typedList.K2 = list;
 
 	return makeMappedResultEnvelope( typedList, null );
@@ -362,7 +362,7 @@ function BUILTIN_EQUALS_STRING_( Z6_1, Z6_2 ) {
 	);
 }
 
-async function stringToCharsInternal( characterArray ) {
+function stringToCharsInternal( characterArray ) {
 	const Z86Array = [];
 	const typeZ86 = { Z1K1: 'Z9', Z9K1: 'Z86' };
 	for ( const character of characterArray ) {
@@ -371,12 +371,12 @@ async function stringToCharsInternal( characterArray ) {
 			Z86K1: { Z1K1: 'Z6', Z6K1: character }
 		} );
 	}
-	return await convertArrayToKnownTypedList( Z86Array, typeZ86 );
+	return convertArrayToKnownTypedList( Z86Array, typeZ86 );
 }
 
-async function BUILTIN_STRING_TO_CHARS_( Z6 ) {
+function BUILTIN_STRING_TO_CHARS_( Z6 ) {
 	return makeMappedResultEnvelope(
-		await stringToCharsInternal( Array.from( Z6.Z6K1 ) ),
+		stringToCharsInternal( Array.from( Z6.Z6K1 ) ),
 		null );
 }
 
@@ -443,10 +443,10 @@ async function BUILTIN_SCHEMA_VALIDATOR_(
 			[ 'K1', 'Z3K1' ], invariants,
 			/* ignoreList= */null, /* resolveInternals= */false ) );
 	} );
-	const theSchema = await createSchema( { Z1K1: Z4.asJSON() } );
+	const theSchema = createSchema( { Z1K1: Z4.asJSON() } );
 
 	// TODO (T294289): Return validationStatus Z5s as Z22K2.
-	const theStatus = await theSchema.validateStatus( Z1.asJSON() );
+	const theStatus = theSchema.validateStatus( Z1.asJSON() );
 	let errors;
 	if ( theStatus.isValid() ) {
 		errors = [];
@@ -574,10 +574,10 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 			declaredType = declaredType.asJSON();
 		}
 		// TODO (T296669): Fix type semantics below; do something when declaredType is a Z4.
-		if ( ( await validatesAsType( declaredType ) ).isValid() ) {
+		if ( validatesAsType( declaredType ).isValid() ) {
 			continue;
 		}
-		if ( ( await validatesAsReference( declaredType ) ).isValid() ) {
+		if ( validatesAsReference( declaredType ).isValid() ) {
 			declaredType = declaredType.Z9K1;
 		}
 
@@ -655,7 +655,7 @@ function BUILTIN_ERROR_TYPE_VALIDATOR_( Z99 ) {
 	return makeValidatorResultEnvelope( Z99, [] );
 }
 
-async function resolveListType( typeZ4 ) {
+function resolveListType( typeZ4 ) {
 	if ( typeZ4 instanceof ZWrapper ) {
 		typeZ4 = typeZ4.asJSON();
 	}
@@ -677,9 +677,9 @@ async function resolveListType( typeZ4 ) {
 			Z9K1: 'Z4'
 		},
 		Z4K1: itsMe,
-		Z4K2: await convertArrayToKnownTypedList( [
-			Z3For( typeZ4, { Z1K1: 'Z6', Z6K1: 'K1' }, await Z12For( 'head' ) ),
-			Z3For( itsMe, { Z1K1: 'Z6', Z6K1: 'K2' }, await Z12For( 'tail' ) )
+		Z4K2: convertArrayToKnownTypedList( [
+			Z3For( typeZ4, { Z1K1: 'Z6', Z6K1: 'K1' }, Z12For( 'head' ) ),
+			Z3For( itsMe, { Z1K1: 'Z6', Z6K1: 'K2' }, Z12For( 'tail' ) )
 		], typeZ3 ),
 		Z4K3: {
 			Z1K1: 'Z9',
@@ -689,11 +689,11 @@ async function resolveListType( typeZ4 ) {
 	return makeMappedResultEnvelope( Z4, null );
 }
 
-async function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
-	return await resolveListType( typeZ4 );
+function BUILTIN_GENERIC_LIST_TYPE_( typeZ4 ) {
+	return resolveListType( typeZ4 );
 }
 
-async function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
+function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 	const typeZ3 = { Z1K1: 'Z9', Z9K1: 'Z3' };
 	const itsMe = {
 		Z1K1: {
@@ -713,9 +713,9 @@ async function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 			Z9K1: 'Z4'
 		},
 		Z4K1: itsMe,
-		Z4K2: await convertArrayToKnownTypedList( [
-			Z3For( firstType, { Z1K1: 'Z6', Z6K1: 'K1' }, await Z12For( 'first' ) ),
-			Z3For( secondType, { Z1K1: 'Z6', Z6K1: 'K2' }, await Z12For( 'second' ) )
+		Z4K2: convertArrayToKnownTypedList( [
+			Z3For( firstType, { Z1K1: 'Z6', Z6K1: 'K1' }, Z12For( 'first' ) ),
+			Z3For( secondType, { Z1K1: 'Z6', Z6K1: 'K2' }, Z12For( 'second' ) )
 		], typeZ3 ),
 		Z4K3: {
 			Z1K1: 'Z9',
@@ -725,7 +725,7 @@ async function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 	return makeMappedResultEnvelope( Z4, null );
 }
 
-async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants ) {
+function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants ) {
 	// TODO (T302015) When ZMap keys are extended beyond Z6/String, update accordingly
 	const allowedKeyTypes = [ 'Z6', 'Z39' ];
 	if ( !allowedKeyTypes.includes( keyType.Z9K1 ) ) {
@@ -741,8 +741,8 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants ) {
 		Z883K1: keyType,
 		Z883K2: valueType
 	};
-	const pairType = ( await BUILTIN_GENERIC_PAIR_TYPE_( keyType, valueType ) ).Z22K1;
-	const listType = ( await BUILTIN_GENERIC_LIST_TYPE_( pairType ) ).Z22K1;
+	const pairType = BUILTIN_GENERIC_PAIR_TYPE_( keyType, valueType ).Z22K1;
+	const listType = BUILTIN_GENERIC_LIST_TYPE_( pairType ).Z22K1;
 	const typeZ3 = { Z1K1: 'Z9', Z9K1: 'Z3' };
 	const Z4 = {
 		Z1K1: {
@@ -750,8 +750,8 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants ) {
 			Z9K1: 'Z4'
 		},
 		Z4K1: itsMe,
-		Z4K2: await convertArrayToKnownTypedList( [
-			Z3For( listType, { Z1K1: 'Z6', Z6K1: 'K1' }, await Z12For( 'elements' ) )
+		Z4K2: convertArrayToKnownTypedList( [
+			Z3For( listType, { Z1K1: 'Z6', Z6K1: 'K1' }, Z12For( 'elements' ) )
 		], typeZ3 ),
 		Z4K3: {
 			Z1K1: 'Z9',
@@ -909,7 +909,7 @@ const validatorZIDs = [
 	'Z261', 'Z280', 'Z286', 'Z299'
 ];
 
-( async function setBuiltinReferences() {
+( function setBuiltinReferences() {
 	const implementations = new Map();
 	const definitions = new Map();
 	for ( const ZID of implementationZIDs ) {
@@ -962,11 +962,11 @@ const validatorZIDs = [
 		const ZID = entry[ 0 ];
 		const definition = entry[ 1 ];
 		const normalizedDefinition = (
-			await normalize( definition, /* generically= */ true, /* withVoid= */ true )
+			normalize( definition, /* generically= */ true, /* withVoid= */ true )
 		).Z22K1;
 		builtinReferences.set( ZID, normalizedDefinition );
 	}
-}() ).then();
+}() );
 
 /**
  * Creates a Z8 corresponding to a bulitin function.

@@ -18,10 +18,10 @@ class BaseFrame {
 	// * ZObjects are canonicalized
 	// * Scopes are flattened
 	// See also `ZWrapper.debugObject()` and `ZWrapper.debug()`.
-	async debugObject() {
-		const result = ( this.isEmpty() ) ? {} : await this.lastFrame_.debugObject();
+	debugObject() {
+		const result = ( this.isEmpty() ) ? {} : this.lastFrame_.debugObject();
 		for ( const [ name, value ] of this.names_ ) {
-			result[ name ] = await value.argumentDict.argument.debugObject();
+			result[ name ] = value.argumentDict.argument.debugObject();
 		}
 		return result;
 	}

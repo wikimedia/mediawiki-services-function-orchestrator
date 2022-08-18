@@ -30,12 +30,12 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 			if ( output === null ) {
 				output = makeVoid( /* canonical */ true );
 			} else {
-				output = ( await canonicalize( output, /* withVoid= */ true ) ).Z22K1;
+				output = canonicalize( output, /* withVoid= */ true ).Z22K1;
 			}
 			if ( error === null ) {
 				error = makeVoid( /* canonical */ true );
 			} else {
-				error = ( await canonicalize( error, /* withVoid= */ true ) ).Z22K1;
+				error = canonicalize( error, /* withVoid= */ true ).Z22K1;
 			}
 			const result = await preq.post( {
 				uri: uri,

@@ -47,7 +47,7 @@ async function validateAsType( Z1, invariants, typeZObject = null ) {
 	// validation needs to be run. Here we just make sure that we won't run the
 	// same function twice by comparing Z8K5 references.
 	const resolvedType = ( await ( typeZObject.resolve( invariants ) ) ).Z22K1;
-	if ( ( await validatesAsType( resolvedType.asJSON() ) ).isValid() ) {
+	if ( validatesAsType( resolvedType.asJSON() ).isValid() ) {
 		await ( resolvedType.resolveKey( [ 'Z4K3' ], invariants ) );
 		const validatorZ8 = resolvedType.Z4K3;
 		if ( validatorZ8.Z8K5.Z9K1 !== genericValidatorZ8.Z8K5.Z9K1 ) {
@@ -76,7 +76,7 @@ async function resolveTypes( Z1, invariants, doValidate = true ) {
 	const objectQueue = [ Z1 ];
 	while ( objectQueue.length > 0 ) {
 		const nextObject = objectQueue.shift();
-		if ( await isRefOrString( nextObject ) ) {
+		if ( isRefOrString( nextObject ) ) {
 			continue;
 		}
 		await ( nextObject.resolveKey(
@@ -298,7 +298,7 @@ async function getArgumentStates( zobject, invariants, doValidate = true ) {
  */
 async function validateReturnType( result, zobject, invariants ) {
 	// eslint-disable-next-line no-bitwise
-	const thebits = ( ( await containsValue( result ) ) << 1 ) | containsError( result );
+	const thebits = ( containsValue( result ) << 1 ) | containsError( result );
 
 	if ( thebits === 0 ) {
 		// Neither value nor error.
@@ -347,7 +347,7 @@ async function executeInternal(
 	zobject, invariants, doValidate = true,
 	implementationSelector = null, resolveInternals = true ) {
 
-	const typeKey = await createZObjectKey( zobject );
+	const typeKey = createZObjectKey( zobject );
 	if ( typeKey.ZID_ === 'Z881' && !resolveInternals ) {
 		// TODO (T305459): Tighten number of cases where `resolveInternals` is set to false.
 		// Use an empty scope for the outer object, the nested object should already have its own
@@ -475,7 +475,7 @@ async function resolveDanglingReferences( zobject, invariants ) {
 		if ( oldValueJSON instanceof ZWrapper ) {
 			oldValueJSON = oldValueJSON.asJSON();
 		}
-		if ( ( await validatesAsArgumentReference( oldValueJSON ) ).isValid() ) {
+		if ( validatesAsArgumentReference( oldValueJSON ).isValid() ) {
 			const valueEnvelope = await ( oldValue.resolve(
 				invariants, /* ignoreList= */ new Set( [
 					MutationType.REFERENCE, MutationType.FUNCTION_CALL,

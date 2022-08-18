@@ -117,7 +117,7 @@ class ZWrapper {
 				nextJSON = nextJSON.asJSON();
 			}
 			if ( !ignoreList.has( MutationType.ARGUMENT_REFERENCE ) ) {
-				const argumentReferenceStatus = await validatesAsArgumentReference( nextJSON );
+				const argumentReferenceStatus = validatesAsArgumentReference( nextJSON );
 				if ( argumentReferenceStatus.isValid() ) {
 					const refKey = nextObject.Z18K1.Z6K1;
 					const dereferenced = await this.scope_.retrieveArgument(
@@ -131,7 +131,7 @@ class ZWrapper {
 				}
 			}
 			if ( !ignoreList.has( MutationType.REFERENCE ) ) {
-				const referenceStatus = await validatesAsReference( nextJSON );
+				const referenceStatus = validatesAsReference( nextJSON );
 				// TODO (T296686): isUserDefined call here is only an
 				// optimization/testing expedient; it would be better to pre-populate
 				// the cache with builtin types.
@@ -143,7 +143,7 @@ class ZWrapper {
 				}
 			}
 			if ( !ignoreList.has( MutationType.FUNCTION_CALL ) ) {
-				const functionCallStatus = await validatesAsFunctionCall( nextJSON );
+				const functionCallStatus = validatesAsFunctionCall( nextJSON );
 				if ( functionCallStatus.isValid() ) {
 					const { execute } = require( './execute.js' );
 					const Z22 = await execute(
@@ -156,13 +156,13 @@ class ZWrapper {
 					continue;
 				}
 			}
-			if ( await isGenericType( nextObject ) ) {
+			if ( isGenericType( nextObject ) ) {
 				const executionResult = await nextObject.resolveKey( [ 'Z1K1' ], invariants, ignoreList, resolveInternals, doValidate );
 				if ( containsError( executionResult ) ) {
 					return executionResult;
 				}
 				const Z4 = nextObject.Z1K1;
-				const typeStatus = await validatesAsType( Z4.asJSON() );
+				const typeStatus = validatesAsType( Z4.asJSON() );
 				if ( !typeStatus.isValid() ) {
 					// TODO (T2966681): Return typeStatus.getZ5() as part of this result.
 					return makeWrappedResultEnvelope(
@@ -198,7 +198,7 @@ class ZWrapper {
 		if ( resolveInternals ) {
 			// Validate that the newly-mutated object validates in accordance with the
 			// original object's key declaration.
-			const theSchema = await createSchema( this.asJSON() );
+			const theSchema = createSchema( this.asJSON() );
 			// We validate elsewhere that Z1K1 must be a type, so the schemata do not
 			// surface separate validators for Z1K1.
 			if ( key !== 'Z1K1' ) {
@@ -218,7 +218,7 @@ class ZWrapper {
 				} else {
 					toValidate = newValue;
 				}
-				const theStatus = await subValidator.validateStatus( toValidate );
+				const theStatus = subValidator.validateStatus( toValidate );
 				if ( !theStatus.isValid() ) {
 					// TODO (T302015): Find a way to incorporate information about where this
 					// error came from.
@@ -320,17 +320,17 @@ class ZWrapper {
 	// * ZObjects are canonicalized
 	// * Scopes are flattened
 	// See also `ZWrapper.debug()`.
-	async debugObject() {
-		const object_ = ( await canonicalize( this.asJSON() ) ).Z22K1;
-		const scope_ = await this.scope_.debugObject();
+	debugObject() {
+		const object_ = canonicalize( this.asJSON() ).Z22K1;
+		const scope_ = this.scope_.debugObject();
 		return { object_, scope_ };
 	}
 
 	// Helper function for logging the debug representation of the ZWrapper. With it, one can write:
 	// `console.log( 'executing:', await zwrapper.debug() );`
 	// to log the debug representation of the ZWrapper object without truncating it due to depth.
-	async debug() {
-		const debugObject = await this.debugObject();
+	debug() {
+		const debugObject = this.debugObject();
 		return { [ util.inspect.custom ]: ( _, options, inspect ) => {
 			return util.inspect( debugObject, Object.assign( {}, options, {
 				depth: null

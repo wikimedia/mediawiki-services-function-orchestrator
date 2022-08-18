@@ -91,7 +91,7 @@ class BuiltIn extends Implementation {
 	 * @param {Array} argumentList
 	 * @return {Object} the result of calling this.functor_ with provided arguments
 	 */
-	async executeInternal( zobject, argumentList ) {
+	executeInternal( zobject, argumentList ) {
 		const keys = [];
 		const nameToArgument = new Map();
 		for ( const argumentDict of argumentList ) {
@@ -133,7 +133,7 @@ class Evaluated extends Implementation {
 		Z7.Z7K1 = Z7K1.asJSON();
 		// TODO: Eliminate this back-and-forth ZWrapper conversion if possible.
 		const Z8K4 = ZWrapper.create(
-			await convertItemArrayToZList( [ this.Z14_.asJSON() ] ), this.Z14_.scope_ );
+			convertItemArrayToZList( [ this.Z14_.asJSON() ] ), this.Z14_.scope_ );
 
 		const implementation = this;
 

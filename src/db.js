@@ -62,7 +62,7 @@ class ReferenceResolver {
 				// Dereferenced objects are created in an empty scope because they are not supposed
 				// to refer to any local variable.
 				const normalized =
-					ZWrapper.create( await normalize( zobject,
+					ZWrapper.create( normalize( zobject,
 						/* generically= */true, /* withVoid= */ true ), new EmptyFrame() );
 				// TODO (T304971): We should include the entire Z22 in the result.
 				// We should also generate Z22s when the call to the wiki fails.

@@ -17,19 +17,19 @@ const validators = new Map();
  * @param {Object} Z1 the type ZObject
  * @return {Schema} a fully-initialized Schema or null if unsupported.
  */
-async function getSchemaValidator( Z1 ) {
+function getSchemaValidator( Z1 ) {
 	Z1 = Z1.asJSON();
 	const result = {
 		typeKey: null,
 		schemaValidator: null
 	};
-	result.typeKey = await createZObjectKey( Z1.Z1K1 );
+	result.typeKey = createZObjectKey( Z1.Z1K1 );
 	if ( result.typeKey.type() === 'GenericTypeKey' ) {
 		return result;
 	}
 	const keyString = result.typeKey.asString();
 	if ( !validators.has( keyString ) ) {
-		validators.set( keyString, await createSchema( Z1 ) );
+		validators.set( keyString, createSchema( Z1 ) );
 	}
 	result.schemaValidator = validators.get( keyString );
 	return result;
@@ -123,26 +123,20 @@ async function runTypeValidatorDynamic( Z1, Z4, invariants ) {
 	}
 }
 
-async function traverseInternal( ZObject, callback, promises ) {
+function traverseInternal( ZObject, callback ) {
 	if ( isString( ZObject ) ) {
 		return;
 	}
-	promises.push( callback( ZObject ) );
+	callback( ZObject );
 	let keys;
-	if ( ( await validatesAsFunctionCall( ZObject.asJSON() ) ).isValid() ) {
+	if ( validatesAsFunctionCall( ZObject.asJSON() ).isValid() ) {
 		keys = [ 'Z1K1', 'Z7K1' ];
 	} else {
 		keys = ZObject.keys();
 	}
 	for ( const key of keys ) {
-		await traverseInternal( ZObject[ key ], callback, promises );
+		traverseInternal( ZObject[ key ], callback );
 	}
-}
-
-async function traverseOmittingFunctionCallInputs( ZObject, callback ) {
-	const promises = [];
-	await traverseInternal( ZObject, callback, promises );
-	await Promise.all( promises );
 }
 
 /**
@@ -156,18 +150,14 @@ async function traverseOmittingFunctionCallInputs( ZObject, callback ) {
 async function getContainedTypeZObjects( zobject, invariants ) {
 	const containedTypes = new Set();
 
-	const promises = [];
-	await traverseOmittingFunctionCallInputs( zobject, function ( Z1 ) {
-		promises.push( ( async function () {
-			const typeKey = await createZObjectKey( Z1.Z1K1 );
-			const key = typeKey.asString();
-			// TODO (T297717): We should add other types to the set, not just builtins.
-			if ( typeKey.type() === 'SimpleTypeKey' ) {
-				containedTypes.add( key );
-			}
-		} )() );
+	traverseInternal( zobject, function ( Z1 ) {
+		const typeKey = createZObjectKey( Z1.Z1K1 );
+		const key = typeKey.asString();
+		// TODO (T297717): We should add other types to the set, not just builtins.
+		if ( typeKey.type() === 'SimpleTypeKey' ) {
+			containedTypes.add( key );
+		}
 	} );
-	await Promise.all( promises );
 
 	const result = await invariants.resolver.dereference( containedTypes );
 	return result;
@@ -184,51 +174,42 @@ async function getContainedTypeZObjects( zobject, invariants ) {
 async function validate( zobject, invariants ) {
 	const errors = [];
 	const ZObjectTypes = await getContainedTypeZObjects( zobject, invariants );
-	const traversalPromises = [];
 	const typeValidatorPromises = [];
 
-	await traverseOmittingFunctionCallInputs( zobject, ( Z1 ) => {
-		traversalPromises.push( ( async function () {
-			let validatorTuple;
-			try {
-				validatorTuple = await getSchemaValidator( Z1 );
-			} catch ( error ) {
-				console.error( 'Attempting to validate Z1', Z1, 'produced error', error );
-				errors.push(
-					// Use an empty scope as the error should not refer to any local variable.
-					ZWrapper.create( normalError(
-						[ error.zid_not_found ],
-						[ error.message ] ), new EmptyFrame() ) );
-				return;
-			}
-			const {
-				typeKey,
-				schemaValidator
-			} = validatorTuple;
-			if ( schemaValidator === null ) {
-				return;
-			}
-			if ( ZObjectTypes[ typeKey.asString() ] === undefined ) {
-				// TODO (T297717): We should add other types to the set, not just builtins.
-				return;
-			}
-			const theStatus = await schemaValidator.validateStatus( Z1.asJSON() );
-			if ( !theStatus.isValid() ) {
+	traverseInternal( zobject, ( Z1 ) => {
+		let validatorTuple;
+		try {
+			validatorTuple = getSchemaValidator( Z1 );
+		} catch ( error ) {
+			console.error( 'Attempting to validate Z1', Z1, 'produced error', error );
+			errors.push(
 				// Use an empty scope as the error should not refer to any local variable.
-				errors.push( ZWrapper.create( theStatus.getZ5(), new EmptyFrame() ) );
-			} else {
-				// TODO (T307244): Use ignoreList instead of setting evaluator
-				// to null.
-				const noEvaluator = new Invariants( null, invariants.resolver );
-				typeValidatorPromises.push(
-					runTypeValidator(
-						Z1, ZObjectTypes[ typeKey.asString() ].Z2K2, noEvaluator )
-				);
-			}
-		} )() );
+				ZWrapper.create( normalError(
+					[ error.zid_not_found ],
+					[ error.message ] ), new EmptyFrame() ) );
+			return;
+		}
+		const { typeKey, schemaValidator } = validatorTuple;
+		if ( schemaValidator === null ) {
+			return;
+		}
+		if ( ZObjectTypes[ typeKey.asString() ] === undefined ) {
+			// TODO (T297717): We should add other types to the set, not just builtins.
+			return;
+		}
+		const theStatus = schemaValidator.validateStatus( Z1.asJSON() );
+		if ( !theStatus.isValid() ) {
+			// Use an empty scope as the error should not refer to any local variable.
+			errors.push( ZWrapper.create( theStatus.getZ5(), new EmptyFrame() ) );
+		} else {
+			// TODO (T307244): Use ignoreList instead of setting evaluator
+			// to null.
+			const noEvaluator = new Invariants( null, invariants.resolver );
+			typeValidatorPromises.push( runTypeValidator(
+				Z1, ZObjectTypes[ typeKey.asString() ].Z2K2, noEvaluator ) );
+		}
 	} );
 
-	await Promise.all( traversalPromises );
 	const typeValidatorResults = await Promise.all( typeValidatorPromises );
 
 	typeValidatorResults

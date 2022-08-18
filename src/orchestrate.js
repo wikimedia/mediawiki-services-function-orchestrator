@@ -51,8 +51,8 @@ async function maybeValidate( zobject, doValidate, invariants ) {
  * @param {Object} zobject
  * @return {Object} a Z22 as described above
  */
-async function Z7OrError( zobject ) {
-	if ( ( await validatesAsFunctionCall( zobject ) ).isValid() ) {
+function Z7OrError( zobject ) {
+	if ( validatesAsFunctionCall( zobject ).isValid() ) {
 		return makeMappedResultEnvelope( zobject, null );
 	}
 	return makeMappedResultEnvelope(
@@ -139,7 +139,7 @@ async function orchestrate( input, implementationSelector = null ) {
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationEndTime' }, { Z1K1: 'Z6', Z6K1: endTimeStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationDuration' }, { Z1K1: 'Z6', Z6K1: durationStr } );
 
-	const canonicalized = await canonicalize( currentPair, /* withVoid= */ true );
+	const canonicalized = canonicalize( currentPair, /* withVoid= */ true );
 
 	if ( containsError( canonicalized ) ) {
 		// If canonicalization fails, return normalized form instead.
