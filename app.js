@@ -12,6 +12,7 @@ const packageInfo = require( './package.json' );
 const yaml = require( 'js-yaml' );
 const addShutdown = require( 'http-shutdown' );
 const path = require( 'path' );
+const { setLogger } = require( './src/logger.js' );
 
 /**
  * Creates an express app and initialises it
@@ -23,6 +24,9 @@ function initApp( options ) {
 
 	// the main application object
 	const app = express();
+
+	const logger = options.logger;
+	setLogger( logger );
 
 	// get the options and make them available in the app
 	app.logger = options.logger; // the logging device

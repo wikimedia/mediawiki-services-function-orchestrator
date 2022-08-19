@@ -14,6 +14,7 @@ const { Invariants } = require( './Invariants.js' );
 const { ReferenceResolver } = require( './db.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { cpuUsage, memoryUsage } = require( 'node:process' );
+const { getLogger } = require( './logger.js' );
 
 /**
  * Decides whether to validate a function. Returns the pair
@@ -137,7 +138,8 @@ async function orchestrate( input, implementationSelector = null ) {
 
 	if ( containsError( canonicalized ) ) {
 		// If canonicalization fails, return normalized form instead.
-		console.log( 'Could not canonicalize; outputting in normal form.' );
+		const logger = getLogger();
+		logger.log( 'Could not canonicalize; outputting in normal form.' );
 	} else {
 		currentPair = canonicalized.Z22K1;
 	}
