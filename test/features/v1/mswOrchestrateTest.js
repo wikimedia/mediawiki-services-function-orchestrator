@@ -45,7 +45,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		// Set evaluator response for string numeral increment function.
 		// Used in scott numeral tests to convert scott numerals to strings.
 		evaluatorStub.setZId( 'Z40002', ( zobject ) => makeMappedResultEnvelope( ( parseInt( zobject.Z40002K1.Z6K1 ) + 1 ).toString(), null ) );
-
+		// Set evaluator response for test "Test with many on-wiki custom types."
+		evaluatorStub.setZId( 'Z10143', ( Z10143 ) => makeMappedResultEnvelope( JSON.stringify( Z10143.Z10143K1 ), null ) );
 		return mockServiceWorker.listen();
 	} );
 
@@ -1476,6 +1477,43 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* functionCall= */ call,
 			/* expectedResultFile= */ testDataDir( 'expected-Z140.json' ),
 			/* expectedErrorState= */ false
+		);
+	}
+
+	{
+		wikiStub.setZId( 'Z10144', readJSON( testDataDir( 'Z10144.json' ) ) );
+		wikiStub.setZId( 'Z10143', readJSON( testDataDir( 'Z10143.json' ) ) );
+		wikiStub.setZId( 'Z10139', readJSON( testDataDir( 'Z10139.json' ) ) );
+		wikiStub.setZId( 'Z10138', readJSON( testDataDir( 'Z10138.json' ) ) );
+		wikiStub.setZId( 'Z10015', readJSON( testDataDir( 'Z10015.json' ) ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z10143',
+			Z10143K1: {
+				Z1K1: 'Z10139',
+				Z10139K1: '111',
+				Z10139K2: [
+					'Z10138',
+					{
+						Z1K1: 'Z10138',
+						Z10138K1: {
+							Z1K1: 'Z10015',
+							Z10015K1: '222'
+						},
+						Z10138K2: '333',
+						Z10138K3: '444'
+					}
+				]
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test with many on-wiki custom types',
+			/* functionCall= */ call,
+			/* expectedResultFile= */ testDataDir( 'expected-on-wiki-types.json' ),
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile = */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 

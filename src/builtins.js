@@ -1,7 +1,7 @@
 'use strict';
 
 const normalize = require( '../function-schemata/javascript/src/normalize' );
-const { createSchema, makeBoolean, traverseZList } = require( './utils.js' );
+const { createSchema, createZObjectKey, makeBoolean, traverseZList } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const {
 	builtInTypes,
@@ -433,8 +433,26 @@ function makeValidatorResultEnvelope( Z1, errors ) {
 	}
 }
 
-async function BUILTIN_SCHEMA_VALIDATOR_(
-	quotedObject, quotedType, invariants ) {
+async function resolveAllZ4Keys_( Z4, invariants ) {
+	const resolvedKeys = new Set();
+	const typesToResolve = [];
+	typesToResolve.push( Z4 );
+	while ( typesToResolve.length > 0 ) {
+		const toResolve = typesToResolve.pop( 0 );
+		await traverseZList( toResolve.Z4K2, async function ( Z3Tail ) {
+			await ( Z3Tail.resolveEphemeral( [ 'K1', 'Z3K1' ], invariants, /* ignoreList= */null, /* resolveInternals= */false ) );
+			const nextType = Z3Tail.K1.getNameEphemeral( 'Z3K1' );
+			const key = createZObjectKey( nextType ).asString();
+			if ( resolvedKeys.has( key ) ) {
+				return;
+			}
+			resolvedKeys.add( key );
+			typesToResolve.push( nextType );
+		} );
+	}
+}
+
+async function BUILTIN_SCHEMA_VALIDATOR_( quotedObject, quotedType, invariants ) {
 	// TODO (T290698): Use this instead of BUILTIN_EMPTY_VALIDATOR_.
 	const Z1 = quotedObject.Z99K1;
 	const Z4 = ( await ( quotedType.Z99K1.resolve(
@@ -443,12 +461,8 @@ async function BUILTIN_SCHEMA_VALIDATOR_(
 
 	// Ensure all internal type references are resolved.
 	// TODO (T297904): Also need to resolve generic types.
-	await traverseZList( Z4.Z4K2, async function ( Z3Tail ) {
-		await ( Z3Tail.resolveKey(
-			[ 'K1', 'Z3K1' ], invariants,
-			/* ignoreList= */null, /* resolveInternals= */false ) );
-	} );
-	const theSchema = createSchema( { Z1K1: Z4.asJSON() } );
+	await resolveAllZ4Keys_( Z4, invariants );
+	const theSchema = createSchema( { Z1K1: Z4.asJSONEphemeral() } );
 
 	// TODO (T294289): Return validationStatus Z5s as Z22K2.
 	const theStatus = theSchema.validateStatus( Z1.asJSON() );
@@ -538,7 +552,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 	Z99, errors, invariants ) {
 	const Z1 = Z99.Z99K1;
 	const { getArgumentStates } = require( './execute.js' );
-	const argumentStates = await getArgumentStates( Z1, invariants, true );
+	const argumentStates = await getArgumentStates( Z1, invariants );
 	const dictDict = {};
 	for ( const argumentState of argumentStates ) {
 		if ( argumentState.state === 'ERROR' ) {
