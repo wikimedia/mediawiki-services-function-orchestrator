@@ -1,10 +1,19 @@
 'use strict';
 
-const utils = require( '../function-schemata/javascript/src/utils' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { createSchema, makeBoolean, traverseZList } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
-const { makeMappedResultEnvelope, makeTrue, makeFalse } = require( '../function-schemata/javascript/src/utils.js' );
+const {
+	convertArrayToKnownTypedList,
+	convertZListToItemArray,
+	isEmptyZList,
+	isGlobalKey,
+	isString,
+	kidFromGlobalKey,
+	makeMappedResultEnvelope,
+	makeTrue,
+	makeFalse
+} = require( '../function-schemata/javascript/src/utils.js' );
 const { readJSON } = require( './read-json.js' );
 const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
 const {
@@ -100,7 +109,7 @@ async function Z12For( name ) {
 			Z1K1: 'Z9',
 			Z9K1: 'Z12'
 		},
-		Z12K1: await ( utils.convertArrayToKnownTypedList )( [
+		Z12K1: await ( convertArrayToKnownTypedList )( [
 			{
 				Z1K1: {
 					Z1K1: 'Z9',
@@ -152,7 +161,7 @@ function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
 }
 
 async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
-	const keyrefs = utils.convertZListToItemArray( Z39s );
+	const keyrefs = convertZListToItemArray( Z39s );
 	const pairType = {
 		Z1K1: Z9For( 'Z7' ),
 		Z7K1: Z9For( 'Z882' ),
@@ -180,7 +189,7 @@ async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
 			[ 'Object did not contain key(s): ' + missing ] );
 		return makeMappedResultEnvelope( null, badResult );
 	} else {
-		const pairList = await utils.convertArrayToKnownTypedList( pairArray, pairType );
+		const pairList = await convertArrayToKnownTypedList( pairArray, pairType );
 		const mapType = {
 			Z1K1: Z9For( 'Z7' ),
 			Z7K1: Z9For( 'Z883' ),
@@ -196,7 +205,7 @@ async function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
 }
 
 async function reifyRecursive( Z1 ) {
-	if ( utils.isString( Z1 ) ) {
+	if ( isString( Z1 ) ) {
 		return {
 			Z1K1: 'Z6',
 			Z6K1: Z1
@@ -226,7 +235,7 @@ async function reifyRecursive( Z1 ) {
 			K2: value
 		} );
 	}
-	return await utils.convertArrayToKnownTypedList( result, pairType );
+	return await convertArrayToKnownTypedList( result, pairType );
 }
 
 async function BUILTIN_REIFY_( Z1 ) {
@@ -238,7 +247,7 @@ function abstractRecursive( ZList ) {
 		return ZList.Z6K1;
 	}
 	const result = {};
-	const arrayOfPairs = utils.convertZListToItemArray( ZList );
+	const arrayOfPairs = convertZListToItemArray( ZList );
 	for ( const pair of arrayOfPairs ) {
 		const Z39 = pair.K1;
 		result[ Z39.Z39K1.Z6K1 ] = abstractRecursive( pair.K2 );
@@ -265,14 +274,14 @@ async function BUILTIN_CONS_( Z1, list ) {
 		itemType = list.Z1K1.Z881K1;
 	}
 
-	const typedList = await utils.convertArrayToKnownTypedList( [ Z1 ], itemType );
+	const typedList = await convertArrayToKnownTypedList( [ Z1 ], itemType );
 	typedList.K2 = list;
 
 	return makeMappedResultEnvelope( typedList, null );
 }
 
 function BUILTIN_HEAD_( list ) {
-	if ( utils.isEmptyZList( list ) ) {
+	if ( isEmptyZList( list ) ) {
 		return makeMappedResultEnvelope(
 			null,
 			normalError(
@@ -283,7 +292,7 @@ function BUILTIN_HEAD_( list ) {
 }
 
 function BUILTIN_TAIL_( list ) {
-	if ( utils.isEmptyZList( list ) ) {
+	if ( isEmptyZList( list ) ) {
 		return makeMappedResultEnvelope(
 			null,
 			normalError(
@@ -295,7 +304,7 @@ function BUILTIN_TAIL_( list ) {
 
 function BUILTIN_EMPTY_( list ) {
 	let result;
-	if ( utils.isEmptyZList( list ) ) {
+	if ( isEmptyZList( list ) ) {
 		result = makeTrue();
 	} else {
 		result = makeFalse();
@@ -362,7 +371,7 @@ async function stringToCharsInternal( characterArray ) {
 			Z86K1: { Z1K1: 'Z6', Z6K1: character }
 		} );
 	}
-	return await utils.convertArrayToKnownTypedList( Z86Array, typeZ86 );
+	return await convertArrayToKnownTypedList( Z86Array, typeZ86 );
 }
 
 async function BUILTIN_STRING_TO_CHARS_( Z6 ) {
@@ -372,7 +381,7 @@ async function BUILTIN_STRING_TO_CHARS_( Z6 ) {
 }
 
 function charsToStringInternal( list ) {
-	const Z86Array = utils.convertZListToItemArray( list );
+	const Z86Array = convertZListToItemArray( list );
 	const result = [];
 	for ( const Z86 of Z86Array ) {
 		result.push( Z86.Z6K1 || Z86.Z86K1.Z6K1 );
@@ -463,18 +472,18 @@ function BUILTIN_EMPTY_VALIDATOR_( Z1 ) {
  * @return {Object} a Typed List of Z5/Error.
  */
 function arrayValidator( list, key, identity ) {
-	const keys = utils.convertZListToItemArray( list ).map( key );
+	const keys = convertZListToItemArray( list ).map( key );
 	const messages = [];
 
 	const seen = new Set();
 	for ( let i = 0; i < keys.length; ++i ) {
 		const originalKey = keys[ i ];
 		let key = originalKey;
-		if ( utils.isGlobalKey( key ) ) {
+		if ( isGlobalKey( key ) ) {
 			if ( !originalKey.startsWith( identity ) ) {
 				messages.push( `Invalid key at index ${i}: string should start with ${identity}` );
 			}
-			key = utils.kidFromGlobalKey( key );
+			key = kidFromGlobalKey( key );
 		}
 		const expectedIndex = i + 1;
 		const actualIndex = Number( key.replace( 'K', '' ) );
@@ -597,7 +606,7 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_( Z99, invariants ) {
 async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
-	const Z11s = utils.convertZListToItemArray( Z1.Z12K1 );
+	const Z11s = convertZListToItemArray( Z1.Z12K1 );
 	const languages = await Promise.all( Z11s.map( async ( Z11 ) => await ( Z11.resolveKey(
 		[ 'Z11K1', 'Z60K1', 'Z6K1' ],
 		invariants ).Z22K1 ) ) );
@@ -622,7 +631,7 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants ) {
 function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_( Z99 ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
-	const Z31s = utils.convertZListToItemArray( Z1.Z32K1 );
+	const Z31s = convertZListToItemArray( Z1.Z32K1 );
 	const languages = Z31s.map( ( Z31 ) => Z31.Z31K1.Z60K1.Z6K1 );
 
 	const seen = new Set();
@@ -668,7 +677,7 @@ async function resolveListType( typeZ4 ) {
 			Z9K1: 'Z4'
 		},
 		Z4K1: itsMe,
-		Z4K2: await utils.convertArrayToKnownTypedList( [
+		Z4K2: await convertArrayToKnownTypedList( [
 			Z3For( typeZ4, { Z1K1: 'Z6', Z6K1: 'K1' }, await Z12For( 'head' ) ),
 			Z3For( itsMe, { Z1K1: 'Z6', Z6K1: 'K2' }, await Z12For( 'tail' ) )
 		], typeZ3 ),
@@ -704,7 +713,7 @@ async function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 			Z9K1: 'Z4'
 		},
 		Z4K1: itsMe,
-		Z4K2: await utils.convertArrayToKnownTypedList( [
+		Z4K2: await convertArrayToKnownTypedList( [
 			Z3For( firstType, { Z1K1: 'Z6', Z6K1: 'K1' }, await Z12For( 'first' ) ),
 			Z3For( secondType, { Z1K1: 'Z6', Z6K1: 'K2' }, await Z12For( 'second' ) )
 		], typeZ3 ),
@@ -741,7 +750,7 @@ async function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants ) {
 			Z9K1: 'Z4'
 		},
 		Z4K1: itsMe,
-		Z4K2: await utils.convertArrayToKnownTypedList( [
+		Z4K2: await convertArrayToKnownTypedList( [
 			Z3For( listType, { Z1K1: 'Z6', Z6K1: 'K1' }, await Z12For( 'elements' ) )
 		], typeZ3 ),
 		Z4K3: {
