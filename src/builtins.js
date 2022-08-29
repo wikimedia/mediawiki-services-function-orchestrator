@@ -4,6 +4,7 @@ const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { createSchema, makeBoolean, traverseZList } = require( './utils.js' );
 const { normalError, error } = require( '../function-schemata/javascript/src/error' );
 const {
+	builtInTypes,
 	convertArrayToKnownTypedList,
 	convertZListToItemArray,
 	isEmptyZList,
@@ -728,7 +729,13 @@ function BUILTIN_GENERIC_PAIR_TYPE_( firstType, secondType ) {
 function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants ) {
 	// TODO (T302015) When ZMap keys are extended beyond Z6/String, update accordingly
 	const allowedKeyTypes = [ 'Z6', 'Z39' ];
-	if ( !allowedKeyTypes.includes( keyType.Z9K1 ) ) {
+	// TODO (T302032): Use function-schemata version of findIdentity to improve
+	// type inference here.
+	let identity = keyType;
+	while ( identity.Z4K1 !== undefined ) {
+		identity = identity.Z4K1;
+	}
+	if ( !allowedKeyTypes.includes( identity.Z9K1 ) ) {
 		const newError = normalError(
 			[ error.argument_value_error ],
 			[ 'Z883K1', keyType ]
@@ -955,6 +962,10 @@ const validatorZIDs = [
 		definitions.set( ZID, theDefinition );
 	}
 	for ( const ZID of validatorZIDs ) {
+		const theDefinition = getDefinitionFromFile( ZID );
+		definitions.set( ZID, theDefinition );
+	}
+	for ( const ZID of builtInTypes() ) {
 		const theDefinition = getDefinitionFromFile( ZID );
 		definitions.set( ZID, theDefinition );
 	}

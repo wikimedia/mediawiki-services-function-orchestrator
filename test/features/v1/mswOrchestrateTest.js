@@ -642,8 +642,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		const genericPair = readJSON( './test/features/v1/test_data/generic-pair.json' );
 		genericPair.Z1802K2 = 'Z88203';
 		const expected = readJSON( './test/features/v1/test_data/Z88203-expanded.json' );
-		const Z831 = readJSON( './test/features/v1/test_data/Z831.json' );
-		expected.Z1K1.Z4K3 = Z831;
 		test(
 			'generic pair',
 			genericPair,
@@ -676,8 +674,6 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		const genericMap = readJSON( './test/features/v1/test_data/generic-map.json' );
 		genericMap.Z1802K2 = 'Z88303';
 		const expected = readJSON( './test/features/v1/test_data/Z88303-expanded.json' );
-		const Z831 = readJSON( './test/features/v1/test_data/Z831.json' );
-		expected.Z1K1.Z4K3 = Z831;
 		test(
 			'generic map',
 			genericMap,
@@ -708,7 +704,30 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			'map "echo" function to a list of items',
 			mapCall,
 			[
-				'Z6',
+				{
+					Z1K1: 'Z4',
+					Z4K1: 'Z6',
+					Z4K2: [
+						'Z3',
+						{
+							Z1K1: 'Z3',
+							Z3K1: 'Z6',
+							Z3K2: 'Z6K1',
+							Z3K3: {
+								Z1K1: 'Z12',
+								Z12K1: [
+									'Z11',
+									{
+										Z1K1: 'Z11',
+										Z11K1: 'Z1002',
+										Z11K2: 'value'
+									}
+								]
+							}
+						}
+					],
+					Z4K3: 'Z106'
+				},
 				'acab'
 			]
 		);
@@ -1196,6 +1215,26 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			call,
 			'3',
 			null
+		);
+	}
+
+	{
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z803',
+			Z803K1: {
+				Z1K1: 'Z39',
+				Z39K1: {
+					Z1K1: 'Z6',
+					Z6K1: 'Z4K3'
+				}
+			},
+			Z803K2: 'Z40'
+		};
+		test(
+			'Built-ins are resolved when they are an argument to a function.',
+			call,
+			'Z140'
 		);
 	}
 

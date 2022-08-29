@@ -126,7 +126,8 @@ class Frame extends BaseFrame {
 		//      doValidate is currently false, otherwise using a Function;
 		//  -   caching and reusing the results of function calls
 		const argumentEnvelope = await ( argumentDict.argument.resolve(
-			invariants, ignoreList, resolveInternals, doValidate ) );
+			invariants, ignoreList, resolveInternals, doValidate,
+			/* evenBuiltins= */ true ) );
 		if ( containsError( argumentEnvelope ) ) {
 			return ArgumentState.ERROR( getError( argumentEnvelope ) );
 		}

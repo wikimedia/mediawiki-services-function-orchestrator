@@ -6,7 +6,7 @@
 	"scripts": {
 		"start": "service-runner",
 		"test": "npm run lint && npm run test:nolint",
-		"test:nolint": "PREQ_CONNECT_TIMEOUT=15 mocha --recursive --timeout 15000",
+		"test:nolint": "PREQ_CONNECT_TIMEOUT=15 mocha --recursive --timeout 20000",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
 		"docker-start": "service-runner docker-start",

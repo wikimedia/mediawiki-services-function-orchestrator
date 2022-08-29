@@ -106,7 +106,7 @@ class ZWrapper {
 	}
 
 	// private
-	async resolveInternal_( invariants, ignoreList, resolveInternals, doValidate ) {
+	async resolveInternal_( invariants, ignoreList, resolveInternals, doValidate, evenBuiltins ) {
 		if ( ignoreList === null ) {
 			ignoreList = new Set();
 		}
@@ -135,11 +135,13 @@ class ZWrapper {
 				// TODO (T296686): isUserDefined call here is only an
 				// optimization/testing expedient; it would be better to pre-populate
 				// the cache with builtin types.
-				if ( referenceStatus.isValid() && isUserDefined( nextObject.Z9K1 ) ) {
-					const refKey = nextObject.Z9K1;
-					const dereferenced = await invariants.resolver.dereference( [ refKey ] );
-					nextObject = dereferenced[ refKey ].Z2K2;
-					continue;
+				if ( referenceStatus.isValid() ) {
+					if ( isUserDefined( nextObject.Z9K1 ) || evenBuiltins ) {
+						const refKey = nextObject.Z9K1;
+						const dereferenced = await invariants.resolver.dereference( [ refKey ] );
+						nextObject = dereferenced[ refKey ].Z2K2;
+						continue;
+					}
 				}
 			}
 			if ( !ignoreList.has( MutationType.FUNCTION_CALL ) ) {
@@ -242,14 +244,16 @@ class ZWrapper {
 	 * @param {Set(MutationType)} ignoreList
 	 * @param {boolean} resolveInternals
 	 * @param {boolean} doValidate
+	 * @param {boolean} evenBuiltins Whether to resolve references to built-in types.
 	 * @return {ZWrapper} A result envelope zobject representing the result.
 	 */
 	async resolve(
-		invariants, ignoreList = null, resolveInternals = true, doValidate = true
+		invariants, ignoreList = null, resolveInternals = true, doValidate = true,
+		evenBuiltins = false
 	) {
 		// TODO: Remove this intermediate call?
 		return this.resolveInternal_(
-			invariants, ignoreList, resolveInternals, doValidate );
+			invariants, ignoreList, resolveInternals, doValidate, evenBuiltins );
 	}
 
 	/**
