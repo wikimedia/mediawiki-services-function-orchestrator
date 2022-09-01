@@ -1,9 +1,6 @@
 'use strict';
 
-const Bluebird = require( 'bluebird' );
-const fetch = require( 'node-fetch' );
-
-fetch.Promise = Bluebird;
+const fetch = require( '../lib/fetch.js' );
 
 /**
  * Function evaluator. Wraps API calls to the function-evaluator service, which

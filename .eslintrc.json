@@ -17,6 +17,12 @@
 				"ignores": []
 			}
 		],
+		"node/no-restricted-require": [ "error", [
+			{
+				"name": "node-fetch",
+				"message": "Please use the wrapper in lib/fetch.js instead."
+			}
+		] ],
 		"no-shadow": "off",
 		"no-underscore-dangle": "off",
 		"no-unused-vars": [

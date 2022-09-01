@@ -1,14 +1,11 @@
 'use strict';
 
-const Bluebird = require( 'bluebird' );
-const fetch = require( 'node-fetch' );
+const fetch = require( '../lib/fetch.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { containsError } = require( './utils.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { getError } = require( '../function-schemata/javascript/src/utils.js' );
 const { EmptyFrame } = require( './frame' );
-
-fetch.Promise = Bluebird;
 
 class ReferenceResolver {
 
