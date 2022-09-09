@@ -12,7 +12,7 @@ const packageInfo = require( './package.json' );
 const yaml = require( 'js-yaml' );
 const addShutdown = require( 'http-shutdown' );
 const path = require( 'path' );
-const { setLogger } = require( './src/logger.js' );
+const { getLogger, setLogger } = require( './src/logger.js' );
 
 /**
  * Creates an express app and initialises it
@@ -25,11 +25,11 @@ function initApp( options ) {
 	// the main application object
 	const app = express();
 
-	const logger = options.logger;
-	setLogger( logger );
+	setLogger( options.logger );
+	const logger = getLogger();
 
 	// get the options and make them available in the app
-	app.logger = options.logger; // the logging device
+	app.logger = logger; // the logging device
 	app.metrics = options.metrics; // the metrics
 	app.conf = options.config; // this app's config options
 	app.info = packageInfo; // this app's package info
@@ -80,7 +80,7 @@ function initApp( options ) {
 		try {
 			app.conf.spec = yaml.safeLoad( fs.readFileSync( app.conf.spec ) );
 		} catch ( e ) {
-			app.logger.log( 'warn/spec', `Could not load the spec: ${e}` );
+			logger.log( 'warn/spec', `Could not load the spec: ${e}` );
 			app.conf.spec = {};
 		}
 	}
@@ -212,7 +212,7 @@ function createServer( app ) {
 		);
 		server = addShutdown( server );
 	} ).then( () => {
-		app.logger.log( 'info',
+		getLogger().log( 'info',
 			`Worker ${process.pid} listening on ${app.conf.interface || '*'}:${app.conf.port}` );
 
 		// Don't delay incomplete packets for 40ms (Linux default) on

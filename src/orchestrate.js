@@ -77,6 +77,7 @@ async function Z7OrError( zobject ) {
 async function orchestrate( input, implementationSelector = null ) {
 	const startTime = new Date();
 	const startUsage = cpuUsage();
+	const logger = getLogger();
 
 	let zobject = input.zobject;
 	if ( zobject === undefined ) {
@@ -115,7 +116,11 @@ async function orchestrate( input, implementationSelector = null ) {
 		]
 	];
 
-	currentPair = await returnOnFirstError( currentPair, callTuples );
+	try {
+		currentPair = await returnOnFirstError( currentPair, callTuples );
+	} catch ( e ) {
+		logger.error( `Call tuples failed in returnOnFirstError. Error: ${e}.` );
+	}
 
 	if ( currentPair instanceof ZWrapper ) {
 		currentPair = currentPair.asJSON();
@@ -138,8 +143,7 @@ async function orchestrate( input, implementationSelector = null ) {
 
 	if ( containsError( canonicalized ) ) {
 		// If canonicalization fails, return normalized form instead.
-		const logger = getLogger();
-		logger.log( 'Could not canonicalize; outputting in normal form.' );
+		logger.info( 'Could not canonicalize; outputting in normal form.' );
 	} else {
 		currentPair = canonicalized.Z22K1;
 	}
