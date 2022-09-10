@@ -2,98 +2,49 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-const normalize = require( '../../../function-schemata/javascript/src/normalize.js' );
 const { makeMappedResultEnvelope, makeTrue, setZMapValue, getError } =
 	require( '../../../function-schemata/javascript/src/utils.js' );
-const { rest } = require( 'msw' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
-const { readJSON, readZObjectsFromDirectory } = require( '../../../src/read-json.js' );
+const { readJSON } = require( '../../../src/read-json.js' );
 const { normalError, error } = require( '../../../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../../../function-schemata/javascript/src/utils' );
+const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../../../lib/mockUtils.js' );
 
-class Canned {
-
-	constructor() {
-		this.reset();
-	}
-
-	reset() {
-		this.dict_ = {
-			wiki: readZObjectsFromDirectory( 'function-schemata/data/definitions/' ),
-			evaluator: {}
-		};
-	}
-
-	setWiki( key, value ) {
-		this.dict_.wiki[ key ] = value;
-	}
-
-	async setEvaluator( key, callback, statusCode = 200 ) {
-		this.dict_.evaluator[ key ] = {
-			statusCode: statusCode,
-			callback: callback
-		};
-	}
-
-	getWiki( key ) {
-		return this.dict_.wiki[ key ];
-	}
-
-	getEvaluator( key ) {
-		return this.dict_.evaluator[ key ];
-	}
-
-}
+const WIKI_URI = 'http://thewiki';
+const EVAL_URI = 'http://theevaluator';
 
 describe( 'orchestrate', function () { // eslint-disable-line no-undef
-	const cannedResponses = new Canned();
+	const wikiStub = new MediaWikiStub();
+	const evaluatorStub = new EvaluatorStub();
 
-	const restHandlers = [
-		rest.get( 'http://thewiki', ( req, res, ctx ) => {
-			const zids = req.url.searchParams.get( 'zids' );
-			const result = {};
-			for ( const ZID of zids.split( '|' ) ) {
-				result[ ZID ] = {
-					wikilambda_fetch: JSON.stringify( cannedResponses.getWiki( ZID ) )
-				};
-			}
-			return res( ctx.status( 200 ), ctx.json( result ) );
-		} ),
-
-		rest.post( 'http://theevaluator', ( req, res, ctx ) => {
-			const ZID = req.body.Z7K1.Z8K5.Z9K1;
-			const { statusCode, callback } = cannedResponses.getEvaluator( ZID );
-			const value = normalize( callback( req.body ) ).Z22K1;
-			return res( ctx.status( statusCode ), ctx.json( value ) );
-		} ),
-
-		// Silently forward GET requests to the API running at :6254.
-		rest.get( 'http://localhost:6254/*', ( req, res, ctx ) => {} ) // eslint-disable-line no-unused-vars
-	];
-	const mockServiceWorker = setupServer( ...restHandlers );
+	const mockServiceWorker = setupServer(
+		mockMediaWiki( WIKI_URI, wikiStub ),
+		mockEvaluator( EVAL_URI, evaluatorStub ),
+		mockLocalhost()
+	);
 
 	before( async () => { // eslint-disable-line no-undef
 		// Set evaluator response for test "evaluated function call"
-		await cannedResponses.setEvaluator( 'Z1000', ( unused ) => makeMappedResultEnvelope( { Z1K1: 'Z6', Z6K1: '13' }, null ) ); // eslint-disable-line no-unused-vars
+		evaluatorStub.setZId( 'Z1000', ( unused ) => makeMappedResultEnvelope( { Z1K1: 'Z6', Z6K1: '13' }, null ) ); // eslint-disable-line no-unused-vars
 		// Set evaluator response for test "failed evaluated function call"
-		await cannedResponses.setEvaluator( 'Z420420', ( unused ) => 'naw', 500 ); // eslint-disable-line no-unused-vars
+		evaluatorStub.setZId( 'Z420420', ( unused ) => 'naw', 500 ); // eslint-disable-line no-unused-vars
 		// Set evaluator response for test "evaluated function call, result and empty map"
-		await cannedResponses.setEvaluator( 'Z1001', ( unused ) => // eslint-disable-line no-unused-vars
+		evaluatorStub.setZId( 'Z1001', ( unused ) => // eslint-disable-line no-unused-vars
 			readJSON( './test/features/v1/test_data/Z22-map-result-only.json' ),
 		null );
 		// Set evaluator response for test "evaluated function call, result and simple map"
-		await cannedResponses.setEvaluator( 'Z1002', ( unused ) => // eslint-disable-line no-unused-vars
+		evaluatorStub.setZId( 'Z1002', ( unused ) => // eslint-disable-line no-unused-vars
 			readJSON( './test/features/v1/test_data/Z22-map-basic.json' ),
 		null );
 		// Set evaluator response for test "evaluated function call, void result"
 		const evaluatorResponse = readJSON( './test/features/v1/test_data/Z22-map-error.json' );
 		const errorTerm = normalError( [ error.not_wellformed_value ], [ 'Error placeholder' ] );
 		setZMapValue( evaluatorResponse.Z22K2, { Z1K1: 'Z6', Z6K1: 'errors' }, errorTerm );
-		await cannedResponses.setEvaluator( 'Z1003', ( unused ) => evaluatorResponse, null ); // eslint-disable-line no-unused-vars
+		evaluatorStub.setZId( 'Z1003', ( unused ) => evaluatorResponse, null ); // eslint-disable-line no-unused-vars
 		// Set evaluator response for string numeral increment function.
 		// Used in scott numeral tests to convert scott numerals to strings.
-		await cannedResponses.setEvaluator( 'Z40002', ( zobject ) => makeMappedResultEnvelope( ( parseInt( zobject.Z40002K1.Z6K1 ) + 1 ).toString(), null ) );
+		evaluatorStub.setZId( 'Z40002', ( zobject ) => makeMappedResultEnvelope( ( parseInt( zobject.Z40002K1.Z6K1 ) + 1 ).toString(), null ) );
 
 		return mockServiceWorker.listen();
 	} );
@@ -222,7 +173,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	{
 		const Z10122 = readJSON( './test/features/v1/test_data/Z10122.json' );
-		cannedResponses.setWiki( 'Z10122', {
+		wikiStub.setZId( 'Z10122', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10122' },
 			Z2K2: Z10122
@@ -243,13 +194,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	{
 		const Z50000 = readJSON( './test/features/v1/test_data/generic-composition.json' );
-		cannedResponses.setWiki( 'Z50000', {
+		wikiStub.setZId( 'Z50000', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50000' },
 			Z2K2: Z50000
 		} );
 		const Z50001 = readJSON( './test/features/v1/test_data/generic-composition-implementation.json' );
-		cannedResponses.setWiki( 'Z50001', {
+		wikiStub.setZId( 'Z50001', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50001' },
 			Z2K2: Z50001
@@ -322,13 +273,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	{
 		const Z50000 = readJSON( './test/features/v1/test_data/generic-composition.json' );
-		cannedResponses.setWiki( 'Z50000', {
+		wikiStub.setZId( 'Z50000', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50000' },
 			Z2K2: Z50000
 		} );
 		const Z50001 = readJSON( './test/features/v1/test_data/generic-composition-implementation.json' );
-		cannedResponses.setWiki( 'Z50001', {
+		wikiStub.setZId( 'Z50001', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50001' },
 			Z2K2: Z50001
@@ -393,7 +344,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z12422', {
+		wikiStub.setZId( 'Z12422', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12422' },
 			Z2K2: readJSON( './test/features/v1/test_data/misnamed-argument-Z12422.json' )
@@ -407,7 +358,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z12423', {
+		wikiStub.setZId( 'Z12423', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12423' },
 			Z2K2: readJSON( './test/features/v1/test_data/misnamed-argument-Z12423.json' )
@@ -421,7 +372,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z12422', {
+		wikiStub.setZId( 'Z12422', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12422' },
 			Z2K2: readJSON( './test/features/v1/test_data/misnamed-argument-Z12422.json' )
@@ -435,12 +386,12 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10101', {
+		wikiStub.setZId( 'Z10101', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10101' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z10101.json' )
 		} );
-		cannedResponses.setWiki( 'Z101030', {
+		wikiStub.setZId( 'Z101030', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z101030' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z10103-bad.json' )
@@ -456,12 +407,12 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z88201', {
+		wikiStub.setZId( 'Z88201', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88201' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88201.json' )
 		} );
-		cannedResponses.setWiki( 'Z882030', {
+		wikiStub.setZId( 'Z882030', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z882030' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88203-bad.json' )
@@ -528,7 +479,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10037', readJSON( './test/features/v1/test_data/all_Z10037.json' ) );
+		wikiStub.setZId( 'Z10037', readJSON( './test/features/v1/test_data/all_Z10037.json' ) );
 		test(
 			'composition of all empty',
 			readJSON( './test/features/v1/test_data/all_empty.json' ),
@@ -547,7 +498,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10037', readJSON( './test/features/v1/test_data/all_Z10037.json' ) );
+		wikiStub.setZId( 'Z10037', readJSON( './test/features/v1/test_data/all_Z10037.json' ) );
 		test(
 			'composition of all: [true, true]',
 			readJSON( './test/features/v1/test_data/all_true_true.json' ),
@@ -566,7 +517,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10037', readJSON( './test/features/v1/test_data/all_Z10037.json' ) );
+		wikiStub.setZId( 'Z10037', readJSON( './test/features/v1/test_data/all_Z10037.json' ) );
 		test(
 			'composition of all: [true, false]',
 			readJSON( './test/features/v1/test_data/all_true_false.json' ),
@@ -585,8 +536,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10029', readJSON( './test/features/v1/test_data/empty_string_Z10029.json' ) );
-		cannedResponses.setWiki( 'Z10031', readJSON( './test/features/v1/test_data/one_character_Z10031.json' ) );
+		wikiStub.setZId( 'Z10029', readJSON( './test/features/v1/test_data/empty_string_Z10029.json' ) );
+		wikiStub.setZId( 'Z10031', readJSON( './test/features/v1/test_data/one_character_Z10031.json' ) );
 		test(
 			'one character("ab")',
 			{
@@ -609,8 +560,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10029', readJSON( './test/features/v1/test_data/empty_string_Z10029.json' ) );
-		cannedResponses.setWiki( 'Z10031', readJSON( './test/features/v1/test_data/one_character_Z10031.json' ) );
+		wikiStub.setZId( 'Z10029', readJSON( './test/features/v1/test_data/empty_string_Z10029.json' ) );
+		wikiStub.setZId( 'Z10031', readJSON( './test/features/v1/test_data/one_character_Z10031.json' ) );
 		test(
 			'one character("a")',
 			{
@@ -633,8 +584,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10029', readJSON( './test/features/v1/test_data/empty_string_Z10029.json' ) );
-		cannedResponses.setWiki( 'Z10031', readJSON( './test/features/v1/test_data/one_character_Z10031.json' ) );
+		wikiStub.setZId( 'Z10029', readJSON( './test/features/v1/test_data/empty_string_Z10029.json' ) );
+		wikiStub.setZId( 'Z10031', readJSON( './test/features/v1/test_data/one_character_Z10031.json' ) );
 		test(
 			'one character(<empty>)',
 			{
@@ -657,12 +608,12 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10101', {
+		wikiStub.setZId( 'Z10101', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10101' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z10101.json' )
 		} );
-		cannedResponses.setWiki( 'Z10103', {
+		wikiStub.setZId( 'Z10103', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10103' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z10103.json' )
@@ -678,12 +629,12 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z88201', {
+		wikiStub.setZId( 'Z88201', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88201' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88201.json' )
 		} );
-		cannedResponses.setWiki( 'Z88203', {
+		wikiStub.setZId( 'Z88203', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88203' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88203.json' )
@@ -702,22 +653,22 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z88301', {
+		wikiStub.setZId( 'Z88301', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88301' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88301.json' )
 		} );
-		cannedResponses.setWiki( 'Z88303', {
+		wikiStub.setZId( 'Z88303', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88303' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88303.json' )
 		} );
-		cannedResponses.setWiki( 'Z88311', {
+		wikiStub.setZId( 'Z88311', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88311' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88311.json' )
 		} );
-		cannedResponses.setWiki( 'Z88321', {
+		wikiStub.setZId( 'Z88321', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88321' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88321.json' )
@@ -747,7 +698,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10044', {
+		wikiStub.setZId( 'Z10044', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10044' },
 			Z2K2: readJSON( './test/features/v1/test_data/map-Z10044.json' )
@@ -775,17 +726,17 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z88401', {
+		wikiStub.setZId( 'Z88401', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88401' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88401.json' )
 		} );
-		cannedResponses.setWiki( 'Z88402', {
+		wikiStub.setZId( 'Z88402', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88402' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88402.json' )
 		} );
-		cannedResponses.setWiki( 'Z88403', {
+		wikiStub.setZId( 'Z88403', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88403' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88403.json' )
@@ -804,17 +755,17 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z88401', {
+		wikiStub.setZId( 'Z88401', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88401' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88401.json' )
 		} );
-		cannedResponses.setWiki( 'Z88402', {
+		wikiStub.setZId( 'Z88402', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88402' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88402.json' )
 		} );
-		cannedResponses.setWiki( 'Z88404', {
+		wikiStub.setZId( 'Z88404', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88403' },
 			Z2K2: readJSON( './test/features/v1/test_data/Z88403-bad.json' )
@@ -831,7 +782,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	{
 		const Z10005 = readJSON( './test/features/v1/test_data/Z10005.json' );
-		cannedResponses.setWiki( 'Z10005', {
+		wikiStub.setZId( 'Z10005', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10005' },
 			Z2K2: Z10005
@@ -888,7 +839,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z100101', {
+		wikiStub.setZId( 'Z100101', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z100101' },
 			Z2K2: 'just an ol string'
@@ -908,10 +859,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10081', readJSON( './test/features/v1/test_data/Z10081.json' ) );
-		cannedResponses.setWiki( 'Z10086', readJSON( './test/features/v1/test_data/Z10086.json' ) );
-		cannedResponses.setWiki( 'Z10084', readJSON( './test/features/v1/test_data/Z10084.json' ) );
-		cannedResponses.setWiki( 'Z10085', readJSON( './test/features/v1/test_data/Z10085.json' ) );
+		wikiStub.setZId( 'Z10081', readJSON( './test/features/v1/test_data/Z10081.json' ) );
+		wikiStub.setZId( 'Z10086', readJSON( './test/features/v1/test_data/Z10086.json' ) );
+		wikiStub.setZId( 'Z10084', readJSON( './test/features/v1/test_data/Z10084.json' ) );
+		wikiStub.setZId( 'Z10085', readJSON( './test/features/v1/test_data/Z10085.json' ) );
 		const validateNonempty = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z10084',
@@ -932,10 +883,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10081', readJSON( './test/features/v1/test_data/Z10081.json' ) );
-		cannedResponses.setWiki( 'Z10086', readJSON( './test/features/v1/test_data/Z10086.json' ) );
-		cannedResponses.setWiki( 'Z10084', readJSON( './test/features/v1/test_data/Z10084.json' ) );
-		cannedResponses.setWiki( 'Z10085', readJSON( './test/features/v1/test_data/Z10085.json' ) );
+		wikiStub.setZId( 'Z10081', readJSON( './test/features/v1/test_data/Z10081.json' ) );
+		wikiStub.setZId( 'Z10086', readJSON( './test/features/v1/test_data/Z10086.json' ) );
+		wikiStub.setZId( 'Z10084', readJSON( './test/features/v1/test_data/Z10084.json' ) );
+		wikiStub.setZId( 'Z10085', readJSON( './test/features/v1/test_data/Z10085.json' ) );
 		const validateEmpty = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z10084',
@@ -956,22 +907,22 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z10088', {
+		wikiStub.setZId( 'Z10088', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10088' },
 			Z2K2: readJSON( './test/features/v1/test_data/curry-implementation-Z10088.json' )
 		} );
-		cannedResponses.setWiki( 'Z10087', {
+		wikiStub.setZId( 'Z10087', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10087' },
 			Z2K2: readJSON( './test/features/v1/test_data/curry-Z10087.json' )
 		} );
-		cannedResponses.setWiki( 'Z30086', {
+		wikiStub.setZId( 'Z30086', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z30086' },
 			Z2K2: readJSON( './test/features/v1/test_data/curry-call-Z30086.json' )
 		} );
-		cannedResponses.setWiki( 'Z10007', {
+		wikiStub.setZId( 'Z10007', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10007' },
 			Z2K2: readJSON( './test/features/v1/test_data/and-Z10007.json' )
@@ -996,12 +947,12 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		// (calling argument f multiple times to make sure nothing funny is happening with the
 		// caching)
 		// h(x) = lambda y: x
-		cannedResponses.setWiki( 'Z10001', {
+		wikiStub.setZId( 'Z10001', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10001' },
 			Z2K2: readJSON( './test/features/v1/test_data/save-argument-scope-Z10001.json' )
 		} );
-		cannedResponses.setWiki( 'Z10002', {
+		wikiStub.setZId( 'Z10002', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10002' },
 			Z2K2: readJSON( './test/features/v1/test_data/save-argument-scope-Z10002.json' )
@@ -1026,10 +977,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki(
+		wikiStub.setZId(
 			'Z100920',
 			readJSON( './test/features/v1/test_data/Z100920-wrap.json' ) );
-		cannedResponses.setWiki(
+		wikiStub.setZId(
 			'Z100930',
 			readJSON( './test/features/v1/test_data/Z100930-wrap-implementation.json' )
 		);
@@ -1070,13 +1021,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki(
+		wikiStub.setZId(
 			'Z20022',
 			readJSON( './test/features/v1/test_data/Z20022-natural-number-type.json' ) );
-		cannedResponses.setWiki(
+		wikiStub.setZId(
 			'Z20095',
 			readJSON( './test/features/v1/test_data/Z20095-natural-number-from-string.json' ) );
-		cannedResponses.setWiki(
+		wikiStub.setZId(
 			'Z20096',
 			readJSON( './test/features/v1/test_data/Z20096-nnfs-implementation.json' ) );
 		const naturalNumberCall = {
@@ -1096,17 +1047,17 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z31000', {
+		wikiStub.setZId( 'Z31000', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z31000' },
 			Z2K2: readJSON( './test/features/v1/test_data/bind-binary-Z31000.json' )
 		} );
-		cannedResponses.setWiki( 'Z31001', {
+		wikiStub.setZId( 'Z31001', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z31001' },
 			Z2K2: readJSON( './test/features/v1/test_data/bind-binary-implementation-Z31001.json' )
 		} );
-		cannedResponses.setWiki( 'Z10007', {
+		wikiStub.setZId( 'Z10007', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10007' },
 			Z2K2: readJSON( './test/features/v1/test_data/and-Z10007.json' )
@@ -1135,7 +1086,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40002',
@@ -1150,10 +1101,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
-		cannedResponses.setWiki( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
-		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
-		cannedResponses.setWiki( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		wikiStub.setZId( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
+		wikiStub.setZId( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
+		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		wikiStub.setZId( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40003',
@@ -1168,10 +1119,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
-		cannedResponses.setWiki( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
-		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
-		cannedResponses.setWiki( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		wikiStub.setZId( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
+		wikiStub.setZId( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
+		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		wikiStub.setZId( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40003',
@@ -1190,10 +1141,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		cannedResponses.setWiki( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
-		cannedResponses.setWiki( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
-		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
-		cannedResponses.setWiki( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		wikiStub.setZId( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
+		wikiStub.setZId( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
+		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		wikiStub.setZId( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40003',
@@ -1217,11 +1168,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	{
 		// TODO(T310093): Speed this up until and bump up the input values, e.g. to Ackermann(2, 2).
-		cannedResponses.setWiki( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
-		cannedResponses.setWiki( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
-		cannedResponses.setWiki( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
-		cannedResponses.setWiki( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
-		cannedResponses.setWiki( 'Z40004', readJSON( './test/features/v1/test_data/scott-numeral-ack-Z40004.json' ) );
+		wikiStub.setZId( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
+		wikiStub.setZId( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
+		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		wikiStub.setZId( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		wikiStub.setZId( 'Z40004', readJSON( './test/features/v1/test_data/scott-numeral-ack-Z40004.json' ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40003',
