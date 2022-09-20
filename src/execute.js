@@ -8,7 +8,7 @@ const { containsError, containsValue, createZObjectKey, isRefOrString, makeWrapp
 const { MutationType, ZWrapper } = require( './ZWrapper' );
 const { resolveListType } = require( './builtins.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
-const { convertZListToItemArray, getError } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToItemArray, getError, setZMapValue } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsArgumentReference, validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
 
 let execute = null;
@@ -300,13 +300,20 @@ async function validateReturnType( result, zobject, invariants ) {
 	if ( !containsError( result ) ) {
 		if ( !containsValue( result ) ) {
 			// Neither value nor error.
-			return makeWrappedResultEnvelope(
-				null,
+			// TODO (T318293): Can we add modification of the Z22 internals to the ZWrapper concept?
+			const modifiableResult = result.asJSON();
+			const metadataResponse = modifiableResult.Z22K2;
+			setZMapValue(
+				metadataResponse,
+				{ Z1K1: 'Z6', Z6K1: 'errors' },
 				normalError(
 					[ error.not_wellformed_value ],
 					[ 'Function evaluation returned an empty object.' ]
 				)
 			);
+			modifiableResult.Z22K2 = metadataResponse;
+			result = ZWrapper.create( modifiableResult );
+			return modifiableResult;
 		}
 
 		// Value returned; validate its return type..
