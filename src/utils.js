@@ -239,28 +239,28 @@ async function traverseZList( ZList, callback ) {
  * @return {Object} a Z22
  */
 async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = true ) {
-	let currentPair = Z22;
+	let currentResponseEnvelope = Z22;
 	for ( const callTuple of callTuples ) {
 		if (
-			containsError( currentPair ) ||
-			isVoid( currentPair.Z22K1 )
+			containsError( currentResponseEnvelope ) ||
+			isVoid( currentResponseEnvelope.Z22K1 )
 		) {
 			break;
 		}
 		if ( callback !== null ) {
-			await callback( currentPair, callTuple );
+			await callback( currentResponseEnvelope, callTuple );
 		}
 		const callable = callTuple[ 0 ];
 		const args = [];
 		if ( addZ22 ) {
-			args.push( currentPair.Z22K1 );
+			args.push( currentResponseEnvelope.Z22K1 );
 		}
 		for ( const arg of callTuple[ 1 ] ) {
 			args.push( arg );
 		}
-		currentPair = await callable( ...args );
+		currentResponseEnvelope = await callable( ...args );
 	}
-	return currentPair;
+	return currentResponseEnvelope;
 }
 
 function quoteZObject( ZObject ) {
