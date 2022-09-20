@@ -12,6 +12,7 @@ const {
 	isString,
 	kidFromGlobalKey,
 	makeMappedResultEnvelope,
+	setMetadataValue,
 	makeTrue,
 	makeFalse
 } = require( '../function-schemata/javascript/src/utils.js' );
@@ -401,8 +402,10 @@ function BUILTIN_CHARS_TO_STRING_( list ) {
 	);
 }
 
-function BUILTIN_TRIGGER_METADATA_( Z5 ) {
-	return makeMappedResultEnvelope( null, Z5 );
+function BUILTIN_TRIGGER_METADATA_( keyZ6, valueZ1 ) {
+	let response = makeMappedResultEnvelope( null, null );
+	response = setMetadataValue( response, keyZ6, valueZ1 );
+	return response;
 }
 
 function BUILTIN_SAME_( Z86_1, Z86_2 ) {

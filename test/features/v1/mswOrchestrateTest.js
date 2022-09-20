@@ -930,22 +930,35 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		const callToThrow = readJSON( './test/features/v1/test_data/throw.json' );
-		const expected = callToThrow.Z820K1;
-		test(
-			'throw throws Z5s',
-			callToThrow,
-			null,
-			expected
+		const basicMetadataInsertionCall = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z820',
+			Z820K1: {
+				Z1K1: 'Z6',
+				Z6K1: 'test'
+			},
+			Z820K2: {
+				Z1K1: 'Z6',
+				Z6K1: 'Test value!'
+			}
+		};
+
+		attemptOrchestration(
+			/* testName */ 'basic meta-data creation call',
+			/* functionCall */ basicMetadataInsertionCall,
+			/* expectedResult */ null,
+			/* expectedErrorState */ true,
+			/* expectedErrorValue */ null,
+			/* expectedExtraMetadata */ [ 'test' ],
+			/* expectedMissingMetadata */ []
 		);
 	}
 
 	{
 		const callToThrow = readJSON( './test/features/v1/test_data/throw.json' );
-		callToThrow.Z820K1 = "I am a string and not an error plz don't throw meeee I will break";
-		const expected = readJSON( './test/features/v1/test_data/throw_z6_expected.json' );
+		const expected = callToThrow.Z820K2;
 		test(
-			'throw does not throw Z6s',
+			'throw throws Z5s',
 			callToThrow,
 			null,
 			expected
