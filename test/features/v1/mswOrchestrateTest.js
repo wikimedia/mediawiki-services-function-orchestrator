@@ -2,7 +2,7 @@
 
 const assert = require( '../../utils/assert.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
-const { makeMappedResultEnvelope, makeTrue, setZMapValue, getError } =
+const { makeMappedResultEnvelope, makeTrue, setZMapValue, getZMapValue, getError } =
 	require( '../../../function-schemata/javascript/src/utils.js' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
@@ -53,6 +53,18 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		return mockServiceWorker.resetHandlers();
 	} );
 
+	/**
+	 *
+	 * @deprecated
+	 *
+	 * @param {string} name
+	 * @param {Object} zobject
+	 * @param {Mixed} output
+	 * @param {Mixed} error
+	 * @param {Mixed} implementationSelector
+	 * @param {bool} doValidate
+	 * @param {bool} skip
+	 */
 	const test = function (
 		name, zobject, output = null, error = null, implementationSelector = null,
 		doValidate = true, skip = false
@@ -90,11 +102,94 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		} );
 	};
 
-	test(
-		'validation error: invalid argument key for function call',
-		readJSON( './test/features/v1/test_data/invalid_call_argument_key.json' ),
-		null,
-		readJSON( './test/features/v1/test_data/invalid_call_argument_key_expected.json' )
+	const attemptOrchestration = function (
+		testName,
+		functionCall,
+		expectedResult,
+		expectedErrorState = false,
+		expectedErrorValue = null,
+		expectedExtraMetadata = [],
+		expectedMissingMetadata = [] ) {
+
+		const executionBlock = {
+			zobject: functionCall,
+			wikiUri: 'http://thewiki',
+			evaluatorUri: 'http://theevaluator',
+			doValidate: false
+		};
+
+		it( // eslint-disable-line no-undef
+			'orchestration test: ' + testName,
+			async () => {
+				if ( expectedResult === null ) {
+					expectedResult = makeVoid( /* canonical */ true );
+				} else {
+					expectedResult = canonicalize( expectedResult, /* withVoid= */ true ).Z22K1;
+				}
+
+				let result = {};
+				let thrownError = null;
+
+				try {
+					result = await orchestrate( executionBlock );
+				} catch ( err ) {
+					console.trace();
+					console.log( err );
+					thrownError = err;
+				}
+				assert.isNull( thrownError, testName + ' should not throw an execution/validation error' );
+
+				assert.deepEqual( result.Z22K1, expectedResult, testName + ' returns the expected output, if any' );
+
+				const responseError = getError( result );
+				if ( expectedErrorState ) {
+					assert.isNotNull( responseError, testName + ' should be in an execution/validation error state' );
+					if ( expectedErrorValue ) {
+						assert.deepEqual(
+							responseError,
+							canonicalize( expectedErrorValue ).Z22K1,
+							testName + ' returns the expected error, if any'
+						);
+					}
+				} else {
+					assert.isFalse( responseError, testName + ' should not be in an execution/validation error state' );
+					assert.isFalse( thrownError, testName + ' should not expect an execution/validation error' );
+				}
+
+				// Note: Keep this list in sync with the key block in the orchestrate() function.
+				const standardMetaData = [
+					'orchestrationMemoryUsage',
+					'orchestrationCpuUsage',
+					'orchestrationStartTime',
+					'orchestrationEndTime',
+					'orchestrationDuration',
+					'orchestrationHostname'
+				];
+
+				standardMetaData.forEach( ( key ) => {
+					if ( !expectedMissingMetadata.includes( key ) ) {
+						const metaDataValue = getZMapValue( result.Z22K2, key );
+						assert.isNotNull( metaDataValue, testName + ' should have the `' + key + '` meta-data key set' );
+					}
+				} );
+
+				expectedExtraMetadata.forEach( ( key ) => {
+					const metaDataValue = getZMapValue( result.Z22K2, key );
+					assert.isNotNull( metaDataValue, testName + ' should have the `' + key + '` meta-data key set' );
+				} );
+			}
+		);
+
+	};
+
+	attemptOrchestration(
+		/* testName */ 'validation error: invalid argument key for function call',
+		/* functionCall */ readJSON( './test/features/v1/test_data/invalid_call_argument_key.json' ),
+		/* expectedResult */ null,
+		/* expectedErrorState */ true,
+		/* expectedErrorValue */ readJSON( './test/features/v1/test_data/invalid_call_argument_key_expected.json' ),
+		/* expectedExtraMetadata */ [],
+		/* expectedMissingMetadata */ []
 	);
 
 	test(

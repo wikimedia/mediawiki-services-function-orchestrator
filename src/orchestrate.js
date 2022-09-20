@@ -136,6 +136,7 @@ async function orchestrate( input, implementationSelector = null ) {
 	const durationStr = ( endTime.getTime() - startTime.getTime() ) + ' ms';
 	const hostname = os.hostname();
 
+	// Note: Keep this block in sync with the 'standardMetaData' list in mswOrchestrateTest
 	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationMemoryUsage' }, { Z1K1: 'Z6', Z6K1: memoryUsageStr } );
 	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationCpuUsage' }, { Z1K1: 'Z6', Z6K1: cpuUsageStr } );
 	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationStartTime' }, { Z1K1: 'Z6', Z6K1: startTimeStr } );
