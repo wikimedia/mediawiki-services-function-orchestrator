@@ -297,38 +297,54 @@ async function getArgumentStates( zobject, invariants, doValidate = true ) {
  * @return {Object} zobject if validation succeeds; error tuple otherwise
  */
 async function validateReturnType( result, zobject, invariants ) {
-	// eslint-disable-next-line no-bitwise
-	const thebits = ( containsValue( result ) << 1 ) | containsError( result );
+	if ( !containsError( result ) ) {
+		if ( !containsValue( result ) ) {
+			// Neither value nor error.
+			return makeWrappedResultEnvelope(
+				null,
+				normalError(
+					[ error.not_wellformed_value ],
+					[ 'Function evaluation returned an empty object.' ]
+				)
+			);
+		}
 
-	if ( thebits === 0 ) {
-		// Neither value nor error.
-		return makeWrappedResultEnvelope(
-			null,
-			normalError(
-				[ error.not_wellformed_value ],
-				[ 'Function evaluation returned an empty object.' ] ) );
-	} else if ( thebits === 2 ) {
 		// Value returned; validate its return type..
 		await ( zobject.resolveKey( [ 'Z7K1', 'Z8K2' ], invariants ) );
 		const returnType = zobject.Z7K1.Z8K2;
 		const returnTypeValidation = await validateAsType(
-			result.Z22K1, invariants, returnType );
+			result.Z22K1, invariants, returnType
+		);
 		if ( containsError( returnTypeValidation ) ) {
 			return makeWrappedResultEnvelope(
 				null,
 				normalError(
 					[ error.return_type_mismatch ],
-					[ returnType, result.Z22K1.Z1K1, result.Z22K1,
-						getError( returnTypeValidation ) ] ) );
+					[
+						returnType,
+						result.Z22K1.Z1K1,
+						result.Z22K1,
+						getError( returnTypeValidation )
+					]
+				)
+			);
 		}
-	} else if ( thebits === 3 ) {
+		// If we got here, it's got a value, no error, and validates, so return as-is.
+		return result;
+	}
+
+	if ( containsValue( result ) ) {
 		// Both value and error.
 		return makeWrappedResultEnvelope(
 			null,
 			normalError(
 				[ error.not_wellformed_value ],
-				[ 'Function evaluation returned both a value and an error.' ] ) );
+				[ 'Function evaluation returned both a value and an error.' ]
+			)
+		);
 	}
+
+	// No value but some error.
 	return result;
 }
 
