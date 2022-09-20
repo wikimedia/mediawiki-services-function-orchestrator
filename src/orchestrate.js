@@ -84,14 +84,14 @@ async function orchestrate( input, implementationSelector = null ) {
 	if ( zobject === undefined ) {
 		zobject = input;
 	}
-	let currentPair;
+	let currentResponseEnvelope;
 
 	if ( isError( zobject ) ) {
-		currentPair = makeMappedResultEnvelope(
+		currentResponseEnvelope = makeMappedResultEnvelope(
 			null, zobject, /* canonicalize= */true
 		);
 	} else {
-		currentPair = makeMappedResultEnvelope(
+		currentResponseEnvelope = makeMappedResultEnvelope(
 			zobject, null, /* canonicalize= */true
 		);
 	}
@@ -118,13 +118,13 @@ async function orchestrate( input, implementationSelector = null ) {
 	];
 
 	try {
-		currentPair = await returnOnFirstError( currentPair, callTuples );
+		currentResponseEnvelope = await returnOnFirstError( currentResponseEnvelope, callTuples );
 	} catch ( e ) {
 		logger.error( `Call tuples failed in returnOnFirstError. Error: ${e}.` );
 	}
 
-	if ( currentPair instanceof ZWrapper ) {
-		currentPair = currentPair.asJSON();
+	if ( currentResponseEnvelope instanceof ZWrapper ) {
+		currentResponseEnvelope = currentResponseEnvelope.asJSON();
 	}
 
 	const cpuUsageStats = cpuUsage( startUsage );
@@ -135,22 +135,23 @@ async function orchestrate( input, implementationSelector = null ) {
 	const endTimeStr = endTime.toISOString();
 	const durationStr = ( endTime.getTime() - startTime.getTime() ) + ' ms';
 	const hostname = os.hostname();
-	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationMemoryUsage' }, { Z1K1: 'Z6', Z6K1: memoryUsageStr } );
-	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationCpuUsage' }, { Z1K1: 'Z6', Z6K1: cpuUsageStr } );
-	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationStartTime' }, { Z1K1: 'Z6', Z6K1: startTimeStr } );
-	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationEndTime' }, { Z1K1: 'Z6', Z6K1: endTimeStr } );
-	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationDuration' }, { Z1K1: 'Z6', Z6K1: durationStr } );
-	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationHostname' }, { Z1K1: 'Z6', Z6K1: hostname } );
 
-	const canonicalized = canonicalize( currentPair, /* withVoid= */ true );
+	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationMemoryUsage' }, { Z1K1: 'Z6', Z6K1: memoryUsageStr } );
+	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationCpuUsage' }, { Z1K1: 'Z6', Z6K1: cpuUsageStr } );
+	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationStartTime' }, { Z1K1: 'Z6', Z6K1: startTimeStr } );
+	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationEndTime' }, { Z1K1: 'Z6', Z6K1: endTimeStr } );
+	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationDuration' }, { Z1K1: 'Z6', Z6K1: durationStr } );
+	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationHostname' }, { Z1K1: 'Z6', Z6K1: hostname } );
+
+	const canonicalized = canonicalize( currentResponseEnvelope, /* withVoid= */ true );
 
 	if ( containsError( canonicalized ) ) {
 		// If canonicalization fails, return normalized form instead.
 		logger.info( 'Could not canonicalize; outputting in normal form.' );
 	} else {
-		currentPair = canonicalized.Z22K1;
+		currentResponseEnvelope = canonicalized.Z22K1;
 	}
-	return currentPair;
+	return currentResponseEnvelope;
 }
 
 module.exports = orchestrate;
