@@ -15,6 +15,7 @@ const { ReferenceResolver } = require( './db.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { cpuUsage, memoryUsage } = require( 'node:process' );
 const { getLogger } = require( './logger.js' );
+const os = require( 'os' );
 
 /**
  * Decides whether to validate a function. Returns the pair
@@ -133,11 +134,13 @@ async function orchestrate( input, implementationSelector = null ) {
 	const startTimeStr = startTime.toISOString();
 	const endTimeStr = endTime.toISOString();
 	const durationStr = ( endTime.getTime() - startTime.getTime() ) + ' ms';
+	const hostname = os.hostname();
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationMemoryUsage' }, { Z1K1: 'Z6', Z6K1: memoryUsageStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationCpuUsage' }, { Z1K1: 'Z6', Z6K1: cpuUsageStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationStartTime' }, { Z1K1: 'Z6', Z6K1: startTimeStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationEndTime' }, { Z1K1: 'Z6', Z6K1: endTimeStr } );
 	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationDuration' }, { Z1K1: 'Z6', Z6K1: durationStr } );
+	currentPair = setMetadataValue( currentPair, { Z1K1: 'Z6', Z6K1: 'orchestrationHostname' }, { Z1K1: 'Z6', Z6K1: hostname } );
 
 	const canonicalized = canonicalize( currentPair, /* withVoid= */ true );
 
