@@ -16,7 +16,7 @@ const {
 	makeTrue,
 	makeFalse
 } = require( '../function-schemata/javascript/src/utils.js' );
-const { readJSON } = require( './read-json.js' );
+const { readJSON } = require( './fileUtils.js' );
 const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
 const {
 	validatesAsType,

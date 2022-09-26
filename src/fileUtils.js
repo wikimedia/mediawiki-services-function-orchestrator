@@ -23,4 +23,10 @@ function readZObjectsFromDirectory( directory ) {
 	return result;
 }
 
-module.exports = { readJSON, readZObjectsFromDirectory };
+function testDataDir( ...pathComponents ) {
+	return path.join(
+		path.dirname( path.dirname( __filename ) ),
+		'test', 'features', 'v1', 'test_data', ...pathComponents );
+}
+
+module.exports = { readJSON, readZObjectsFromDirectory, testDataDir };

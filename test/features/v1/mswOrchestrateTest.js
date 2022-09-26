@@ -6,7 +6,7 @@ const { makeFalse, makeMappedResultEnvelope, makeTrue, setZMapValue, getZMapValu
 	require( '../../../function-schemata/javascript/src/utils.js' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
-const { readJSON } = require( '../../../src/read-json.js' );
+const { readJSON, testDataDir } = require( '../../../src/fileUtils.js' );
 const { normalError, error } = require( '../../../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../../../function-schemata/javascript/src/utils' );
 const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../../../lib/mockUtils.js' );
@@ -31,14 +31,14 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		evaluatorStub.setZId( 'Z420420', ( unused ) => 'naw', 500 ); // eslint-disable-line no-unused-vars
 		// Set evaluator response for test "evaluated function call, result and empty map"
 		evaluatorStub.setZId( 'Z1001', ( unused ) => // eslint-disable-line no-unused-vars
-			readJSON( './test/features/v1/test_data/Z22-map-result-only.json' ),
+			readJSON( testDataDir( 'Z22-map-result-only.json' ) ),
 		null );
 		// Set evaluator response for test "evaluated function call, result and simple map"
 		evaluatorStub.setZId( 'Z1002', ( unused ) => // eslint-disable-line no-unused-vars
-			readJSON( './test/features/v1/test_data/Z22-map-basic.json' ),
+			readJSON( testDataDir( 'Z22-map-basic.json' ) ),
 		null );
 		// Set evaluator response for test "evaluated function call, void result"
-		const evaluatorResponse = readJSON( './test/features/v1/test_data/Z22-map-error.json' );
+		const evaluatorResponse = readJSON( testDataDir( 'Z22-map-error.json' ) );
 		const errorTerm = normalError( [ error.not_wellformed_value ], [ 'Error placeholder' ] );
 		setZMapValue( evaluatorResponse.Z22K2, { Z1K1: 'Z6', Z6K1: 'errors' }, errorTerm );
 		evaluatorStub.setZId( 'Z1003', ( unused ) => evaluatorResponse, null ); // eslint-disable-line no-unused-vars
@@ -158,10 +158,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'validation error: invalid argument key for function call',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/invalid_call_argument_key.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'invalid_call_argument_key.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_call_argument_key_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_call_argument_key_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
@@ -169,10 +169,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'validation error: invalid argument type for function call',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/invalid_call_argument_type.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'invalid_call_argument_type.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_call_argument_type_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_call_argument_type_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
@@ -180,10 +180,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'validation error: invalid duplicated argument key in function definition',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/invalid_key_duplicated.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'invalid_key_duplicated.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_key_duplicated_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_key_duplicated_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
@@ -191,10 +191,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'validation error: invalid key for first argument in function definition',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/invalid_key_first_name.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'invalid_key_first_name.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_key_first_name_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_key_first_name_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
@@ -202,10 +202,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'validation error: invalid key name for argument in function definition',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/invalid_key_name.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'invalid_key_name.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_key_name_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_key_name_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
@@ -213,10 +213,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'validation error: invalid non-sequential key for argument in function definition',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/invalid_key_nonsequential.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'invalid_key_nonsequential.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_key_nonsequential_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_key_nonsequential_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
@@ -224,10 +224,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'argument type error: argument type does not match declared type',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/invalid_call_argument_not_of_declared_type.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'invalid_call_argument_not_of_declared_type.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_call_argument_not_of_declared_type_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_call_argument_not_of_declared_type_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
@@ -235,24 +235,24 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'return value type error: return value type does not match declared type',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/invalid_call_return_value_not_of_declared_type.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'invalid_call_return_value_not_of_declared_type.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_call_return_value_not_of_declared_type_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_call_return_value_not_of_declared_type_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
 	);
 
 	{
-		const mapCall = readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883.json' );
+		const mapCall = readJSON( testDataDir( 'invalid_key_type_passed_to_Z883.json' ) );
 		mapCall.Z883K1 = 'Z1';
 		attemptOrchestration(
 			/* testName= */ 'argument value error: invalid value for Z883K1 / key type passed to Z883 / Typed Map',
 			/* functionCall= */ mapCall,
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883_expected.json' ),
+			/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_key_type_passed_to_Z883_expected.json' ) ),
 			/* expectedExtraMetadata= */ [],
 			/* expectedMissingMetadata= */ [],
 			/* implementationSelector= */ null
@@ -261,10 +261,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'input to composition type error: static validation is skipped',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/skips_static_validation.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'skips_static_validation.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/skips_static_validation_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'skips_static_validation_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
@@ -272,24 +272,24 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	attemptOrchestration(
 		/* testName= */ 'input to Z804: missing keys',
-		/* functionCall= */ readJSON( './test/features/v1/test_data/Z804_missing_keys.json' ),
+		/* functionCall= */ readJSON( testDataDir( 'Z804_missing_keys.json' ) ),
 		/* expectedResult= */ null,
 		/* expectedErrorState= */ true,
-		/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/Z804_missing_keys_expected.json' ),
+		/* expectedErrorValue= */ readJSON( testDataDir( 'Z804_missing_keys_expected.json' ) ),
 		/* expectedExtraMetadata= */ [],
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
 	);
 
 	{
-		const Z10122 = readJSON( './test/features/v1/test_data/Z10122.json' );
+		const Z10122 = readJSON( testDataDir( 'Z10122.json' ) );
 		wikiStub.setZId( 'Z10122', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10122' },
 			Z2K2: Z10122
 		} );
-		const theFunctionCall = readJSON( './test/features/v1/test_data/composition-returns-type.json' );
-		const returnedType = readJSON( './test/features/v1/test_data/type-returned-by-composition.json' );
+		const theFunctionCall = readJSON( testDataDir( 'composition-returns-type.json' ) );
+		const returnedType = readJSON( testDataDir( 'type-returned-by-composition.json' ) );
 		// Set the argument to the composition (which internally calls "echo").
 		theFunctionCall.Z7K1.Z8K4[ 1 ].Z14K2.Z801K1 = { ...returnedType };
 		// In the actual return value, the generic type will be expanded.
@@ -303,13 +303,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		const Z50000 = readJSON( './test/features/v1/test_data/generic-composition.json' );
+		const Z50000 = readJSON( testDataDir( 'generic-composition.json' ) );
 		wikiStub.setZId( 'Z50000', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50000' },
 			Z2K2: Z50000
 		} );
-		const Z50001 = readJSON( './test/features/v1/test_data/generic-composition-implementation.json' );
+		const Z50001 = readJSON( testDataDir( 'generic-composition-implementation.json' ) );
 		wikiStub.setZId( 'Z50001', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50001' },
@@ -338,7 +338,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			}
 		};
 
-		const resolvedType = readJSON( './test/features/v1/test_data/type-returned-by-generic-composition.json' );
+		const resolvedType = readJSON( testDataDir( 'type-returned-by-generic-composition.json' ) );
 		const expectedOutput = {
 			Z1K1: resolvedType,
 			K1: [ 'Z6' ],
@@ -383,13 +383,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		const Z50000 = readJSON( './test/features/v1/test_data/generic-composition.json' );
+		const Z50000 = readJSON( testDataDir( 'generic-composition.json' ) );
 		wikiStub.setZId( 'Z50000', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50000' },
 			Z2K2: Z50000
 		} );
-		const Z50001 = readJSON( './test/features/v1/test_data/generic-composition-implementation.json' );
+		const Z50001 = readJSON( testDataDir( 'generic-composition-implementation.json' ) );
 		wikiStub.setZId( 'Z50001', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z50001' },
@@ -444,7 +444,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			}
 		};
 
-		const expectedError = readJSON( './test/features/v1/test_data/bad_generic_composition_expected.json' );
+		const expectedError = readJSON( testDataDir( 'bad_generic_composition_expected.json' ) );
 
 		attemptOrchestration(
 			/* testName= */ 'bad generic defined as composition',
@@ -462,15 +462,15 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z12422', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12422' },
-			Z2K2: readJSON( './test/features/v1/test_data/misnamed-argument-Z12422.json' )
+			Z2K2: readJSON( testDataDir( 'misnamed-argument-Z12422.json' ) )
 		} );
 
 		attemptOrchestration(
 			/* testName= */ 'argument name error: misnamed argument',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/misnamed-argument.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'misnamed-argument.json' ) ),
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_call_misnamed_argument_expected.json' ),
+			/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_call_misnamed_argument_expected.json' ) ),
 			/* expectedExtraMetadata= */ [],
 			/* expectedMissingMetadata= */ [],
 			/* implementationSelector= */ null
@@ -481,15 +481,15 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z12423', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12423' },
-			Z2K2: readJSON( './test/features/v1/test_data/misnamed-argument-Z12423.json' )
+			Z2K2: readJSON( testDataDir( 'misnamed-argument-Z12423.json' ) )
 		} );
 
 		attemptOrchestration(
 			/* testName= */ 'argument name error: list type misnamed argument',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/misnamed-argument-list.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'misnamed-argument-list.json' ) ),
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_call_misnamed_argument_list_expected.json' ),
+			/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_call_misnamed_argument_list_expected.json' ) ),
 			/* expectedExtraMetadata= */ [],
 			/* expectedMissingMetadata= */ [],
 			/* implementationSelector= */ null
@@ -500,15 +500,15 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z12422', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z12422' },
-			Z2K2: readJSON( './test/features/v1/test_data/misnamed-argument-Z12422.json' )
+			Z2K2: readJSON( testDataDir( 'misnamed-argument-Z12422.json' ) )
 		} );
 
 		attemptOrchestration(
 			/* testName= */ 'argument error: missing argument',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/missing-argument.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'missing-argument.json' ) ),
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/invalid_call_missing_argument_expected.json' ),
+			/* expectedErrorValue= */ readJSON( testDataDir( 'invalid_call_missing_argument_expected.json' ) ),
 			/* expectedExtraMetadata= */ [],
 			/* expectedMissingMetadata= */ [],
 			/* implementationSelector= */ null
@@ -519,14 +519,14 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z10101', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10101' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z10101.json' )
+			Z2K2: readJSON( testDataDir( 'Z10101.json' ) )
 		} );
 		wikiStub.setZId( 'Z101030', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z101030' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z10103-bad.json' )
+			Z2K2: readJSON( testDataDir( 'Z10103-bad.json' ) )
 		} );
-		const genericIf = readJSON( './test/features/v1/test_data/generic-if.json' );
+		const genericIf = readJSON( testDataDir( 'generic-if.json' ) );
 		genericIf.Z1802K2 = 'Z101030';
 
 		attemptOrchestration(
@@ -534,7 +534,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* functionCall= */ genericIf,
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/bad_generic_list_expected.json' ),
+			/* expectedErrorValue= */ readJSON( testDataDir( 'bad_generic_list_expected.json' ) ),
 			/* expectedExtraMetadata= */ [],
 			/* expectedMissingMetadata= */ [],
 			/* implementationSelector= */ null
@@ -545,14 +545,14 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z88201', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88201' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88201.json' )
+			Z2K2: readJSON( testDataDir( 'Z88201.json' ) )
 		} );
 		wikiStub.setZId( 'Z882030', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z882030' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88203-bad.json' )
+			Z2K2: readJSON( testDataDir( 'Z88203-bad.json' ) )
 		} );
-		const genericPair = readJSON( './test/features/v1/test_data/generic-pair.json' );
+		const genericPair = readJSON( testDataDir( 'generic-pair.json' ) );
 		genericPair.Z1802K2 = 'Z882030';
 
 		attemptOrchestration(
@@ -560,7 +560,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* functionCall= */ genericPair,
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/bad_generic_pair_expected.json' ),
+			/* expectedErrorValue= */ readJSON( testDataDir( 'bad_generic_pair_expected.json' ) ),
 			/* expectedExtraMetadata= */ [],
 			/* expectedMissingMetadata= */ [],
 			/* implementationSelector= */ null
@@ -570,7 +570,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	{
 		attemptOrchestration(
 			/* testName= */ 'evaluated function call',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/evaluated.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'evaluated.json' ) ),
 			/* expectedResult= */ { Z1K1: 'Z6', Z6K1: '13' },
 			/* expectedErrorState= */ false
 		);
@@ -586,7 +586,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		};
 		attemptOrchestration(
 			/* testName= */ 'failed evaluated function call',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/evaluated-failed.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'evaluated-failed.json' ) ),
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
 			/* expectedErrorValue= */ expectedError
@@ -596,7 +596,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	{
 		attemptOrchestration(
 			/* testName= */ 'evaluated function call, result and empty map',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/evaluated-map-result-only.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'evaluated-map-result-only.json' ) ),
 			/* expectedResult= */ { Z1K1: 'Z6', Z6K1: '13' },
 			/* expectedErrorState= */ false
 		);
@@ -605,7 +605,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	{
 		attemptOrchestration(
 			/* testName= */ 'evaluated function call, result and simple map',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/evaluated-map-basic.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'evaluated-map-basic.json' ) ),
 			/* expectedResult= */ { Z1K1: 'Z6', Z6K1: '13' },
 			/* expectedErrorState= */ false
 		);
@@ -617,7 +617,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			Z5K1: { Z1K1: 'Z526', Z526K1: 'Error placeholder' } };
 		attemptOrchestration(
 			/* testName= */ 'evaluated function call, void result',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/evaluated-map-error.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'evaluated-map-error.json' ) ),
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
 			/* expectedErrorValue= */ expectedError
@@ -625,41 +625,41 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		wikiStub.setZId( 'Z10037', readJSON( './test/features/v1/test_data/all_Z10037.json' ) );
+		wikiStub.setZId( 'Z10037', readJSON( testDataDir( 'all_Z10037.json' ) ) );
 		const expectedOutput = makeTrue();
 		attemptOrchestration(
 			/* testName= */ 'composition of all empty',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/all_empty.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'all_empty.json' ) ),
 			/* expectedResult= */ expectedOutput,
 			/* expectedErrorState= */ false
 		);
 	}
 
 	{
-		wikiStub.setZId( 'Z10037', readJSON( './test/features/v1/test_data/all_Z10037.json' ) );
+		wikiStub.setZId( 'Z10037', readJSON( testDataDir( 'all_Z10037.json' ) ) );
 		const expectedOutput = makeTrue();
 		attemptOrchestration(
 			/* testName= */ 'composition of all: [true, true]',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/all_true_true.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'all_true_true.json' ) ),
 			/* expectedResult= */ expectedOutput,
 			/* expectedErrorState= */ false
 		);
 	}
 
 	{
-		wikiStub.setZId( 'Z10037', readJSON( './test/features/v1/test_data/all_Z10037.json' ) );
+		wikiStub.setZId( 'Z10037', readJSON( testDataDir( 'all_Z10037.json' ) ) );
 		const expectedOutput = makeFalse();
 		attemptOrchestration(
 			/* testName= */ 'composition of all: [true, false]',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/all_true_false.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'all_true_false.json' ) ),
 			/* expectedResult= */ expectedOutput,
 			/* expectedErrorState= */ false
 		);
 	}
 
 	{
-		wikiStub.setZId( 'Z10029', readJSON( './test/features/v1/test_data/empty_string_Z10029.json' ) );
-		wikiStub.setZId( 'Z10031', readJSON( './test/features/v1/test_data/one_character_Z10031.json' ) );
+		wikiStub.setZId( 'Z10029', readJSON( testDataDir( 'empty_string_Z10029.json' ) ) );
+		wikiStub.setZId( 'Z10031', readJSON( testDataDir( 'one_character_Z10031.json' ) ) );
 		const input = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z10031',
@@ -675,8 +675,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		wikiStub.setZId( 'Z10029', readJSON( './test/features/v1/test_data/empty_string_Z10029.json' ) );
-		wikiStub.setZId( 'Z10031', readJSON( './test/features/v1/test_data/one_character_Z10031.json' ) );
+		wikiStub.setZId( 'Z10029', readJSON( testDataDir( 'empty_string_Z10029.json' ) ) );
+		wikiStub.setZId( 'Z10031', readJSON( testDataDir( 'one_character_Z10031.json' ) ) );
 		const input = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z10031',
@@ -692,8 +692,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		wikiStub.setZId( 'Z10029', readJSON( './test/features/v1/test_data/empty_string_Z10029.json' ) );
-		wikiStub.setZId( 'Z10031', readJSON( './test/features/v1/test_data/one_character_Z10031.json' ) );
+		wikiStub.setZId( 'Z10029', readJSON( testDataDir( 'empty_string_Z10029.json' ) ) );
+		wikiStub.setZId( 'Z10031', readJSON( testDataDir( 'one_character_Z10031.json' ) ) );
 		const input = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z10031',
@@ -712,19 +712,19 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z10101', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10101' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z10101.json' )
+			Z2K2: readJSON( testDataDir( 'Z10101.json' ) )
 		} );
 		wikiStub.setZId( 'Z10103', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10103' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z10103.json' )
+			Z2K2: readJSON( testDataDir( 'Z10103.json' ) )
 		} );
-		const genericIf = readJSON( './test/features/v1/test_data/generic-if.json' );
+		const genericIf = readJSON( testDataDir( 'generic-if.json' ) );
 		genericIf.Z1802K2 = 'Z10103';
 		attemptOrchestration(
 			/* testName= */ 'generic if',
 			/* functionCall= */ genericIf,
-			/* expectedResult= */ readJSON( './test/features/v1/test_data/Z10103-expanded.json' ),
+			/* expectedResult= */ readJSON( testDataDir( 'Z10103-expanded.json' ) ),
 			/* expectedErrorState= */ false
 		);
 	}
@@ -733,16 +733,16 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z88201', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88201' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88201.json' )
+			Z2K2: readJSON( testDataDir( 'Z88201.json' ) )
 		} );
 		wikiStub.setZId( 'Z88203', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88203' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88203.json' )
+			Z2K2: readJSON( testDataDir( 'Z88203.json' ) )
 		} );
-		const genericPair = readJSON( './test/features/v1/test_data/generic-pair.json' );
+		const genericPair = readJSON( testDataDir( 'generic-pair.json' ) );
 		genericPair.Z1802K2 = 'Z88203';
-		const expected = readJSON( './test/features/v1/test_data/Z88203-expanded.json' );
+		const expected = readJSON( testDataDir( 'Z88203-expanded.json' ) );
 		attemptOrchestration(
 			/* testName= */ 'generic pair',
 			/* functionCall= */ genericPair,
@@ -755,26 +755,26 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z88301', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88301' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88301.json' )
+			Z2K2: readJSON( testDataDir( 'Z88301.json' ) )
 		} );
 		wikiStub.setZId( 'Z88303', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88303' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88303.json' )
+			Z2K2: readJSON( testDataDir( 'Z88303.json' ) )
 		} );
 		wikiStub.setZId( 'Z88311', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88311' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88311.json' )
+			Z2K2: readJSON( testDataDir( 'Z88311.json' ) )
 		} );
 		wikiStub.setZId( 'Z88321', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88321' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88321.json' )
+			Z2K2: readJSON( testDataDir( 'Z88321.json' ) )
 		} );
-		const genericMap = readJSON( './test/features/v1/test_data/generic-map.json' );
+		const genericMap = readJSON( testDataDir( 'generic-map.json' ) );
 		genericMap.Z1802K2 = 'Z88303';
-		const expected = readJSON( './test/features/v1/test_data/Z88303-expanded.json' );
+		const expected = readJSON( testDataDir( 'Z88303-expanded.json' ) );
 		attemptOrchestration(
 			/* testName= */ 'generic map',
 			/* functionCall= */ genericMap,
@@ -784,9 +784,9 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		const mapCall = readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883.json' );
+		const mapCall = readJSON( testDataDir( 'invalid_key_type_passed_to_Z883.json' ) );
 		mapCall.Z883K1 = 'Z6';
-		const expected = readJSON( './test/features/v1/test_data/map-key-z6-expected.json' );
+		const expected = readJSON( testDataDir( 'map-key-z6-expected.json' ) );
 		attemptOrchestration(
 			/* testName= */ 'map key can be Z6/String',
 			/* functionCall= */ mapCall,
@@ -799,9 +799,9 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z10044', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10044' },
-			Z2K2: readJSON( './test/features/v1/test_data/map-Z10044.json' )
+			Z2K2: readJSON( testDataDir( 'map-Z10044.json' ) )
 		} );
-		const mapCall = readJSON( './test/features/v1/test_data/map-Z10043.json' );
+		const mapCall = readJSON( testDataDir( 'map-Z10043.json' ) );
 		const expectedOutput = [
 			{
 				Z1K1: 'Z4',
@@ -838,9 +838,9 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		const mapCall = readJSON( './test/features/v1/test_data/invalid_key_type_passed_to_Z883.json' );
+		const mapCall = readJSON( testDataDir( 'invalid_key_type_passed_to_Z883.json' ) );
 		mapCall.Z883K1 = 'Z39';
-		const expected = readJSON( './test/features/v1/test_data/map-key-z39-expected.json' );
+		const expected = readJSON( testDataDir( 'map-key-z39-expected.json' ) );
 		attemptOrchestration(
 			/* testName= */ 'map key can be Z39/Key Reference',
 			/* functionCall= */ mapCall,
@@ -853,22 +853,22 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z88401', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88401' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88401.json' )
+			Z2K2: readJSON( testDataDir( 'Z88401.json' ) )
 		} );
 		wikiStub.setZId( 'Z88402', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88402' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88402.json' )
+			Z2K2: readJSON( testDataDir( 'Z88402.json' ) )
 		} );
 		wikiStub.setZId( 'Z88403', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88403' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88403.json' )
+			Z2K2: readJSON( testDataDir( 'Z88403.json' ) )
 		} );
-		const userDefinedIf = readJSON( './test/features/v1/test_data/user-defined-type.json' );
+		const userDefinedIf = readJSON( testDataDir( 'user-defined-type.json' ) );
 		userDefinedIf.Z1802K2 = 'Z88403';
-		const expected = readJSON( './test/features/v1/test_data/Z88403-expected.json' );
-		const Z831 = readJSON( './test/features/v1/test_data/Z831.json' );
+		const expected = readJSON( testDataDir( 'Z88403-expected.json' ) );
+		const Z831 = readJSON( testDataDir( 'Z831.json' ) );
 		expected.Z1K1.Z4K3 = Z831;
 		attemptOrchestration(
 			/* testName= */ 'good user-defined type',
@@ -882,42 +882,42 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z88401', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88401' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88401.json' )
+			Z2K2: readJSON( testDataDir( 'Z88401.json' ) )
 		} );
 		wikiStub.setZId( 'Z88402', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88402' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88402.json' )
+			Z2K2: readJSON( testDataDir( 'Z88402.json' ) )
 		} );
 		wikiStub.setZId( 'Z88404', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z88403' },
-			Z2K2: readJSON( './test/features/v1/test_data/Z88403-bad.json' )
+			Z2K2: readJSON( testDataDir( 'Z88403-bad.json' ) )
 		} );
-		const userDefinedIf = readJSON( './test/features/v1/test_data/user-defined-type.json' );
+		const userDefinedIf = readJSON( testDataDir( 'user-defined-type.json' ) );
 		userDefinedIf.Z1802K2 = 'Z88404';
 		attemptOrchestration(
 			/* testName= */ 'bad user-defined type',
 			/* functionCall= */ userDefinedIf,
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/bad_user_defined_type_expected.json' )
+			/* expectedErrorValue= */ readJSON( testDataDir( 'bad_user_defined_type_expected.json' ) )
 		);
 	}
 
 	{
-		const Z10005 = readJSON( './test/features/v1/test_data/Z10005.json' );
+		const Z10005 = readJSON( testDataDir( 'Z10005.json' ) );
 		wikiStub.setZId( 'Z10005', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10005' },
 			Z2K2: Z10005
 		} );
-		const userDefinedEcho = readJSON( './test/features/v1/test_data/user-defined-type-as-reference.json' );
-		const typeOnly = readJSON( './test/features/v1/test_data/type-only.json' );
+		const userDefinedEcho = readJSON( testDataDir( 'user-defined-type-as-reference.json' ) );
+		const typeOnly = readJSON( testDataDir( 'type-only.json' ) );
 		userDefinedEcho.Z1903K1 = typeOnly;
 		const expected = { ...typeOnly };
 		expected.Z1K1 = Z10005;
-		expected.Z1K1.Z4K3 = readJSON( './test/features/v1/test_data/Z831.json' );
+		expected.Z1K1.Z4K3 = readJSON( testDataDir( 'Z831.json' ) );
 		attemptOrchestration(
 			/* testName= */ 'reference to user-defined type',
 			/* functionCall= */ userDefinedEcho,
@@ -934,7 +934,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		}
 		attemptOrchestration(
 			/* testName= */ 'multiple implementations',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/multiple-implementations.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'multiple-implementations.json' ) ),
 			/* expectedResult= */ makeTrue(),
 			/* expectedErrorState= */ false,
 			/* expectedErrorValue= */ null,
@@ -971,7 +971,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		const callToThrow = readJSON( './test/features/v1/test_data/throw.json' );
+		const callToThrow = readJSON( testDataDir( 'throw.json' ) );
 		const expected = callToThrow.Z820K2;
 		attemptOrchestration(
 			/* testName= */ 'throw throws Z5s',
@@ -997,7 +997,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		};
 		attemptOrchestration(
 			/* testName= */ 'referenced object is not correct type',
-			/* functionCall= */ readJSON( './test/features/v1/test_data/bad-reference.json' ),
+			/* functionCall= */ readJSON( testDataDir( 'bad-reference.json' ) ),
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
 			/* expectedErrorValue= */ expectedError
@@ -1005,10 +1005,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		wikiStub.setZId( 'Z10081', readJSON( './test/features/v1/test_data/Z10081.json' ) );
-		wikiStub.setZId( 'Z10086', readJSON( './test/features/v1/test_data/Z10086.json' ) );
-		wikiStub.setZId( 'Z10084', readJSON( './test/features/v1/test_data/Z10084.json' ) );
-		wikiStub.setZId( 'Z10085', readJSON( './test/features/v1/test_data/Z10085.json' ) );
+		wikiStub.setZId( 'Z10081', readJSON( testDataDir( 'Z10081.json' ) ) );
+		wikiStub.setZId( 'Z10086', readJSON( testDataDir( 'Z10086.json' ) ) );
+		wikiStub.setZId( 'Z10084', readJSON( testDataDir( 'Z10084.json' ) ) );
+		wikiStub.setZId( 'Z10085', readJSON( testDataDir( 'Z10085.json' ) ) );
 		const validateNonempty = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z10084',
@@ -1023,16 +1023,16 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		attemptOrchestration(
 			/* testName= */ 'Nonempty string with Z10084 validator',
 			/* functionCall= */ validateNonempty,
-			/* expectedResult= */ readJSON( './test/features/v1/test_data/Z10084_nonempty_string_expected.json' ),
+			/* expectedResult= */ readJSON( testDataDir( 'Z10084_nonempty_string_expected.json' ) ),
 			/* expectedErrorState= */ false
 		);
 	}
 
 	{
-		wikiStub.setZId( 'Z10081', readJSON( './test/features/v1/test_data/Z10081.json' ) );
-		wikiStub.setZId( 'Z10086', readJSON( './test/features/v1/test_data/Z10086.json' ) );
-		wikiStub.setZId( 'Z10084', readJSON( './test/features/v1/test_data/Z10084.json' ) );
-		wikiStub.setZId( 'Z10085', readJSON( './test/features/v1/test_data/Z10085.json' ) );
+		wikiStub.setZId( 'Z10081', readJSON( testDataDir( 'Z10081.json' ) ) );
+		wikiStub.setZId( 'Z10086', readJSON( testDataDir( 'Z10086.json' ) ) );
+		wikiStub.setZId( 'Z10084', readJSON( testDataDir( 'Z10084.json' ) ) );
+		wikiStub.setZId( 'Z10085', readJSON( testDataDir( 'Z10085.json' ) ) );
 		const validateEmpty = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z10084',
@@ -1050,7 +1050,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* functionCall= */ validateEmpty,
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/Z10084_empty_string_expected.json' ),
+			/* expectedErrorValue= */ readJSON( testDataDir( 'Z10084_empty_string_expected.json' ) ),
 			/* expectedExtraMetadata= */ [],
 			/* expectedMissingMetadata= */ [],
 			/* implementationSelector= */ null
@@ -1061,22 +1061,22 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z10088', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10088' },
-			Z2K2: readJSON( './test/features/v1/test_data/curry-implementation-Z10088.json' )
+			Z2K2: readJSON( testDataDir( 'curry-implementation-Z10088.json' ) )
 		} );
 		wikiStub.setZId( 'Z10087', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10087' },
-			Z2K2: readJSON( './test/features/v1/test_data/curry-Z10087.json' )
+			Z2K2: readJSON( testDataDir( 'curry-Z10087.json' ) )
 		} );
 		wikiStub.setZId( 'Z30086', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z30086' },
-			Z2K2: readJSON( './test/features/v1/test_data/curry-call-Z30086.json' )
+			Z2K2: readJSON( testDataDir( 'curry-call-Z30086.json' ) )
 		} );
 		wikiStub.setZId( 'Z10007', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10007' },
-			Z2K2: readJSON( './test/features/v1/test_data/and-Z10007.json' )
+			Z2K2: readJSON( testDataDir( 'and-Z10007.json' ) )
 		} );
 		const curryCall = {
 			Z1K1: 'Z7',
@@ -1102,12 +1102,12 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z10001', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10001' },
-			Z2K2: readJSON( './test/features/v1/test_data/save-argument-scope-Z10001.json' )
+			Z2K2: readJSON( testDataDir( 'save-argument-scope-Z10001.json' ) )
 		} );
 		wikiStub.setZId( 'Z10002', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10002' },
-			Z2K2: readJSON( './test/features/v1/test_data/save-argument-scope-Z10002.json' )
+			Z2K2: readJSON( testDataDir( 'save-argument-scope-Z10002.json' ) )
 		} );
 
 		// Expect:
@@ -1132,10 +1132,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	{
 		wikiStub.setZId(
 			'Z100920',
-			readJSON( './test/features/v1/test_data/Z100920-wrap.json' ) );
+			readJSON( testDataDir( 'Z100920-wrap.json' ) ) );
 		wikiStub.setZId(
 			'Z100930',
-			readJSON( './test/features/v1/test_data/Z100930-wrap-implementation.json' )
+			readJSON( testDataDir( 'Z100930-wrap-implementation.json' ) )
 		);
 		const wrapCall = {
 			Z1K1: 'Z7',
@@ -1177,13 +1177,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	{
 		wikiStub.setZId(
 			'Z20022',
-			readJSON( './test/features/v1/test_data/Z20022-natural-number-type.json' ) );
+			readJSON( testDataDir( 'Z20022-natural-number-type.json' ) ) );
 		wikiStub.setZId(
 			'Z20095',
-			readJSON( './test/features/v1/test_data/Z20095-natural-number-from-string.json' ) );
+			readJSON( testDataDir( 'Z20095-natural-number-from-string.json' ) ) );
 		wikiStub.setZId(
 			'Z20096',
-			readJSON( './test/features/v1/test_data/Z20096-nnfs-implementation.json' ) );
+			readJSON( testDataDir( 'Z20096-nnfs-implementation.json' ) ) );
 		const naturalNumberCall = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z20095',
@@ -1205,17 +1205,17 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		wikiStub.setZId( 'Z31000', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z31000' },
-			Z2K2: readJSON( './test/features/v1/test_data/bind-binary-Z31000.json' )
+			Z2K2: readJSON( testDataDir( 'bind-binary-Z31000.json' ) )
 		} );
 		wikiStub.setZId( 'Z31001', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z31001' },
-			Z2K2: readJSON( './test/features/v1/test_data/bind-binary-implementation-Z31001.json' )
+			Z2K2: readJSON( testDataDir( 'bind-binary-implementation-Z31001.json' ) )
 		} );
 		wikiStub.setZId( 'Z10007', {
 			Z1K1: 'Z2',
 			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10007' },
-			Z2K2: readJSON( './test/features/v1/test_data/and-Z10007.json' )
+			Z2K2: readJSON( testDataDir( 'and-Z10007.json' ) )
 		} );
 		const binaryBindCall = {
 			Z1K1: 'Z7',
@@ -1226,24 +1226,24 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		attemptOrchestration(
 			/* testName= */ 'bind binary function',
 			/* functionCall= */ binaryBindCall,
-			/* expectedResult= */ readJSON( './test/features/v1/test_data/bind-binary-expected.json' ),
+			/* expectedResult= */ readJSON( testDataDir( 'bind-binary-expected.json' ) ),
 			/* expectedErrorState= */ false
 		);
 	}
 
 	{
-		const noScrubs = readJSON( './test/features/v1/test_data/no-implementations.json' );
+		const noScrubs = readJSON( testDataDir( 'no-implementations.json' ) );
 		attemptOrchestration(
 			/* testName= */ 'no implementations',
 			/* functionCall= */ noScrubs,
 			/* expectedResult= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorValue= */ readJSON( './test/features/v1/test_data/no-implementations-expected.json' )
+			/* expectedErrorValue= */ readJSON( testDataDir( 'no-implementations-expected.json' ) )
 		);
 	}
 
 	{
-		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
+		wikiStub.setZId( 'Z40002', readJSON( testDataDir( 'string-numeral-increment-Z40002.json' ) ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40002',
@@ -1258,10 +1258,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		wikiStub.setZId( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
-		wikiStub.setZId( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
-		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
-		wikiStub.setZId( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		wikiStub.setZId( 'Z40000', readJSON( testDataDir( 'scott-numeral-zero-Z40000.json' ) ) );
+		wikiStub.setZId( 'Z40001', readJSON( testDataDir( 'scott-numeral-succ-Z40001.json' ) ) );
+		wikiStub.setZId( 'Z40002', readJSON( testDataDir( 'string-numeral-increment-Z40002.json' ) ) );
+		wikiStub.setZId( 'Z40003', readJSON( testDataDir( 'scott-numeral-convert-Z40003.json' ) ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40003',
@@ -1276,10 +1276,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		wikiStub.setZId( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
-		wikiStub.setZId( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
-		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
-		wikiStub.setZId( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		wikiStub.setZId( 'Z40000', readJSON( testDataDir( 'scott-numeral-zero-Z40000.json' ) ) );
+		wikiStub.setZId( 'Z40001', readJSON( testDataDir( 'scott-numeral-succ-Z40001.json' ) ) );
+		wikiStub.setZId( 'Z40002', readJSON( testDataDir( 'string-numeral-increment-Z40002.json' ) ) );
+		wikiStub.setZId( 'Z40003', readJSON( testDataDir( 'scott-numeral-convert-Z40003.json' ) ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40003',
@@ -1298,10 +1298,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		wikiStub.setZId( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
-		wikiStub.setZId( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
-		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
-		wikiStub.setZId( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
+		wikiStub.setZId( 'Z40000', readJSON( testDataDir( 'scott-numeral-zero-Z40000.json' ) ) );
+		wikiStub.setZId( 'Z40001', readJSON( testDataDir( 'scott-numeral-succ-Z40001.json' ) ) );
+		wikiStub.setZId( 'Z40002', readJSON( testDataDir( 'string-numeral-increment-Z40002.json' ) ) );
+		wikiStub.setZId( 'Z40003', readJSON( testDataDir( 'scott-numeral-convert-Z40003.json' ) ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40003',
@@ -1325,11 +1325,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 
 	{
 		// TODO(T310093): Speed this up until and bump up the input values, e.g. to Ackermann(2, 2).
-		wikiStub.setZId( 'Z40000', readJSON( './test/features/v1/test_data/scott-numeral-zero-Z40000.json' ) );
-		wikiStub.setZId( 'Z40001', readJSON( './test/features/v1/test_data/scott-numeral-succ-Z40001.json' ) );
-		wikiStub.setZId( 'Z40002', readJSON( './test/features/v1/test_data/string-numeral-increment-Z40002.json' ) );
-		wikiStub.setZId( 'Z40003', readJSON( './test/features/v1/test_data/scott-numeral-convert-Z40003.json' ) );
-		wikiStub.setZId( 'Z40004', readJSON( './test/features/v1/test_data/scott-numeral-ack-Z40004.json' ) );
+		wikiStub.setZId( 'Z40000', readJSON( testDataDir( 'scott-numeral-zero-Z40000.json' ) ) );
+		wikiStub.setZId( 'Z40001', readJSON( testDataDir( 'scott-numeral-succ-Z40001.json' ) ) );
+		wikiStub.setZId( 'Z40002', readJSON( testDataDir( 'string-numeral-increment-Z40002.json' ) ) );
+		wikiStub.setZId( 'Z40003', readJSON( testDataDir( 'scott-numeral-convert-Z40003.json' ) ) );
+		wikiStub.setZId( 'Z40004', readJSON( testDataDir( 'scott-numeral-ack-Z40004.json' ) ) );
 		const call = {
 			Z1K1: 'Z7',
 			Z7K1: 'Z40003',
