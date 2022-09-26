@@ -58,6 +58,15 @@ because it is rare for any piece of code in this repository to run without
 consulting most other pieces of code. As a result, most tests exercise the full
 system, focusing on particular execution paths.
 
+### Test Output Regeneration
+Sometimes a change to the orchestrator will make lots of inconsequential changes
+to the output (e.g., a function call is now expanded when it wasn't before). It
+can be tedious to update all affected tests. You can re-generate the expected
+test outputs by adding the `--regenerate-output` argument to the test runner
+command, e.g.
+
+`mocha test/features/v1/mswOrchestrateTest.js --regenerate-output --timeout 20000`
+
 <a href='argument-resolution'></a>
 ## Argument Resolution
 The orchestrator is also responsible for managing the execution of function

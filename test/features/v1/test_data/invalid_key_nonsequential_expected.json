@@ -2,9 +2,6 @@
 	"Z1K1": "Z5",
 	"Z5K1": {
 		"Z1K1": "Z522",
-		"Z522K1": {
-			"Z1K1": "Z6",
-			"Z6K1": "Non-sequential key at index 1: Z803K3"
-		}
+		"Z522K1": "Non-sequential key at index 1: Z803K3"
 	}
 }

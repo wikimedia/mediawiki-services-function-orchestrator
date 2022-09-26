@@ -29,4 +29,8 @@ function testDataDir( ...pathComponents ) {
 		'test', 'features', 'v1', 'test_data', ...pathComponents );
 }
 
-module.exports = { readJSON, readZObjectsFromDirectory, testDataDir };
+function writeJSON( object, fileName ) {
+	fs.writeFile( fileName, JSON.stringify( object, null, 4 ), ( err ) => {} );
+}
+
+module.exports = { readJSON, readZObjectsFromDirectory, testDataDir, writeJSON };
