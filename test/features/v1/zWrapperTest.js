@@ -2,7 +2,7 @@
 
 const assert = require( '../../utils/assert.js' );
 const { ZWrapper } = require( '../../../src/ZWrapper' );
-const { EmptyFrame } = require( '../../../src/frame.js' );
+const { BaseFrame, EmptyFrame } = require( '../../../src/frame.js' );
 
 describe( 'ZWrapper test', function () { // eslint-disable-line no-undef
 
@@ -42,5 +42,39 @@ describe( 'ZWrapper test', function () { // eslint-disable-line no-undef
 
 		await georgieWrapper.resolveKey( [ 'Z1K1' ], /* invariants= */ null );
 		assert.deepEqual( theTrueTrue.Z1K1, georgieWrapper.resolved_.get( 'Z1K1' ).asJSON() );
+	} );
+
+	it( 'ZWrapper debugObject', () => { // eslint-disable-line no-undef
+		const emptyObject = {};
+
+		const nullZReferenceString = 'Z24';
+		const nullZReference = { Z1K1: 'Z9', Z9K1: nullZReferenceString };
+
+		const emptyZWrapper = ZWrapper.create( emptyObject, new EmptyFrame() );
+		assert.deepEqual(
+			{ object_: nullZReference, scope_: {} },
+			emptyZWrapper.debugObject()
+		);
+
+		const recursiveEmptyZWrapper = ZWrapper.create(
+			emptyObject,
+			new BaseFrame( emptyZWrapper )
+		);
+		assert.deepEqual(
+			{ object_: nullZReference, scope_: { object_: nullZReference, scope_: {} } },
+			recursiveEmptyZWrapper.debugObject()
+		);
+
+		const emptyEnvelopeObject = { Z1K1: 'Z22', Z22K1: nullZReference, Z22K2: nullZReference };
+
+		const baseZWrapper = ZWrapper.create( emptyEnvelopeObject, new BaseFrame( emptyZWrapper ) );
+		assert.deepEqual(
+			{
+				// The nullZReferences (normal form) become nullZReferenceStrings (canonical)
+				object_: { Z1K1: 'Z22', Z22K1: nullZReferenceString, Z22K2: nullZReferenceString },
+				scope_: { object_: nullZReference, scope_: {} }
+			},
+			baseZWrapper.debugObject()
+		);
 	} );
 } );
