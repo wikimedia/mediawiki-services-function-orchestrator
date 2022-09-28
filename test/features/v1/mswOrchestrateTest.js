@@ -5,7 +5,8 @@ const { makeMappedResultEnvelope, makeTrue, setZMapValue, getZMapValue, getError
 	require( '../../../function-schemata/javascript/src/utils.js' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
-const { readJSON, testDataDir, writeJSON } = require( '../../../src/fileUtils.js' );
+const { readJSON } = require( '../../../src/fileUtils.js' );
+const { testDataDir, writeJSON } = require( '../../utils/testFileUtils.js' );
 const { normalError, error } = require( '../../../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../../../function-schemata/javascript/src/utils' );
 const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../../../lib/mockUtils.js' );
