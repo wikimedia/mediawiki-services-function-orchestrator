@@ -139,7 +139,11 @@ class ZWrapper {
 					if ( isUserDefined( nextObject.Z9K1 ) || evenBuiltins ) {
 						const refKey = nextObject.Z9K1;
 						const dereferenced = await invariants.resolver.dereference( [ refKey ] );
-						nextObject = dereferenced[ refKey ].Z2K2;
+						const Z22 = dereferenced.get( refKey );
+						if ( containsError( Z22 ) ) {
+							return Z22;
+						}
+						nextObject = Z22.Z22K1.Z2K2;
 						continue;
 					}
 				}

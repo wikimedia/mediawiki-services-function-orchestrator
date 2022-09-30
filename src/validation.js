@@ -193,7 +193,8 @@ async function validate( zobject, invariants ) {
 		if ( schemaValidator === null ) {
 			return;
 		}
-		if ( ZObjectTypes[ typeKey.asString() ] === undefined ) {
+		const typeEnvelope = ZObjectTypes.get( typeKey.asString() );
+		if ( typeEnvelope === undefined ) {
 			// TODO (T297717): We should add other types to the set, not just builtins.
 			return;
 		}
@@ -204,9 +205,13 @@ async function validate( zobject, invariants ) {
 		} else {
 			// TODO (T307244): Use ignoreList instead of setting evaluator
 			// to null.
-			const noEvaluator = new Invariants( null, invariants.resolver );
-			typeValidatorPromises.push( runTypeValidator(
-				Z1, ZObjectTypes[ typeKey.asString() ].Z2K2, noEvaluator ) );
+			if ( containsError( typeEnvelope ) ) {
+				errors.push( getError( typeEnvelope ) );
+			} else {
+				const noEvaluator = new Invariants( null, invariants.resolver );
+				typeValidatorPromises.push( runTypeValidator(
+					Z1, typeEnvelope.Z22K1.Z2K2, noEvaluator ) );
+			}
 		}
 	} );
 
