@@ -121,14 +121,17 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 					assert.deepEqual( responseError, makeVoid( /* canonical= */ true ), testName + ' should not be in an execution/validation error state' );
 				}
 
-				// Note: Keep this list in sync with the key block in the orchestrate() function.
+				// Note: Keep this list in sync with the key block in the orchestrate() function,
+				// and calls to setMetadataValue and setMetadataValues in other places.
 				const standardMetaData = [
 					'orchestrationMemoryUsage',
 					'orchestrationCpuUsage',
 					'orchestrationStartTime',
 					'orchestrationEndTime',
 					'orchestrationDuration',
-					'orchestrationHostname'
+					'orchestrationHostname',
+					'implementationId',
+					'implementationType'
 				];
 
 				standardMetaData.forEach( ( key ) => {

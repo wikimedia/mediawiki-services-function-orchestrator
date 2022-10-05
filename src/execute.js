@@ -2,9 +2,10 @@
 
 const { ArgumentState } = require( './argumentState.js' );
 const { BaseFrame, EmptyFrame } = require( './frame.js' );
-const { Composition, Implementation } = require( './implementation.js' );
+const { Composition, Implementation, Evaluated } = require( './implementation.js' );
 const { RandomImplementationSelector } = require( './implementationSelector.js' );
-const { containsError, containsValue, createZObjectKey, isRefOrString, makeWrappedResultEnvelope, quoteZObject, returnOnFirstError } = require( './utils.js' );
+const { containsError, containsValue, createZObjectKey, isRefOrString, makeWrappedResultEnvelope,
+	setMetadataValues, quoteZObject, returnOnFirstError } = require( './utils.js' );
 const { MutationType, ZWrapper } = require( './ZWrapper' );
 const { resolveListType } = require( './builtins.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
@@ -357,6 +358,37 @@ async function validateReturnType( result, zobject, invariants ) {
 }
 
 /**
+ * Add implementation-specific metadata elements to the metadata map in the
+ * Evaluation result (response envelope).
+ *
+ * @param {Implementation} implementation
+ * @param {ZWrapper} result (Z22 / Evaluation result)
+ * @return {ZWrapper}
+ */
+async function addImplementationMetadata( implementation, result ) {
+	let implementationId, implementationType;
+	const Z14 = implementation.Z14_;
+	if ( implementation instanceof Composition ) {
+		implementationType = 'Composition';
+		// TODO(T320457): Capture persistent ID, if present, in executeInternal()
+		// 'undetermined' (for now) because we don't know if there's a persistent ID
+		implementationId = 'undetermined';
+	} else if ( implementation instanceof Evaluated ) {
+		implementationType = 'Evaluated';
+		// TODO(T320457): Capture persistent ID, if present, in executeInternal()
+		// 'undetermined' (for now) because we don't know if there's a persistent ID
+		implementationId = 'undetermined';
+	} else {
+		implementationType = 'BuiltIn';
+		implementationId = Z14.Z14K4.Z6K1;
+	}
+	const newPairs = new Map();
+	newPairs.set( { Z1K1: 'Z6', Z6K1: 'implementationId' }, { Z1K1: 'Z6', Z6K1: implementationId } );
+	newPairs.set( { Z1K1: 'Z6', Z6K1: 'implementationType' }, { Z1K1: 'Z6', Z6K1: implementationType } );
+	return setMetadataValues( result, newPairs );
+}
+
+/**
  * Same as {@link execute} but assumes a new frame has already been created in the scope and does
  * not recursively resolve the subobjects.
  *
@@ -365,11 +397,13 @@ async function validateReturnType( result, zobject, invariants ) {
  * @param {boolean} doValidate
  * @param {ImplementationSelector} implementationSelector
  * @param {boolean} resolveInternals
+ * @param {boolean} topLevel whether this is the top-level Z7 sent to the orchestrator
  * @return {ZWrapper}
  */
 async function executeInternal(
 	zobject, invariants, doValidate = true,
-	implementationSelector = null, resolveInternals = true ) {
+	implementationSelector = null, resolveInternals = true,
+	topLevel = false ) {
 
 	const typeKey = createZObjectKey( zobject );
 	if ( typeKey.ZID_ === 'Z881' && !resolveInternals ) {
@@ -486,6 +520,9 @@ async function executeInternal(
 	if ( doValidate && resolveInternals ) {
 		result = await validateReturnType( result, zobject, invariants );
 	}
+	if ( topLevel ) {
+		result = await addImplementationMetadata( implementation, result );
+	}
 	return result;
 }
 
@@ -545,7 +582,7 @@ execute = async function (
 	implementationSelector = null, resolveInternals = true, topLevel = false ) {
 	const result = await executeInternal(
 		zobject, invariants, doValidate,
-		implementationSelector, resolveInternals );
+		implementationSelector, resolveInternals, topLevel );
 	if ( topLevel ) {
 		await resolveDanglingReferences( result.Z22K1, invariants );
 	}
