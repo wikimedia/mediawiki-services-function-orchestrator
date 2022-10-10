@@ -7,8 +7,8 @@ const {
 	validatesAsReference,
 	ZObjectKeyFactory
 } = require( '../function-schemata/javascript/src/schema.js' );
-const { isUserDefined, getHead, getTail, makeMappedResultEnvelope, isVoid, isZMap, getZMapValue
-} = require( '../function-schemata/javascript/src/utils' );
+const { isUserDefined, getHead, getTail, makeMappedResultEnvelope, isVoid, isZMap, makeEmptyZMap,
+	getZMapValue, setZMapValue } = require( '../function-schemata/javascript/src/utils' );
 const { EmptyFrame } = require( './frame.js' );
 
 const normalFactory = SchemaFactory.NORMAL();
@@ -109,6 +109,56 @@ function isGenericType( Z1 ) {
 	} catch ( err ) {
 		return false;
 	}
+}
+
+/**
+ * Same as utils.js:setMetadataValue() in function-schemata, *except* this method allows the
+ * envelope (Z22 / Evaluation result) to be either a ZWrapper or a JSON object, and it takes
+ * multiple key / value pairs (as a JavaScript Map).
+ *
+ * Ensures there is an entry in the metadata map of the given envelope for each key/value in
+ * newPairs. If the envelope has no metadata map, creates one.  If there is already an entry
+ * for a given key/value, overwrites the corresponding value.  Otherwise, creates a new entry.
+ * N.B.: May modify the value of Z22K2 and the ZMap's K1 in place.
+ *
+ * @param {Object|ZWrapper} envelope a Z22/Evaluation result, in normal form
+ * @param {Map} newPairs key/value pairs of ZObjects in normal form,
+ * with each key an instance of Z6 or Z39
+ * @return {Object|ZWrapper} the updated envelope, in normal form
+ */
+function setMetadataValues( envelope, newPairs ) {
+	const { ZWrapper } = require( './ZWrapper' );
+	let scope = null;
+	let zMap = envelope.Z22K2;
+	if ( envelope instanceof ZWrapper ) {
+		// Get zMap as JSON, and save scope
+		if ( zMap ) {
+			scope = zMap.getScope();
+			zMap = zMap.asJSON();
+		} else {
+			// For this case we'll create a new ZMap, using the envelope's scope
+			scope = envelope.getScope();
+		}
+	}
+
+	// Do the ZMap creation (if needed) and insertions using JSON objects
+	if ( zMap === undefined || isVoid( zMap ) ) {
+		const keyType = { Z1K1: 'Z9', Z9K1: 'Z6' };
+		const valueType = { Z1K1: 'Z9', Z9K1: 'Z1' };
+		zMap = makeEmptyZMap( keyType, valueType );
+	}
+	for ( const [ key, value ] of newPairs ) {
+		zMap = setZMapValue( zMap, key, value );
+	}
+
+	if ( envelope instanceof ZWrapper ) {
+		// Return zMap to ZWrapper form
+		zMap = ZWrapper.create( zMap, scope );
+		envelope.setName( 'Z22K2', zMap );
+	} else {
+		envelope.Z22K2 = zMap;
+	}
+	return envelope;
 }
 
 /**
@@ -297,5 +347,6 @@ module.exports = {
 	makeWrappedResultEnvelope,
 	quoteZObject,
 	returnOnFirstError,
+	setMetadataValues,
 	traverseZList
 };
