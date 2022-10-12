@@ -1,6 +1,7 @@
 'use strict';
 
 const fetch = require( '../lib/fetch.js' );
+const { convertZObjectToBinary } = require( '../function-schemata/javascript/src/serialize.js' );
 
 /**
  * Function evaluator. Wraps API calls to the function-evaluator service, which
@@ -12,11 +13,12 @@ class Evaluator {
 	}
 
 	async evaluate( functionCall ) {
+		const serialized = convertZObjectToBinary( functionCall );
 		return await fetch(
 			this.evaluatorUri_, {
 				method: 'POST',
-				body: JSON.stringify( functionCall ),
-				headers: { 'Content-Type': 'application/json' }
+				body: serialized,
+				headers: { 'Content-type': 'application/octet-stream' }
 			}
 		);
 	}
