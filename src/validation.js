@@ -77,7 +77,7 @@ async function runValidationFunction( Z8, invariants, ...Z1s ) {
  * @return {Array} an array of Z5/Error
  */
 async function runTypeValidator( Z1, Z4, invariants ) {
-	await ( Z4.resolveKey( [ 'Z4K3' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ false ) );
+	await ( Z4.resolveEphemeral( [ 'Z4K3' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ false ) );
 	const validationFunction = Z4.Z4K3;
 
 	try {
@@ -107,7 +107,7 @@ async function runTypeValidator( Z1, Z4, invariants ) {
  * @return {Array} an array of Z5/Error
  */
 async function runTypeValidatorDynamic( Z1, Z4, invariants ) {
-	await ( Z4.resolveKey( [ 'Z4K3' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ false ) );
+	await ( Z4.resolveEphemeral( [ 'Z4K3' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ false ) );
 	const validationFunction = Z4.Z4K3;
 
 	try {

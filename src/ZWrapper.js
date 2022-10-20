@@ -34,6 +34,7 @@ class ZWrapper {
 		// to the same scope, but they diverge as subobjects get resolved.
 		this.original_ = new Map();
 		this.resolved_ = new Map();
+		this.resolvedEphemeral_ = new Map();
 		this.keys_ = new Set();
 		this.scope_ = null;
 	}
@@ -56,7 +57,7 @@ class ZWrapper {
 			result.keys_.add( key );
 			Object.defineProperty( result, key, {
 				get: function () {
-					return this.getName( key );
+					return this.getNameEphemeral( key );
 				}
 			} );
 		}
@@ -87,14 +88,17 @@ class ZWrapper {
 			result.keys_.add( key );
 			Object.defineProperty( result, key, {
 				get: function () {
-					return this.getName( key );
+					return this.getNameEphemeral( key );
 				}
 			} );
 		}
 		return result;
 	}
 
-	getName( key ) {
+	getNameEphemeral( key ) {
+		if ( this.resolvedEphemeral_.has( key ) ) {
+			return this.resolvedEphemeral_.get( key );
+		}
 		if ( this.resolved_.has( key ) ) {
 			return this.resolved_.get( key );
 		}
@@ -103,6 +107,17 @@ class ZWrapper {
 
 	setName( key, value ) {
 		this.resolved_.set( key, value );
+	}
+
+	setNameEphemeral( key, value ) {
+		this.resolvedEphemeral_.set( key, value );
+	}
+
+	getName( key ) {
+		if ( this.resolved_.has( key ) ) {
+			return this.resolved_.get( key );
+		}
+		return this.original_.get( key );
 	}
 
 	// private
@@ -184,11 +199,11 @@ class ZWrapper {
 		return makeWrappedResultEnvelope( nextObject, null );
 	}
 
-	// private
-	async resolveKeyInternal_(
-		key, invariants, ignoreList, resolveInternals, doValidate ) {
+	async resolveInternalHelper_(
+		key, invariants, ignoreList, resolveInternals, doValidate,
+		getNameFunction, setNameFunction ) {
 		let newValue, resultPair;
-		const currentValue = this.getName( key );
+		const currentValue = getNameFunction( key );
 		if ( currentValue instanceof ZWrapper ) {
 			resultPair = await ( currentValue.resolveInternal_(
 				invariants, ignoreList, resolveInternals, doValidate ) );
@@ -232,8 +247,39 @@ class ZWrapper {
 				}
 			}
 		}
-		this.setName( key, newValue );
+		setNameFunction( key, newValue );
 		return resultPair;
+	}
+
+	// private
+	async resolveKeyInternal_(
+		key, invariants, ignoreList, resolveInternals, doValidate ) {
+		const selfReference = this;
+		function getNameFunction( key ) {
+			return selfReference.getName( key );
+		}
+		function setNameFunction( key, value ) {
+			return selfReference.setName( key, value );
+		}
+		return await this.resolveInternalHelper_(
+			key, invariants, ignoreList, resolveInternals, doValidate,
+			getNameFunction, setNameFunction );
+	}
+
+	// private
+	// FIXME: Collapse common functionality with resolveKeyInternal_.
+	async resolveEphemeralInternal_(
+		key, invariants, ignoreList, resolveInternals, doValidate ) {
+		const selfReference = this;
+		function getNameFunction( key ) {
+			return selfReference.getNameEphemeral( key );
+		}
+		function setNameFunction( key, value ) {
+			return selfReference.setNameEphemeral( key, value );
+		}
+		return await this.resolveInternalHelper_(
+			key, invariants, ignoreList, resolveInternals, doValidate,
+			getNameFunction, setNameFunction );
 	}
 
 	/**
@@ -295,10 +341,60 @@ class ZWrapper {
 				return result;
 			}
 		}
-		const nextValue = this.getName( key );
+		const nextValue = this.getNameEphemeral( key );
 		if ( nextValue instanceof ZWrapper ) {
 			result = await (
 				nextValue.resolveKey(
+					keys, invariants, ignoreList, resolveInternals, doValidate )
+			);
+		}
+		return result;
+	}
+
+	/**
+	 * Recursively traverses and resolves the current object along the given keys, caching the
+	 * results for future calls.
+	 *
+	 * This differs from resolveKey() in that the resolved values will not be
+	 * represented when asJSON() is called. resolveEphemeral is useful for cases
+	 * where it's helpful to cache results, but those results will not be needed
+	 * outside of the orchestrator.
+	 *
+	 * The returned object does not have any evaluation rule that applies to it (i.e. it is not a
+	 * reference, argument reference, function call, etc.) but the same is not true for its
+	 * subobjects; they should be resolved separately. Moreover, it is wrapped in a result envelope
+	 * to indicate any errors.
+	 *
+	 * @param {Array(string)} keys Path of subobjects to resolve
+	 * @param {Invariants} invariants
+	 * @param {Set(MutationType)} ignoreList
+	 * @param {booleanl} resolveInternals
+	 * @param {boolean} doValidate
+	 * @return {ZWrapper} A result envelope zobject representing the result.
+	 */
+	async resolveEphemeral(
+		keys, invariants, ignoreList = null,
+		resolveInternals = true, doValidate = true ) {
+		let result;
+		if ( keys.length <= 0 ) {
+			return makeWrappedResultEnvelope( this, null );
+		}
+		const key = keys.shift();
+		if ( !( this.keys_.has( key ) ) ) {
+			// TODO (T309809): Return an error in this case.
+			return makeWrappedResultEnvelope( this, null );
+		}
+		if ( !this.resolvedEphemeral_.has( key ) ) {
+			result = await this.resolveEphemeralInternal_(
+				key, invariants, ignoreList, resolveInternals, doValidate );
+			if ( containsError( result ) ) {
+				return result;
+			}
+		}
+		const nextValue = this.getNameEphemeral( key );
+		if ( nextValue instanceof ZWrapper ) {
+			result = await (
+				nextValue.resolveEphemeral(
 					keys, invariants, ignoreList, resolveInternals, doValidate )
 			);
 		}
@@ -316,6 +412,18 @@ class ZWrapper {
 		const result = {};
 		for ( const key of this.keys() ) {
 			let value = this.getName( key );
+			if ( value instanceof ZWrapper ) {
+				value = value.asJSON();
+			}
+			result[ key ] = value;
+		}
+		return result;
+	}
+
+	asJSONEphemeral() {
+		const result = {};
+		for ( const key of this.keys() ) {
+			let value = this.getNameEphemeral( key );
 			if ( value instanceof ZWrapper ) {
 				value = value.asJSON();
 			}
