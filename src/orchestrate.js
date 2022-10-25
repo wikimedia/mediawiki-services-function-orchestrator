@@ -96,6 +96,8 @@ async function orchestrate( input, implementationSelector = null ) {
 		);
 	}
 
+	logger.info( 'Z7K1 is: ' + JSON.stringify( zobject.Z7K1 ) );
+
 	const evaluator = new Evaluator( input.evaluatorUri || null );
 	const resolver = new ReferenceResolver( input.wikiUri || null );
 	const invariants = new Invariants( evaluator, resolver );
