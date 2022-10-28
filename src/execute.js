@@ -49,7 +49,7 @@ async function validateAsType( Z1, invariants, typeZObject = null ) {
 	// same function twice by comparing Z8K5 references.
 	const resolvedType = ( await ( typeZObject.resolve( invariants ) ) ).Z22K1;
 	if ( validatesAsType( resolvedType.asJSON() ).isValid() ) {
-		await ( resolvedType.resolveKey( [ 'Z4K3' ], invariants ) );
+		await ( resolvedType.resolveEphemeral( [ 'Z4K3' ], invariants ) );
 		const validatorZ8 = resolvedType.Z4K3;
 		if ( validatorZ8.Z8K5.Z9K1 !== genericValidatorZ8.Z8K5.Z9K1 ) {
 			const { runTypeValidatorDynamic } = require( './validation.js' );
@@ -80,7 +80,7 @@ async function resolveTypes( Z1, invariants, doValidate = true ) {
 		if ( isRefOrString( nextObject ) ) {
 			continue;
 		}
-		await ( nextObject.resolveKey(
+		await ( nextObject.resolveEphemeral(
 			[ 'Z1K1' ], invariants, /* ignoreList= */ null,
 			/* resolveInternals= */ false, doValidate ) );
 		const typeEnvelope = nextObject.Z1K1;
@@ -143,7 +143,7 @@ class Frame extends BaseFrame {
 				return ArgumentState.ERROR(
 					normalError(
 						[ error.object_type_mismatch ],
-						[ argument.Z1K1, argument, getError( actualResult ) ] ) );
+						[ argument.getName( 'Z1K1' ), argument, getError( actualResult ) ] ) );
 			}
 		}
 		return ArgumentState.EVALUATED( {

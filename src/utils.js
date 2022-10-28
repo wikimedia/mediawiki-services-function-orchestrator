@@ -37,7 +37,7 @@ function isRefOrString( Z1 ) {
 function createZObjectKey( ZObject ) {
 	const { ZWrapper } = require( './ZWrapper' );
 	if ( ZObject instanceof ZWrapper ) {
-		ZObject = ZObject.asJSON();
+		ZObject = ZObject.asJSONEphemeral();
 	}
 	return ZObjectKeyFactory.create( ZObject );
 }
@@ -48,7 +48,7 @@ function createSchema( Z1 ) {
 	let Z1K1 = Z1.Z1K1;
 	const { ZWrapper } = require( './ZWrapper' );
 	if ( Z1K1 instanceof ZWrapper ) {
-		Z1K1 = Z1K1.asJSON();
+		Z1K1 = Z1K1.asJSONEphemeral();
 	}
 	if ( isRefOrString( Z1 ) ) {
 		return normalFactory.create( Z1K1 );
@@ -308,7 +308,11 @@ async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = tr
 		for ( const arg of callTuple[ 1 ] ) {
 			args.push( arg );
 		}
-		currentResponseEnvelope = await callable( ...args );
+		try {
+			currentResponseEnvelope = await callable( ...args );
+		} catch ( error ) {
+			console.trace( error );
+		}
 	}
 	return currentResponseEnvelope;
 }
