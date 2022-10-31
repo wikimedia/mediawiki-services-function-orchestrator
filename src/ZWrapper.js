@@ -105,10 +105,12 @@ class ZWrapper {
 		return this.original_.get( key );
 	}
 
+	// Do not call this function with keys that were not part of the original object.
 	setName( key, value ) {
 		this.resolved_.set( key, value );
 	}
 
+	// Do not call this function with keys that were not part of the original object.
 	setNameEphemeral( key, value ) {
 		this.resolvedEphemeral_.set( key, value );
 	}
