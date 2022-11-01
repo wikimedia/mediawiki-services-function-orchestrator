@@ -27,7 +27,9 @@ const MutationType = Object.freeze( {
  */
 class ZWrapper {
 
-	// Private. Use {@link ZWrapper#create} instead.
+	/**
+	 * Private. Use {@link ZWrapper#create} instead.
+	 */
 	constructor() {
 		// Each value in original_ (and eventually in resolved_) points to another ZWrapper
 		// representing the corresponding subobject with its own scope. Initially they all point
@@ -39,9 +41,15 @@ class ZWrapper {
 		this.scope_ = null;
 	}
 
-	// Creates an equivalent ZWrapper representation for the given ZObject and its subobjects.
-	// The resulting ZWrapper has the same fields as the ZObject, each of which is itself a
-	// ZWrapper, and so on.
+	/**
+	 * Creates an equivalent ZWrapper representation for the given ZObject and its subobjects.
+	 * The resulting ZWrapper has the same fields as the ZObject, each of which is itself a
+	 * ZWrapper, and so on.
+	 *
+	 * @param {string|Object|ZWrapper} zobjectJSON The JSON representation of the ZObject)
+	 * @param {ZWrapper} scope The ZObject with whose scope this wrapped object exists
+	 * @return {ZWrapper|string}
+	 */
 	static create( zobjectJSON, scope ) {
 		if ( scope === null ) {
 			throw new Error( 'Missing scope argument' );
@@ -64,7 +72,11 @@ class ZWrapper {
 		return result;
 	}
 
-	// Copy this object.
+	/**
+	 * Get a copy of this object.
+	 *
+	 * @return {ZWrapper}
+	 */
 	copy() {
 		const result = new ZWrapper();
 		result.scope_ = this.getScope();
@@ -95,6 +107,13 @@ class ZWrapper {
 		return result;
 	}
 
+	/**
+	 * Get the resolved object for the given key, including the ephemeral resolution, if
+	 * available.
+	 *
+	 * @param {string} key The key for the object to fetch
+	 * @return {ZWrapper}
+	 */
 	getNameEphemeral( key ) {
 		if ( this.resolvedEphemeral_.has( key ) ) {
 			return this.resolvedEphemeral_.get( key );
@@ -105,16 +124,36 @@ class ZWrapper {
 		return this.original_.get( key );
 	}
 
-	// Do not call this function with keys that were not part of the original object.
+	/**
+	 * Set the resolved object for the given key.
+	 *
+	 * WARNING: Do not call this function with keys that were not part of the original object.
+	 *
+	 * @param {string} key The key to set
+	 * @param {ZWrapper} value The value to set
+	 */
 	setName( key, value ) {
 		this.resolved_.set( key, value );
 	}
 
-	// Do not call this function with keys that were not part of the original object.
+	/**
+	 * Set the ephemerally-resolved object for the given key.
+	 *
+	 * WARNING: Do not call this function with keys that were not part of the original object.
+	 *
+	 * @param {string} key The key to set
+	 * @param {ZWrapper} value The value to set
+	 */
 	setNameEphemeral( key, value ) {
 		this.resolvedEphemeral_.set( key, value );
 	}
 
+	/**
+	 * Get the resolved object for the given key, if available.
+	 *
+	 * @param {string} key The key for the object to fetch
+	 * @return {ZWrapper}
+	 */
 	getName( key ) {
 		if ( this.resolved_.has( key ) ) {
 			return this.resolved_.get( key );
@@ -122,7 +161,16 @@ class ZWrapper {
 		return this.original_.get( key );
 	}
 
-	// private
+	/**
+	 * Private.
+	 *
+	 * @param {Invariants} invariants
+	 * @param {Set(MutationType)} ignoreList
+	 * @param {boolean} resolveInternals
+	 * @param {boolean} doValidate
+	 * @param {boolean} evenBuiltins
+	 * @return {Promise<ZWrapper>}
+	 */
 	async resolveInternal_( invariants, ignoreList, resolveInternals, doValidate, evenBuiltins ) {
 		if ( ignoreList === null ) {
 			ignoreList = new Set();
@@ -201,21 +249,34 @@ class ZWrapper {
 		return makeWrappedResultEnvelope( nextObject, null );
 	}
 
+	/**
+	 * Private.
+	 *
+	 * @param {Object} key
+	 * @param {Invariants} invariants
+	 * @param {Set(MutationType)} ignoreList
+	 * @param {boolean} resolveInternals
+	 * @param {boolean} doValidate
+	 * @param {Function} getNameFunction
+	 * @param {Function} setNameFunction
+	 * @return {Promise<ZWrapper|string>}
+	 */
 	async resolveInternalHelper_(
-		key, invariants, ignoreList, resolveInternals, doValidate,
-		getNameFunction, setNameFunction ) {
-		let newValue, resultPair;
+		key, invariants, ignoreList, resolveInternals, doValidate, getNameFunction, setNameFunction
+	) {
+		let newValue, resultEnvelope;
 		const currentValue = getNameFunction( key );
 		if ( currentValue instanceof ZWrapper ) {
-			resultPair = await ( currentValue.resolveInternal_(
-				invariants, ignoreList, resolveInternals, doValidate ) );
-			if ( containsError( resultPair ) ) {
-				return resultPair;
+			resultEnvelope = await ( currentValue.resolveInternal_(
+				invariants, ignoreList, resolveInternals, doValidate, /* evenBuiltins */ false
+			) );
+			if ( containsError( resultEnvelope ) ) {
+				return resultEnvelope;
 			}
-			newValue = resultPair.Z22K1;
+			newValue = resultEnvelope.Z22K1;
 		} else {
 			resolveInternals = false;
-			resultPair = makeWrappedResultEnvelope( this, null );
+			resultEnvelope = makeWrappedResultEnvelope( this, null );
 			newValue = currentValue;
 		}
 		if ( resolveInternals ) {
@@ -250,12 +311,22 @@ class ZWrapper {
 			}
 		}
 		setNameFunction( key, newValue );
-		return resultPair;
+		return resultEnvelope;
 	}
 
-	// private
+	/**
+	 * Private.
+	 *
+	 * @param {Object} key
+	 * @param {Invariants} invariants
+	 * @param {Set(MutationType)} ignoreList
+	 * @param {boolean} resolveInternals
+	 * @param {boolean} doValidate
+	 * @return {Promise<ZWrapper>}
+	 */
 	async resolveKeyInternal_(
-		key, invariants, ignoreList, resolveInternals, doValidate ) {
+		key, invariants, ignoreList, resolveInternals, doValidate
+	) {
 		const selfReference = this;
 		function getNameFunction( key ) {
 			return selfReference.getName( key );
@@ -265,11 +336,22 @@ class ZWrapper {
 		}
 		return await this.resolveInternalHelper_(
 			key, invariants, ignoreList, resolveInternals, doValidate,
-			getNameFunction, setNameFunction );
+			getNameFunction, setNameFunction
+		);
 	}
 
-	// private
-	// FIXME: Collapse common functionality with resolveKeyInternal_.
+	/**
+	 * Private.
+	 *
+	 * TODO: Collapse common functionality with resolveKeyInternal_.
+	 *
+	 * @param {Object} key
+	 * @param {Invariants} invariants
+	 * @param {Set(MutationType)} ignoreList
+	 * @param {boolean} resolveInternals
+	 * @param {boolean} doValidate
+	 * @return {Promise<ZWrapper>}
+	 */
 	async resolveEphemeralInternal_(
 		key, invariants, ignoreList, resolveInternals, doValidate ) {
 		const selfReference = this;
@@ -297,7 +379,7 @@ class ZWrapper {
 	 * @param {boolean} resolveInternals
 	 * @param {boolean} doValidate
 	 * @param {boolean} evenBuiltins Whether to resolve references to built-in types.
-	 * @return {ZWrapper} A result envelope zobject representing the result.
+	 * @return {Promise<ZWrapper>} A result envelope zobject representing the result.
 	 */
 	async resolve(
 		invariants, ignoreList = null, resolveInternals = true, doValidate = true,
@@ -320,9 +402,9 @@ class ZWrapper {
 	 * @param {Array(string)} keys Path of subobjects to resolve
 	 * @param {Invariants} invariants
 	 * @param {Set(MutationType)} ignoreList
-	 * @param {booleanl} resolveInternals
+	 * @param {boolean} resolveInternals
 	 * @param {boolean} doValidate
-	 * @return {ZWrapper} A result envelope zobject representing the result.
+	 * @return {Promise<ZWrapper>} A result envelope zobject representing the result.
 	 */
 	async resolveKey(
 		keys, invariants, ignoreList = null,
@@ -370,9 +452,9 @@ class ZWrapper {
 	 * @param {Array(string)} keys Path of subobjects to resolve
 	 * @param {Invariants} invariants
 	 * @param {Set(MutationType)} ignoreList
-	 * @param {booleanl} resolveInternals
+	 * @param {boolean} resolveInternals
 	 * @param {boolean} doValidate
-	 * @return {ZWrapper} A result envelope zobject representing the result.
+	 * @return {Promise<ZWrapper>} A result envelope zobject representing the result.
 	 */
 	async resolveEphemeral(
 		keys, invariants, ignoreList = null,
@@ -403,13 +485,18 @@ class ZWrapper {
 		return result;
 	}
 
-	// Returns the JSON representation of the zobject.
-	// WARNING: The resulting object loses all information in the attached scopes and may therefore
-	// have unbound argument references. In particular, if subobjects have already been resolved
-	// with `resolveKey()`, their scope might have diverged. This means that `zwrapper.asJSON()` may
-	// have argument references that are not captured even in `zwrapper.getScope()`. Using this
-	// method should hence only be used judiciously where such effects can be taken into account.
-	// You have been warned.
+	/**
+	 * Returns the JSON representation of the zobject.
+	 *
+	 * WARNING: The resulting object loses all information in the attached scopes and may therefore
+	 * have unbound argument references. In particular, if subobjects have already been resolved
+	 * with `resolveKey()`, their scope might have diverged. This means that `zwrapper.asJSON()` may
+	 * have argument references that are not captured even in `zwrapper.getScope()`. Using this
+	 * method should hence only be used judiciously where such effects can be taken into account.
+	 * You have been warned.
+	 *
+	 * @return {Object}
+	 */
 	asJSON() {
 		const result = {};
 		for ( const key of this.keys() ) {
@@ -422,6 +509,11 @@ class ZWrapper {
 		return result;
 	}
 
+	/**
+	 * Returns the JSON representation of the zobject, based only on the keys' ephemeral values.
+	 *
+	 * @return {Object}
+	 */
 	asJSONEphemeral() {
 		const result = {};
 		for ( const key of this.keys() ) {
@@ -434,19 +526,34 @@ class ZWrapper {
 		return result;
 	}
 
-	// Returns a view of the ZWrapper object suitable for debugging:
-	// * ZObjects are canonicalized
-	// * Scopes are flattened
-	// See also `ZWrapper.debug()`.
+	/**
+	 * Returns a view of the ZWrapper object of a ZResultEnvelope suitable for debugging:
+	 * - ZObjects are canonicalized
+	 * - Scopes are flattened
+	 *
+	 * See also {@link ZWrapper#debug}.
+	 *
+	 * @return {Object}
+	 */
 	debugObject() {
 		const object_ = canonicalize( this.asJSON() ).Z22K1;
 		const scope_ = this.scope_.debugObject();
 		return { object_, scope_ };
 	}
 
-	// Helper function for logging the debug representation of the ZWrapper. With it, one can write:
-	// `console.log( 'executing:', await zwrapper.debug() );`
-	// to log the debug representation of the ZWrapper object without truncating it due to depth.
+	/**
+	 * Helper function for logging the debug representation of the ZWrapper.
+	 *
+	 * With it, one can write:
+	 *
+	 *   `console.log( 'executing:', await zwrapper.debug() );`
+	 *
+	 * … to log the debug representation of the ZWrapper object without truncating it due to depth.
+	 *
+	 * See also {@link ZWrapper#debug}.
+	 *
+	 * @return {Object}
+	 */
 	debug() {
 		const debugObject = this.debugObject();
 		return { [ util.inspect.custom ]: ( _, options, inspect ) => {
@@ -456,14 +563,29 @@ class ZWrapper {
 		} };
 	}
 
+	/**
+	 * Get all the keys set for this ZObject.
+	 *
+	 * @return {IterableIterator<string>}
+	 */
 	keys() {
 		return this.keys_.values();
 	}
 
+	/**
+	 * Get the scope ZWrapper set for this ZObject, if any.
+	 *
+	 * @return {ZWrapper|null}
+	 */
 	getScope() {
 		return this.scope_;
 	}
 
+	/**
+	 * Set the scope ZWrapper for this ZObject.
+	 *
+	 * @param {ZWrapper} scope
+	 */
 	setScope( scope ) {
 		this.scope_ = scope;
 	}
