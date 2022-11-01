@@ -137,13 +137,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 				standardMetaData.forEach( ( key ) => {
 					if ( !expectedMissingMetadata.includes( key ) ) {
 						const metaDataValue = getZMapValue( result.Z22K2, key );
-						assert.isNotNull( metaDataValue, testName + ' should have the `' + key + '` meta-data key set' );
+						assert.isDefined( metaDataValue, testName + ' should have the `' + key + '` meta-data key set' );
 					}
 				} );
 
 				expectedExtraMetadata.forEach( ( key ) => {
 					const metaDataValue = getZMapValue( result.Z22K2, key );
-					assert.isNotNull( metaDataValue, testName + ' should have the `' + key + '` meta-data key set' );
+					assert.isDefined( metaDataValue, testName + ' should have the `' + key + '` meta-data key set' );
 				} );
 			}
 		);
@@ -260,7 +260,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		/* expectedErrorState= */ true,
 		/* expectedErrorFile = */ testDataDir( 'invalid_call_argument_key_expected.json' ),
 		/* expectedExtraMetadata= */ [],
-		/* expectedMissingMetadata= */ [],
+		// Error gets returned before implementation is selected
+		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 		/* implementationSelector= */ null
 	);
 
@@ -271,7 +272,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		/* expectedErrorState= */ true,
 		/* expectedErrorFile= */ testDataDir( 'invalid_call_argument_type_expected.json' ),
 		/* expectedExtraMetadata= */ [],
-		/* expectedMissingMetadata= */ [],
+		// Error gets returned before implementation is selected
+		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 		/* implementationSelector= */ null
 	);
 
@@ -282,7 +284,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		/* expectedErrorState= */ true,
 		/* expectedErrorFile= */ testDataDir( 'invalid_key_duplicated_expected.json' ),
 		/* expectedExtraMetadata= */ [],
-		/* expectedMissingMetadata= */ [],
+		// Error gets returned before implementation is selected
+		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 		/* implementationSelector= */ null
 	);
 
@@ -293,7 +296,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		/* expectedErrorState= */ true,
 		/* expectedErrorFile= */ testDataDir( 'invalid_key_first_name_expected.json' ),
 		/* expectedExtraMetadata= */ [],
-		/* expectedMissingMetadata= */ [],
+		// Error gets returned before implementation is selected
+		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 		/* implementationSelector= */ null
 	);
 
@@ -304,7 +308,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		/* expectedErrorState= */ true,
 		/* expectedErrorFile= */ testDataDir( 'invalid_key_name_expected.json' ),
 		/* expectedExtraMetadata= */ [],
-		/* expectedMissingMetadata= */ [],
+		// Error gets returned before implementation is selected
+		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 		/* implementationSelector= */ null
 	);
 
@@ -315,7 +320,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		/* expectedErrorState= */ true,
 		/* expectedErrorFile= */ testDataDir( 'invalid_key_nonsequential_expected.json' ),
 		/* expectedExtraMetadata= */ [],
-		/* expectedMissingMetadata= */ [],
+		// Error gets returned before implementation is selected
+		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 		/* implementationSelector= */ null
 	);
 
@@ -326,7 +332,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		/* expectedErrorState= */ true,
 		/* expectedErrorFile= */ testDataDir( 'invalid_call_argument_not_of_declared_type_expected.json' ),
 		/* expectedExtraMetadata= */ [],
-		/* expectedMissingMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId' ],
 		/* implementationSelector= */ null
 	);
 
@@ -337,7 +343,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		/* expectedErrorState= */ true,
 		/* expectedErrorFile= */ testDataDir( 'invalid_call_return_value_not_of_declared_type_expected.json' ),
 		/* expectedExtraMetadata= */ [],
-		/* expectedMissingMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId' ],
 		/* implementationSelector= */ null
 	);
 
@@ -363,7 +369,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		/* expectedErrorState= */ true,
 		/* expectedErrorFile= */ testDataDir( 'skips_static_validation_expected.json' ),
 		/* expectedExtraMetadata= */ [],
-		/* expectedMissingMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId' ],
 		/* implementationSelector= */ null
 	);
 
@@ -393,7 +399,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'composition returns type',
 			/* functionCall= */ theFunctionCall,
 			/* expectedResultFile= */ testDataDir( 'composition-returns-type_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -463,7 +473,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'good generic defined as composition',
 			/* functionCall= */ theFunctionCall,
 			/* expectedResultFile= */ testDataDir( 'type-returned-by-generic-composition.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -536,7 +550,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* expectedErrorState= */ true,
 			/* expectedErrorFile= */ testDataDir( 'bad_generic_composition_expected.json' ),
 			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
 			/* implementationSelector= */ null
 		);
 	}
@@ -555,7 +569,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* expectedErrorState= */ true,
 			/* expectedErrorFile= */ testDataDir( 'invalid_call_misnamed_argument_expected.json' ),
 			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
 			/* implementationSelector= */ null
 		);
 	}
@@ -574,7 +588,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* expectedErrorState= */ true,
 			/* expectedErrorFile= */ testDataDir( 'invalid_call_misnamed_argument_list_expected.json' ),
 			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
 			/* implementationSelector= */ null
 		);
 	}
@@ -593,7 +607,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* expectedErrorState= */ true,
 			/* expectedErrorFile= */ testDataDir( 'invalid_call_missing_argument_expected.json' ),
 			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [],
+			// Error gets returned before implementation is selected
+			/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 			/* implementationSelector= */ null
 		);
 	}
@@ -619,7 +634,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* expectedErrorState= */ true,
 			/* expectedErrorFile= */ testDataDir( 'bad_generic_list_expected.json' ),
 			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [],
+			// Error gets returned before implementation is selected
+			/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 			/* implementationSelector= */ null
 		);
 	}
@@ -645,7 +661,8 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* expectedErrorState= */ true,
 			/* expectedErrorFile= */ testDataDir( 'bad_generic_pair_expected.json' ),
 			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [],
+			// Error gets returned before implementation is selected
+			/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 			/* implementationSelector= */ null
 		);
 	}
@@ -655,7 +672,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'evaluated function call',
 			/* functionCall= */ readJSON( testDataDir( 'evaluated.json' ) ),
 			/* expectedResultFile= */ testDataDir( 'evaluated-13.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -665,7 +686,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* functionCall= */ readJSON( testDataDir( 'evaluated-failed.json' ) ),
 			/* expectedResultFile= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorFile= */ testDataDir( 'evaluated-failed_expected.json' )
+			/* expectedErrorFile= */ testDataDir( 'evaluated-failed_expected.json' ),
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -674,7 +698,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'evaluated function call, result and empty map',
 			/* functionCall= */ readJSON( testDataDir( 'evaluated-map-result-only.json' ) ),
 			/* expectedResultFile= */ testDataDir( 'evaluated-map-13.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -683,7 +711,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'evaluated function call, result and simple map',
 			/* functionCall= */ readJSON( testDataDir( 'evaluated-map-basic.json' ) ),
 			/* expectedResultFile= */ testDataDir( 'evaluated-map-basic-13.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -693,7 +725,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* functionCall= */ readJSON( testDataDir( 'evaluated-map-error.json' ) ),
 			/* expectedResultFile= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorFile= */ testDataDir( 'evaluated-map-error_expected.json' )
+			/* expectedErrorFile= */ testDataDir( 'evaluated-map-error_expected.json' ),
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -703,7 +738,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'composition of all empty',
 			/* functionCall= */ readJSON( testDataDir( 'all_empty.json' ) ),
 			/* expectedResultFile= */ testDataDir( 'all_empty_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -713,7 +752,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'composition of all: [true, true]',
 			/* functionCall= */ readJSON( testDataDir( 'all_true_true.json' ) ),
 			/* expectedResultFile= */ testDataDir( 'all_true_true_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -723,7 +766,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'composition of all: [true, false]',
 			/* functionCall= */ readJSON( testDataDir( 'all_true_false.json' ) ),
 			/* expectedResultFile= */ testDataDir( 'all_true_false_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -739,7 +786,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'one character("ab")',
 			/* functionCall= */ input,
 			/* expectedResultFile= */ testDataDir( 'one_character_ab_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -755,7 +806,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'one character("a")',
 			/* functionCall= */ input,
 			/* expectedResultFile= */ testDataDir( 'one_character_a_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -771,7 +826,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'one character(<empty>)',
 			/* functionCall= */ input,
 			/* expectedResultFile= */ testDataDir( 'one_character_empty_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -870,7 +929,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'map "echo" function to a list of items',
 			/* functionCall= */ mapCall,
 			/* expectedResultFile= */ testDataDir( 'map_echo_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -934,7 +997,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* functionCall= */ userDefinedIf,
 			/* expectedResultFile= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorFile= */ testDataDir( 'bad_user_defined_type_expected.json' )
+			/* expectedErrorFile= */ testDataDir( 'bad_user_defined_type_expected.json' ),
+			/* expectedExtraMetadata= */ [],
+			// Error gets returned before implementation is selected
+			/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -969,7 +1036,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* expectedErrorState= */ false,
 			/* expectedErrorFile= */ null,
 			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
 			/* implementationSelector= */ new SecondImplementationSelector()
 		);
 	}
@@ -1022,7 +1089,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* functionCall= */ readJSON( testDataDir( 'bad-reference.json' ) ),
 			/* expectedResultFile= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorFile= */ testDataDir( 'bad-reference_expected.json' )
+			/* expectedErrorFile= */ testDataDir( 'bad-reference_expected.json' ),
+			/* expectedExtraMetadata= */ [],
+			// Error gets returned before implementation is selected
+			/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -1046,7 +1117,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'Nonempty string with Z10084 validator',
 			/* functionCall= */ validateNonempty,
 			/* expectedResultFile= */ testDataDir( 'Z10084_nonempty_string_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1074,7 +1148,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* expectedErrorState= */ true,
 			/* expectedErrorFile= */ testDataDir( 'Z10084_empty_string_expected.json' ),
 			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
 			/* implementationSelector= */ null
 		);
 	}
@@ -1111,7 +1185,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'curry',
 			/* functionCall= */ curryCall,
 			/* expectedResultFile= */ testDataDir( 'curry_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1147,7 +1224,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'save argument scope',
 			/* functionCall= */ call,
 			/* expectedResultFile= */ testDataDir( 'save-scope_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1168,7 +1248,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'wrap type',
 			/* functionCall= */ wrapCall,
 			/* expectedResultFile= */ testDataDir( 'wrap_expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1191,7 +1274,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'construct positive integer from string',
 			/* functionCall= */ naturalNumberCall,
 			/* expectedResultFile= */ testDataDir( 'positive-integer-15.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1221,7 +1307,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'bind binary function',
 			/* functionCall= */ binaryBindCall,
 			/* expectedResultFile= */ testDataDir( 'bind-binary-expected.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1232,7 +1321,11 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* functionCall= */ noScrubs,
 			/* expectedResultFile= */ null,
 			/* expectedErrorState= */ true,
-			/* expectedErrorFile= */ testDataDir( 'no-implementations-expected.json' )
+			/* expectedErrorFile= */ testDataDir( 'no-implementations-expected.json' ),
+			/* expectedExtraMetadata= */ [],
+			// Error gets returned before implementation is selected
+			/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
+			/* implementationSelector= */ null
 		);
 	}
 
@@ -1247,7 +1340,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'Increment string numeral',
 			/* functionCall= */ call,
 			/* expectedResultFile= */ testDataDir( 'expected-42.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1265,7 +1361,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'Scott numeral zero',
 			/* functionCall= */ call,
 			/* expectedResultFile= */ testDataDir( 'expected-0.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1287,7 +1386,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'Scott numeral one',
 			/* functionCall= */ call,
 			/* expectedResultFile= */ testDataDir( 'expected-1.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1313,7 +1415,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'Scott numeral two',
 			/* functionCall= */ call,
 			/* expectedResultFile= */ testDataDir( 'expected-2.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
@@ -1346,7 +1451,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* testName= */ 'Scott numeral Ackermann(1, 1)',
 			/* functionCall= */ call,
 			/* expectedResultFile= */ testDataDir( 'expected-3.json' ),
-			/* expectedErrorState= */ false
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
