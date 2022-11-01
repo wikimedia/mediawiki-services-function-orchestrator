@@ -11,6 +11,7 @@ const {
 } = require( '../function-schemata/javascript/src/schema.js' );
 const canonicalize = require( '../function-schemata/javascript/src/canonicalize.js' );
 const util = require( 'util' );
+const { Invariants } = require( './Invariants.js' );
 
 const MutationType = Object.freeze( {
 	REFERENCE: Symbol( 'REFERENCE' ),
@@ -563,6 +564,7 @@ class ZWrapper {
 		} };
 	}
 
+	/* eslint-disable jsdoc/no-undefined-types */
 	/**
 	 * Get all the keys set for this ZObject.
 	 *
@@ -571,6 +573,7 @@ class ZWrapper {
 	keys() {
 		return this.keys_.values();
 	}
+	/* eslint-enable jsdoc/no-undefined-types */
 
 	/**
 	 * Get the scope ZWrapper set for this ZObject, if any.

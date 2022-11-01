@@ -18,7 +18,7 @@ const { getLogger, setLogger } = require( './src/logger.js' );
  * Creates an express app and initialises it
  *
  * @param {Object} options the options to initialise the app with
- * @return {bluebird} the promise resolving to the app object
+ * @return {BBPromise} the promise resolving to the app object
  */
 function initApp( options ) {
 
@@ -137,9 +137,9 @@ function initApp( options ) {
 /**
  * Loads all routes declared in routes/ into the app
  *
- * @param {Application} app the application object to load routes into
+ * @param {express} app the application object to load routes into
  * @param {string} dir routes folder
- * @return {bluebird} a promise resolving to the app object
+ * @return {BBPromise} a promise resolving to the app object
  */
 function loadRoutes( app, dir ) {
 
@@ -195,8 +195,8 @@ function loadRoutes( app, dir ) {
 /**
  * Creates and start the service's web server
  *
- * @param {Application} app the app object to use in the service
- * @return {bluebird} a promise creating the web server
+ * @param {express} app the app object to use in the service
+ * @return {BBPromise} a promise creating the web server
  */
 function createServer( app ) {
 
@@ -234,7 +234,7 @@ function createServer( app ) {
  * object to it.
  *
  * @param {Object} options the options to initialise the app with
- * @return {bluebird} HTTP server
+ * @return {BBPromise} HTTP server
  */
 module.exports = ( options ) => {
 

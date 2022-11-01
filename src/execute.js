@@ -1,6 +1,8 @@
 'use strict';
 
 const { ArgumentState } = require( './argumentState.js' );
+const { Invariants } = require( './Invariants' );
+const ImplementationSelector = require( './implementationSelector.js' );
 const { BaseFrame, EmptyFrame } = require( './frame.js' );
 const { Composition, Implementation, Evaluated } = require( './implementation.js' );
 const { RandomImplementationSelector } = require( './implementationSelector.js' );
@@ -42,12 +44,17 @@ async function validateAsType( Z1, invariants, typeZObject = null ) {
 			runValidationFunction,
 			[
 				genericValidatorZ8, invariants,
-				quoteZObject( Z1 ), quoteZObject( typeZObject ) ],
-			'runValidationFunction' ] );
+				quoteZObject( Z1 ), quoteZObject( typeZObject )
+			],
+			'runValidationFunction'
+		]
+	);
+
 	// TODO (T301532): Find a more reliable way to signal that no additional
 	// validation needs to be run. Here we just make sure that we won't run the
 	// same function twice by comparing Z8K5 references.
 	const resolvedType = ( await ( typeZObject.resolve( invariants ) ) ).Z22K1;
+
 	if ( validatesAsType( resolvedType.asJSON() ).isValid() ) {
 		await ( resolvedType.resolveEphemeral( [ 'Z4K3' ], invariants ) );
 		const validatorZ8 = resolvedType.Z4K3;
@@ -71,7 +78,7 @@ async function validateAsType( Z1, invariants, typeZObject = null ) {
  * @param {Object} Z1 object whose Z1K1s are to be resolved
  * @param {Invariants} invariants evaluator, resolver: invariants preserved over all function calls
  * @param {boolean} doValidate whether to validate types of arguments and return values
- * @return {ArgumentState|null} error state or null if no error encountered
+ * @return {Promise<ArgumentState|null>} error state or null if no error encountered
  */
 async function resolveTypes( Z1, invariants, doValidate = true ) {
 	const objectQueue = [ Z1 ];

@@ -13,6 +13,7 @@ const { Evaluator } = require( './Evaluator.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ReferenceResolver } = require( './db.js' );
 const { ZWrapper } = require( './ZWrapper' );
+const ImplementationSelector = require( './implementationSelector.js' );
 const { cpuUsage, memoryUsage } = require( 'node:process' );
 const { getLogger } = require( './logger.js' );
 const os = require( 'os' );

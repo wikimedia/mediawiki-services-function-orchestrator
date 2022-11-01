@@ -10,7 +10,6 @@
 				"properties": "never"
 			}
 		],
-		"jsdoc/no-undefined-types": "off",
 		"node/no-unsupported-features/node-builtins": [
 			"error", {
 				"version": ">=12.0.0",

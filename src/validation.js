@@ -8,6 +8,7 @@ const { error, normalError } = require( '../function-schemata/javascript/src/err
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { convertZListToItemArray, isString, getError } = require( '../function-schemata/javascript/src/utils.js' );
 const { EmptyFrame } = require( './frame.js' );
+const { Schema } = require( '../function-schemata/javascript/src/schema.js' );
 
 const validators = new Map();
 

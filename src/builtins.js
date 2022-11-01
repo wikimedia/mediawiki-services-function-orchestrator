@@ -23,6 +23,7 @@ const {
 	validatesAsReference,
 	validatesAsFunctionCall
 } = require( '../function-schemata/javascript/src/schema.js' );
+const { Implementation } = require( './implementation.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const fs = require( 'fs' );
 
@@ -34,7 +35,7 @@ const fs = require( 'fs' );
  * Returns true if the input is equivalent to the builtin true value.
  *
  * @param {Object} Z40 A Z40
- * @return {bool} whether Z40 corresponds to Z41 (true) or not
+ * @return {boolean} whether Z40 corresponds to Z41 (true) or not
  */
 function isTrue( Z40 ) {
 	return Z40.Z40K1.Z9K1 === makeTrue().Z40K1.Z9K1;

@@ -21,10 +21,11 @@ const Z9Validator = normalFactory.create( 'Z9_literal' );
  * logic.
  *
  * @param {Object} Z1 a ZObject
- * @return {bool} true if Z1 validates as either Z6 or Z7
+ * @return {boolean} true if Z1 validates as either Z6 or Z7
  */
 function isRefOrString( Z1 ) {
 	const { ZWrapper } = require( './ZWrapper' );
+
 	if ( Z1 instanceof ZWrapper ) {
 		Z1 = Z1.asJSON();
 	}
@@ -68,7 +69,7 @@ function createSchema( Z1 ) {
  * Validates a ZObject against the Error schema.
  *
  * @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validate as an Error
+ * @return {boolean} whether Z1 can validate as an Error
  */
 function isError( Z1 ) {
 	// TODO (T287921): Assay that Z1 validates as Z5 but not as Z9 or Z18.
@@ -83,7 +84,7 @@ function isError( Z1 ) {
  * Validates a ZObject against the GENERIC schema.
  *
  * @param {Object} Z1 object to be validated
- * @return {bool} whether Z1 can validate as a generic type instantiation
+ * @return {boolean} whether Z1 can validate as a generic type instantiation
  */
 function isGenericType( Z1 ) {
 	// TODO (T296658): Use the GENERIC schema.
@@ -111,6 +112,7 @@ function isGenericType( Z1 ) {
 	}
 }
 
+/* eslint-disable jsdoc/no-undefined-types */
 /**
  * Same as utils.js:setMetadataValue() in function-schemata, *except* this method allows the
  * envelope (Z22 / Evaluation result) to be either a ZWrapper or a JSON object, and it takes
@@ -160,12 +162,13 @@ function setMetadataValues( envelope, newPairs ) {
 	}
 	return envelope;
 }
+/* eslint-enable jsdoc/no-undefined-types */
 
 /**
  * Determines whether a Z22 / Evaluation result contains an error.
  *
  * @param {Object} envelope a Z22
- * @return {bool} true if Z22K2 contains an error; false otherwise
+ * @return {boolean} true if Z22K2 contains an error; false otherwise
  */
 function containsError( envelope ) {
 	const metadata = envelope.Z22K2;
@@ -189,7 +192,7 @@ function containsError( envelope ) {
  * is a normal validator. Check and document.
  *
  * @param {Object} responseEnvelope a Z22
- * @return {bool} true if Z22K1 is not Z24 / Void; false otherwise
+ * @return {boolean} true if Z22K1 is not Z24 / Void; false otherwise
  */
 function containsValue( responseEnvelope ) {
 	const Z22K1 = responseEnvelope.Z22K1.asJSON();
@@ -285,10 +288,10 @@ async function traverseZList( ZList, callback ) {
  *  result of the previous function (starting with input Z22). If the resulting Z22
  *  contains an error (Z22K2), this function returns immediately; otherwise, it
  *  calls the next function with the output of the previous.
- * @param {Function} callback optional callback to be called on every element of
+ * @param {?Function} callback optional callback to be called on every element of
  *  callTuples; arguments are of the form ( current Z22, current call tuple)
  * @param {boolean} addZ22 whether to inject Z22.Z22K1 as first argument to callables
- * @return {Object} a Z22
+ * @return {Promise<Object>} a Z22
  */
 async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = true ) {
 	let currentResponseEnvelope = Z22;

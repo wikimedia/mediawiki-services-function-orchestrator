@@ -59,13 +59,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	 * @param {string} testName unique name to apppend to the test
 	 * @param {Object} functionCall zobject, input to the orchestrator
 	 * @param {Mixed} expectedResult zobject, successful output or null
-	 * @param {bool} expectedErrorState whether to expect an error
+	 * @param {boolean} expectedErrorState whether to expect an error
 	 * @param {Mixed} expectedErrorValue Z5 for an error or null
 	 * @param {Array} expectedExtraMetadata array of expected extra metadata
 	 * @param {Array} expectedMissingMetadata array of expected missing metadata
 	 * @param {Mixed} implementationSelector an ImplementationSelector subclass or null
-	 * @param {bool} doValidate whether to perform static validation
-	 * @param {bool} skip whether to skip this test
+	 * @param {boolean} doValidate whether to perform static validation
+	 * @param {boolean} skip whether to skip this test
 	 */
 	const attemptOrchestrationTestMode = function (
 		testName,
@@ -207,13 +207,13 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	 * @param {string} testName unique name to apppend to the test
 	 * @param {Object} functionCall zobject, input to the orchestrator
 	 * @param {Mixed} expectedResultFile null, or name of file containing successful output
-	 * @param {bool} expectedErrorState whether to expect an error
+	 * @param {boolean} expectedErrorState whether to expect an error
 	 * @param {Mixed} expectedErrorFile null, or name of file containing Z5
 	 * @param {Array} expectedExtraMetadata array of expected extra metadata
 	 * @param {Array} expectedMissingMetadata array of expected missing metadata
 	 * @param {Mixed} implementationSelector an ImplementationSelector subclass or null
-	 * @param {bool} doValidate whether to perform static validation
-	 * @param {bool} skip whether to skip this test
+	 * @param {boolean} doValidate whether to perform static validation
+	 * @param {boolean} skip whether to skip this test
 	 */
 	const attemptOrchestration = function (
 		testName,
