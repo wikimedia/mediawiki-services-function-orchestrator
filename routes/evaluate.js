@@ -6,6 +6,7 @@ const orchestrate = require( '../src/orchestrate.js' );
 
 const { getLogger } = require( '../src/logger.js' );
 
+const evaluatorWs = process.env.FUNCTION_EVALUATOR_WS || null;
 const evaluatorUri = process.env.FUNCTION_EVALUATOR_URL || null;
 const wikiUri = process.env.WIKI_API_URL || null;
 
@@ -18,6 +19,7 @@ const router = sUtil.router();
 router.post( '/', async function ( req, res ) {
 	req.body.wikiUri = wikiUri;
 	req.body.evaluatorUri = evaluatorUri;
+	req.body.evaluatorWs = evaluatorWs;
 
 	const response = await orchestrate( req.body );
 	const logger = getLogger();
