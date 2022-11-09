@@ -162,20 +162,22 @@ function setMetadataValues( envelope, newPairs ) {
 }
 
 /**
- * Determines whether a Z22 / Evaluation result contains an error.  Works both with older
- * "basic" Z22s and with newer map-based Z22s.
+ * Determines whether a Z22 / Evaluation result contains an error.
  *
  * @param {Object} envelope a Z22
  * @return {bool} true if Z22K2 contains an error; false otherwise
  */
 function containsError( envelope ) {
 	const metadata = envelope.Z22K2;
-	if ( isVoid( metadata ) ) {
+	// TODO( T322779 ): Investigate why Z22K2 is sometimes undefined here
+	if ( metadata === undefined ) {
+		return false;
+	} else if ( isVoid( metadata ) ) {
 		return false;
 	} else if ( isZMap( metadata ) ) {
 		return ( getZMapValue( metadata, { Z1K1: 'Z6', Z6K1: 'errors' } ) !== undefined );
 	} else {
-		return isError( metadata );
+		throw new Error( `Invalid value for Z22K2: ${metadata}` );
 	}
 }
 
