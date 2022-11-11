@@ -22,9 +22,9 @@
 
 	"//": "Enforce some level of code coverage per file; eventually these should each be 100%.",
 	"per-file": true,
-	"statements": 53.0,
-	"branches": 33.0,
-	"functions": 50.0,
-	"lines": 53.0,
+	"statements": 58.0,
+	"branches": 50.0,
+	"functions": 54.0,
+	"lines": 58.0,
 	"check-coverage": true
 }
