@@ -44,7 +44,7 @@ class Evaluator {
 	}
 
 	/*
-     * Ignore the subsequence function for coverage purposes; we can't feasibly
+     * Ignore the subsequent function for coverage purposes; we can't feasibly
      * unit-test this functionality.
      *
      * TODO (T322056): Make EvaluatorStub able to recognize and handle multiple
