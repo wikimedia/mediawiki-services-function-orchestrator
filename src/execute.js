@@ -7,20 +7,20 @@ const { BaseFrame, EmptyFrame } = require( './frame.js' );
 const { Composition, Implementation, Evaluated, ZResponseError } = require( './implementation.js' );
 const { RandomImplementationSelector } = require( './implementationSelector.js' );
 const {
-	responseEnvelopeContainsError,
-	responseEnvelopeContainsValue,
 	createZObjectKey,
 	isRefOrString,
 	makeWrappedResultEnvelope,
-	setMetadataValues,
-	quoteZObject,
-	returnOnFirstError
+	returnOnFirstError,
+	responseEnvelopeContainsError,
+	responseEnvelopeContainsValue,
+	setMetadataValues
 } = require( './utils.js' );
 const { MutationType, ZWrapper } = require( './ZWrapper' );
 const { resolveListType } = require( './builtins.js' );
 const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
-const { convertZListToItemArray, getError, setZMapValue } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToItemArray, getError, isString, setZMapValue } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsArgumentReference, validatesAsFunctionCall, validatesAsReference, validatesAsString, validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
+const { compareTypes } = require( '../function-schemata/javascript/src/compareTypes.js' );
 
 let execute = null;
 
@@ -32,46 +32,62 @@ async function validateAsType( Z1, invariants, typeZObject = null ) {
 			Z9K1: ZID
 		}, new EmptyFrame() );
 	};
-	const genericSchemaValidatorZID = 'Z831';
-	const genericValidatorZ8Reference = wrapInZ9( genericSchemaValidatorZID );
-	const genericValidatorZ8 = ( await ( genericValidatorZ8Reference.resolve(
-		invariants ) ) ).Z22K1;
+	const callTuples = [];
+	let resolvedType = Z1.getNameEphemeral( 'Z1K1' );
 
-	if ( typeZObject === null ) {
-		typeZObject = Z1.Z1K1;
-	}
 	// TODO (T292787): Make this more elegant--should be possible to avoid
 	// passing strings in the first place.
-	if ( typeof typeZObject === 'string' || typeZObject instanceof String ) {
+	if ( isString( typeZObject ) ) {
 		typeZObject = wrapInZ9( typeZObject );
 	}
-	const { runValidationFunction } = require( './validation.js' );
-	const callTuples = [];
-	callTuples.push(
-		[
-			runValidationFunction,
+	if ( isString( resolvedType ) ) {
+		resolvedType = wrapInZ9( resolvedType );
+	}
+	if ( typeZObject instanceof ZWrapper ) {
+		typeZObject = typeZObject.asJSON();
+	}
+	let resolvedTypeJSON = resolvedType;
+	if ( resolvedType instanceof ZWrapper ) {
+		resolvedTypeJSON = resolvedType.asJSON();
+	}
+
+	// Run type comparison if typeZObject is provided.
+	if ( typeZObject !== null ) {
+		const runTypeComparison = ( comparand, comparator ) => {
+			const typeComparison = compareTypes( comparand, comparator );
+			if ( typeComparison ) {
+				return makeWrappedResultEnvelope( Z1, null );
+			} else {
+				return makeWrappedResultEnvelope(
+					null,
+					makeErrorInNormalForm(
+						error.object_type_mismatch,
+						[ Z1.getNameEphemeral( 'Z1K1' ) ] ) );
+			}
+		};
+		callTuples.push(
 			[
-				genericValidatorZ8, invariants,
-				quoteZObject( Z1 ), quoteZObject( typeZObject )
-			],
-			'runValidationFunction'
-		]
-	);
+				runTypeComparison,
+				[ resolvedTypeJSON, typeZObject ],
+				'runTypeComparison' ] );
+	}
+	const genericSchemaValidatorZID = 'Z831';
 
 	// TODO (T301532): Find a more reliable way to signal that no additional
 	// validation needs to be run. Here we just make sure that we won't run the
 	// same function twice by comparing Z8K5 references.
-	const resolvedType = ( await ( typeZObject.resolve( invariants ) ) ).Z22K1;
-
-	if ( validatesAsType( resolvedType.asJSON() ).isValid() ) {
+	//
+	// TODO (T327870): Also run the validator for typeZObject?
+	if ( validatesAsType( resolvedTypeJSON ).isValid() ) {
 		await ( resolvedType.resolveEphemeral( [ 'Z4K3' ], invariants ) );
 		const validatorZ8 = resolvedType.Z4K3;
-		if ( validatorZ8.Z8K5.Z9K1 !== genericValidatorZ8.Z8K5.Z9K1 ) {
+		if ( validatorZ8.Z8K5.Z9K1 !== genericSchemaValidatorZID ) {
 			const { runTypeValidatorDynamic } = require( './validation.js' );
 			callTuples.push(
 				[
 					runTypeValidatorDynamic,
-					[ Z1, typeZObject, invariants ],
+					// [ Z1ToValidate, typeToValidate, invariants ],
+					[ Z1, resolvedType, invariants ],
 					'runTypeValidator' ] );
 		}
 	}
@@ -453,6 +469,7 @@ async function validateReturnType( result, zobject, invariants ) {
 		// Value returned; validate its return type..
 		await ( zobject.resolveKey( [ 'Z7K1', 'Z8K2' ], invariants ) );
 		const returnType = zobject.Z7K1.Z8K2;
+		await resolveTypes( result.Z22K1, invariants, /* doValidate= */ true );
 		const returnTypeValidation = await validateAsType(
 			result.Z22K1, invariants, returnType
 		);
@@ -668,9 +685,6 @@ async function executeInternal(
 			}
 		}
 	}
-	if ( doValidate && resolveInternals ) {
-		result = await validateReturnType( result, zobject, invariants );
-	}
 
 	if ( topLevel ) {
 		result = await addImplementationMetadata( implementation, result );
@@ -734,11 +748,12 @@ execute = async function (
 	zobject, invariants = null, doValidate = true,
 	implementationSelector = null, resolveInternals = true, topLevel = false,
 	doEagerlyEvaluate = true ) {
-	const result = await executeInternal(
+	let result = await executeInternal(
 		zobject, invariants, doValidate,
 		implementationSelector, resolveInternals, topLevel, doEagerlyEvaluate );
 	if ( topLevel ) {
 		await resolveDanglingReferences( result.Z22K1, invariants );
+		result = await validateReturnType( result, zobject, invariants );
 	}
 	return result;
 };

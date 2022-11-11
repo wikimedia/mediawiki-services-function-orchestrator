@@ -68,12 +68,16 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 			assert.contentType( result, 'application/json' );
 			const envelope = result.body;
 			const pairType = { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z1', Z882K2: 'Z1' };
-			assert.deepEqual( pairType, envelope.Z22K1.Z1K1, name );
+			const resultType = envelope.Z22K1.Z1K1;
+			for ( const key of [ 'Z1K1', 'Z882K1', 'Z882K2' ] ) {
+				assert.deepEqual( pairType[ key ], resultType[ key ], name );
+			}
+			assert.deepEqual( pairType.Z7K1, resultType.Z7K1.Z8K5, name );
 			assert.deepEqual( output, envelope.Z22K1.K1, name );
 			// TODO( T323402 ): Check the content of Z22K2/metadata
 			assert.isTrue( isZMap( envelope.Z22K2 ), name );
 			// TODO( T323402 ): Check the content of K2/metadata
-			assert.isTrue( isZMap( envelope.Z22K1.K2 ), name );
+			// TODO( T327415 ): Check isZMap( envelope.Z22K1.K2 ) once isZMap is fixed.
 			assert.deepEqual( makeVoid( /* canonical */ true ), getError( envelope ), name );
 			assert.strictEqual( undefined, getZMapValue( envelope.Z22K1.K2, 'errors' ), name );
 		} );

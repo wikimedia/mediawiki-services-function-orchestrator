@@ -1,6 +1,5 @@
 'use strict';
 
-const { EmptyFrame } = require( './frame.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
 const {
 	createSchema,
@@ -33,6 +32,7 @@ const {
 	validatesAsFunctionCall,
 	validatesAsBoolean
 } = require( '../function-schemata/javascript/src/schema.js' );
+const { EmptyFrame } = require( './frame.js' );
 const { Implementation } = require( './implementation.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const fs = require( 'fs' );
@@ -383,7 +383,7 @@ function getLanguageMap() {
 	return JSON.parse( fs.readFileSync( path, { encoding: 'utf8' } ) );
 }
 
-function BUILTIN_LANGUAGE_CODE_TO_LANGUAGE_( Z6 ) {
+async function BUILTIN_LANGUAGE_CODE_TO_LANGUAGE_( Z6, invariants ) {
 	const languages = getLanguageMap();
 	const languageCode = Z6.Z6K1;
 
@@ -394,15 +394,20 @@ function BUILTIN_LANGUAGE_CODE_TO_LANGUAGE_( Z6 ) {
 			error.invalid_key,
 			[ `Invalid language code: ${languageCode}` ]
 		);
-	} else {
-		const zid = languages[ languageCode ];
-		result = {
-			Z1K1: 'Z9',
-			Z9K1: zid
-		};
+		return makeMappedResultEnvelope( result );
 	}
+	const zid = languages[ languageCode ];
+	result = {
+		Z1K1: 'Z9',
+		Z9K1: zid
+	};
 
-	return makeMappedResultEnvelope( result );
+	const wrappedResult = ZWrapper.create( result, new EmptyFrame() );
+	return await wrappedResult.resolve(
+		invariants,
+		/* ignoreList= */ null,
+		/* resolveInternals= */ false,
+		/* doValidate= */ false );
 }
 
 function BUILTIN_EQUALS_STRING_( Z6_1, Z6_2 ) {

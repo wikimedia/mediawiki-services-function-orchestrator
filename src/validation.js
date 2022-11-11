@@ -112,7 +112,14 @@ async function runTypeValidator( Z1, Z4, invariants ) {
  */
 async function runTypeValidatorDynamic( Z1, Z4, invariants ) {
 	await ( Z4.resolveEphemeral( [ 'Z4K3' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ false ) );
-	const validationFunction = Z4.Z4K3;
+	const validationFunction = Z4.getNameEphemeral( 'Z4K3' );
+
+	// TODO (T327872): Oh, when to quote!
+	const genericSchemaValidatorZID = 'Z831';
+	if ( validationFunction.Z8K5.Z9K1 === genericSchemaValidatorZID ) {
+		Z1 = quoteZObject( Z1 );
+		Z4 = quoteZObject( Z4 );
+	}
 
 	try {
 		// TODO (T296681): Catch errors when async functions reject.
