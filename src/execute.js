@@ -4,7 +4,7 @@ const { ArgumentState } = require( './argumentState.js' );
 const { Invariants } = require( './Invariants' );
 const ImplementationSelector = require( './implementationSelector.js' );
 const { BaseFrame, EmptyFrame } = require( './frame.js' );
-const { Composition, Implementation, Evaluated, ZResponseError } = require( './implementation.js' );
+const { Composition, Implementation, Evaluated } = require( './implementation.js' );
 const { RandomImplementationSelector } = require( './implementationSelector.js' );
 const { containsError, containsValue, createZObjectKey, isRefOrString, makeWrappedResultEnvelope,
 	setMetadataValues, quoteZObject, returnOnFirstError } = require( './utils.js' );
@@ -373,19 +373,24 @@ async function validateReturnType( result, zobject, invariants ) {
  * @return {ZWrapper}
  */
 async function addImplementationMetadata( implementation, result ) {
-	const implementationId = implementation.getZID(); // Can be null
-	let implementationType;
+	let implementationId, implementationType;
+	const Z14 = implementation.Z14_;
 	if ( implementation instanceof Composition ) {
 		implementationType = 'Composition';
+		// TODO(T320457): Capture persistent ID, if present, in executeInternal()
+		// 'undetermined' (for now) because we don't know if there's a persistent ID
+		implementationId = 'undetermined';
 	} else if ( implementation instanceof Evaluated ) {
 		implementationType = 'Evaluated';
+		// TODO(T320457): Capture persistent ID, if present, in executeInternal()
+		// 'undetermined' (for now) because we don't know if there's a persistent ID
+		implementationId = 'undetermined';
 	} else {
 		implementationType = 'BuiltIn';
+		implementationId = Z14.Z14K4.Z6K1;
 	}
 	const newPairs = new Map();
-	if ( implementationId !== null ) {
-		newPairs.set( { Z1K1: 'Z6', Z6K1: 'implementationId' }, { Z1K1: 'Z6', Z6K1: implementationId } );
-	}
+	newPairs.set( { Z1K1: 'Z6', Z6K1: 'implementationId' }, { Z1K1: 'Z6', Z6K1: implementationId } );
 	newPairs.set( { Z1K1: 'Z6', Z6K1: 'implementationType' }, { Z1K1: 'Z6', Z6K1: implementationType } );
 	return setMetadataValues( result, newPairs );
 }
@@ -446,17 +451,13 @@ async function executeInternal(
 	const implementations = [];
 
 	for ( const Z14 of convertZListToItemArray( Z8K4 ) ) {
-		let impl;
-		try {
-			impl = await ( Implementation.create( Z14, invariants, doValidate ) );
-		} catch ( err ) {
-			if ( err instanceof ZResponseError ) {
-				return err.envelope;
-			} else {
-				throw err; // unknown error; rethrow
-			}
+		const Z14Envelope = ( await ( Z14.resolve(
+			invariants, /* ignoreList= */null, /* resolveInternals= */ false, doValidate
+		) ) );
+		if ( containsError( Z14Envelope ) ) {
+			return Z14Envelope;
 		}
-		implementations.push( impl );
+		implementations.push( Z14Envelope.Z22K1 );
 	}
 
 	if ( implementations.length === 0 ) {
@@ -472,7 +473,8 @@ async function executeInternal(
 	if ( implementationSelector === null ) {
 		implementationSelector = new RandomImplementationSelector();
 	}
-	const implementation = implementationSelector.select( implementations );
+	const implementationZObject = implementationSelector.select( implementations );
+	const implementation = Implementation.create( implementationZObject );
 
 	if ( implementation === null ) {
 		return makeWrappedResultEnvelope(
@@ -484,7 +486,7 @@ async function executeInternal(
 		);
 	}
 
-	const newScope = new Frame( implementation.getZ14().getScope() );
+	const newScope = new Frame( implementationZObject.getScope() );
 	for ( const argumentState of argumentStates ) {
 		newScope.setArgument( argumentState.argumentDict.name, argumentState );
 	}
@@ -525,7 +527,6 @@ async function executeInternal(
 	if ( doValidate && resolveInternals ) {
 		result = await validateReturnType( result, zobject, invariants );
 	}
-
 	if ( topLevel ) {
 		result = await addImplementationMetadata( implementation, result );
 	}
