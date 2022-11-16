@@ -74,9 +74,11 @@ function Z7OrError( zobject ) {
  *
  * @param {Object} input the input for a function call
  * @param {ImplementationSelector} implementationSelector
+ * @param {boolean} returnNormal return normal form if true; canonical form otherwise
  * @return {Object} a Z22 containing the result of function evaluation or a Z5
  */
-async function orchestrate( input, implementationSelector = null ) {
+async function orchestrate( input, implementationSelector = null,
+	returnNormal = false ) {
 	const startTime = new Date();
 	const startUsage = cpuUsage();
 	const logger = getLogger();
@@ -152,6 +154,9 @@ async function orchestrate( input, implementationSelector = null ) {
 	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationDuration' }, { Z1K1: 'Z6', Z6K1: durationStr } );
 	currentResponseEnvelope = setMetadataValue( currentResponseEnvelope, { Z1K1: 'Z6', Z6K1: 'orchestrationHostname' }, { Z1K1: 'Z6', Z6K1: hostname } );
 
+	if ( returnNormal ) {
+		return currentResponseEnvelope;
+	}
 	const canonicalized = canonicalize( currentResponseEnvelope, /* withVoid= */ true );
 
 	if ( responseEnvelopeContainsError( canonicalized ) ) {

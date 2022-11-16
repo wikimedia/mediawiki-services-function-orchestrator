@@ -323,6 +323,21 @@ function BUILTIN_SECOND_( Z882 ) {
 	return makeMappedResultEnvelope( Z882.K2, null );
 }
 
+async function BUILTIN_GET_ENVELOPE_( QuotedZ7 ) {
+	const orchestrate = require( './orchestrate.js' );
+	// Requesting envelope in normal form avoids a validation error and unnecessary processing
+	const envelope = await orchestrate( QuotedZ7.Z99K1.asJSON(),
+		/* implementationSelector= */ null, /* returnNormal= */ true );
+	const pairType = {
+		Z1K1: Z9For( 'Z7' ),
+		Z7K1: Z9For( 'Z882' ),
+		Z882K1: Z9For( 'Z1' ),
+		Z882K2: Z9For( 'Z1' )
+	};
+	const pair = { Z1K1: pairType, K1: envelope.Z22K1, K2: envelope.Z22K2 };
+	return makeMappedResultEnvelope( pair, null );
+}
+
 function BUILTIN_EQUALS_BOOLEAN_( Z40_1, Z40_2 ) {
 	return makeMappedResultEnvelope(
 		makeBoolean( ( Z40_1.Z40K1.Z9K1 === Z40_2.Z40K1.Z9K1 ) ),
@@ -801,6 +816,7 @@ builtinFunctions.set( 'Z913', BUILTIN_EMPTY_ );
 builtinFunctions.set( 'Z920', BUILTIN_TRIGGER_METADATA_ );
 builtinFunctions.set( 'Z921', BUILTIN_FIRST_ );
 builtinFunctions.set( 'Z922', BUILTIN_SECOND_ );
+builtinFunctions.set( 'Z923', BUILTIN_GET_ENVELOPE_ );
 builtinFunctions.set( 'Z931', BUILTIN_SCHEMA_VALIDATOR_ );
 builtinFunctions.set( 'Z944', BUILTIN_EQUALS_BOOLEAN_ );
 builtinFunctions.set( 'Z960', BUILTIN_LANGUAGE_CODE_TO_LANGUAGE_ );
@@ -903,7 +919,7 @@ function getDefinitionFromFile( ZID ) {
 // Built-in implementations.
 const implementationZIDs = [
 	'Z901', 'Z902', 'Z903', 'Z904', 'Z905', 'Z908', 'Z910', 'Z911', 'Z912',
-	'Z913', 'Z920', 'Z921', 'Z922', 'Z944', 'Z960', 'Z966', 'Z968',
+	'Z913', 'Z920', 'Z921', 'Z922', 'Z923', 'Z944', 'Z960', 'Z966', 'Z968',
 	// TODO (T314383): Add these ZIDs to the list of implementations. See below.
 	/*
      * 'Z981', 'Z982',
@@ -918,7 +934,7 @@ const implementationZIDs = [
 // Built-in functions.
 const functionZIDs = [
 	'Z801', 'Z802', 'Z803', 'Z804', 'Z805', 'Z808', 'Z810', 'Z811', 'Z812',
-	'Z813', 'Z820', 'Z821', 'Z822', 'Z844', 'Z860', 'Z866', 'Z868',
+	'Z813', 'Z820', 'Z821', 'Z822', 'Z823', 'Z844', 'Z860', 'Z866', 'Z868',
 	'Z881', 'Z882', 'Z883', 'Z886', 'Z888', 'Z899', 'Z831'
 ];
 

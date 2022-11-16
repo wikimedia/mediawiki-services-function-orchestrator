@@ -6,7 +6,7 @@ const assert = require( '../../utils/assert.js' );
 const Server = require( '../../utils/server.js' );
 const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
 const { getMissingZ5 } = require( '../../../function-schemata/javascript/test/testUtils.js' );
-const { getError, makeVoid } = require( '../../../function-schemata/javascript/src/utils.js' );
+const { getError, makeVoid, isZMap, getZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
 const { readJSON } = require( '../../../src/fileUtils.js' );
 const { testDataDir } = require( '../../utils/testFileUtils.js' );
 
@@ -48,7 +48,38 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 			assert.status( result, 200 );
 			assert.contentType( result, 'application/json' );
 			assert.deepEqual( output, result.body.Z22K1, name );
+			// TODO( T323402 ): Check the content of Z22K2/metadata
+			assert.isTrue( isZMap( result.body.Z22K2 ), name );
 			assert.deepEqual( error, getError( result.body ), name );
+		} );
+	};
+
+	// Z823 returns TypedPair<Z1, TypedMap<Z6, Z1>>.  As Z823 is the only function whose Z22K1/
+	// result includes a metadata map (and metadata maps contain nondeterministic values), its
+	// test requires special handling.
+	// output is the expected value of the first element of the typed pair.
+	const testZ823Call = function ( name, input, output ) {
+		it( 'orchestration endpoint: ' + name, async function () { // eslint-disable-line no-undef
+			output = canonicalize( output, /* withVoid= */ true ).Z22K1;
+			const result = await preq.post( {
+				uri: uri,
+				headers: {
+					'content-type': 'application/json'
+				},
+				body: input
+			} );
+			assert.status( result, 200 );
+			assert.contentType( result, 'application/json' );
+			const envelope = result.body;
+			const pairType = { Z1K1: 'Z7', Z7K1: 'Z882', Z882K1: 'Z1', Z882K2: 'Z1' };
+			assert.deepEqual( pairType, envelope.Z22K1.Z1K1, name );
+			assert.deepEqual( output, envelope.Z22K1.K1, name );
+			// TODO( T323402 ): Check the content of Z22K2/metadata
+			assert.isTrue( isZMap( envelope.Z22K2 ), name );
+			// TODO( T323402 ): Check the content of K2/metadata
+			assert.isTrue( isZMap( envelope.Z22K1.K2 ), name );
+			assert.deepEqual( makeVoid( /* canonical */ true ), getError( envelope ), name );
+			assert.strictEqual( undefined, getZMapValue( envelope.Z22K1.K2, 'errors' ), name );
 		} );
 	};
 
@@ -596,5 +627,11 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 		'function call for Z960 (language code to language)',
 		{ doValidate: true, zobject: readJSON( testDataDir( 'Z6_english.json' ) ) },
 		'Z1002'
+	);
+
+	testZ823Call(
+		'function call for Z823/Get envelope',
+		{ doValidate: true, zobject: readJSON( testDataDir( 'Z823.json' ) ) },
+		{ Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
 	);
 } );
