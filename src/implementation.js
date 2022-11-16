@@ -6,32 +6,16 @@ const { ZWrapper } = require( './ZWrapper' );
 const { convertItemArrayToZList, makeMappedResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../function-schemata/javascript/src/utils' );
-const { Invariants } = require( './Invariants.js' );
-const { validatesAsReference } = require( '../function-schemata/javascript/src/schema.js' );
-
-/**
- * Error class for throwing a Z22/'Evaluation response' (envelope) that
- * contains an error (in Z22K2/metadata).
- */
-class ZResponseError extends Error {
-	constructor( message, envelope ) {
-		super( message );
-		this.name = 'ZResponseError';
-		this.envelope = envelope;
-	}
-}
 
 class Implementation {
 
-	constructor( Z14, ZID ) {
+	constructor( Z14 ) {
 		this.invariants_ = null;
 		this.scope_ = null;
 		this.lazyVariables_ = new Set();
 		this.lazyReturn_ = false;
 		this.doValidate_ = true;
 		this.Z14_ = Z14;
-		// Persistent ID for the implementation; null if there is none
-		this.ZID_ = ZID;
 	}
 
 	hasLazyVariable( variableName ) {
@@ -40,14 +24,6 @@ class Implementation {
 
 	returnsLazy() {
 		return this.lazyReturn_;
-	}
-
-	getZID() {
-		return this.ZID_;
-	}
-
-	getZ14() {
-		return this.Z14_;
 	}
 
 	async execute( zobject, argumentList ) {
@@ -67,63 +43,40 @@ class Implementation {
 	}
 
 	/**
-	 * Creates and returns a function implementation for the given Z14,
-	 * as an instance of one of the subclasses Composition, Evaluated,
-	 * or BuiltIn.  If an error occurs, an instance of subclass
-	 * ImplementationError is returned.
-	 *
-	 * invariants and doValidate are used locally in this method.  To set them for use
-	 * in other methods, use setInvariants and setDoValidate.
+	 * Retrieves a function implementation (or an in-memory JS function if a
+	 * built-in). Function implementation may be a function, a serializer for
+	 * ZObjects, or a deserializer for ZObject.
 	 *
 	 * @param {Object} Z14 the implementation
-	 * @param {Invariants} invariants
-	 * @param {boolean} doValidate
-	 * @return {Implementation}
-	 * @throws {ZResponseError} If the call to resolve() returns an error
+	 * @return {Implementation} the implementation
 	 */
-	static async create( Z14, invariants, doValidate = true ) {
+	static create( Z14 ) {
 		if ( typeof Z14 === 'undefined' ) {
 			return null;
 		}
 
-		// ZID captures the persistent ID when Z14 is a Z9 / Reference,
-		// for Composition and Evaluated implementations.
-		// TODO( T321998 ): If an ID key is added to Z14, this can be removed
-		let ZID = null;
-		if ( validatesAsReference( Z14 ).isValid() ) {
-			ZID = Z14.Z9K1;
-		}
-
-		const Z14Envelope = ( await ( Z14.resolve(
-			invariants, /* ignoreList= */null, /* resolveInternals= */ false, doValidate
-		) ) );
-		if ( containsError( Z14Envelope ) ) {
-			throw new ZResponseError( 'Error returned from call to resolve', Z14Envelope );
-		}
-		const resolvedZ14 = Z14Envelope.Z22K1;
-
-		if ( resolvedZ14.Z14K4 !== undefined ) {
-			const BuiltInZID = resolvedZ14.Z14K4.Z6K1;
-			const builtin = builtins.getFunction( BuiltInZID );
-			const lazyVariables = builtins.getLazyVariables( BuiltInZID );
-			const lazyReturn = builtins.getLazyReturn( BuiltInZID );
+		if ( Z14.Z14K4 !== undefined ) {
+			const ZID = Z14.Z14K4.Z6K1;
+			const builtin = builtins.getFunction( ZID );
+			const lazyVariables = builtins.getLazyVariables( ZID );
+			const lazyReturn = builtins.getLazyReturn( ZID );
 			// eslint-disable-next-line no-use-before-define
-			return new BuiltIn( resolvedZ14, BuiltInZID, builtin,
-				lazyVariables, lazyReturn );
+			return new BuiltIn( Z14, builtin, lazyVariables, lazyReturn );
 		}
-		if ( resolvedZ14.Z14K2 !== undefined ) {
+		if ( Z14.Z14K2 !== undefined ) {
 			// eslint-disable-next-line no-use-before-define
-			return new Composition( resolvedZ14, ZID );
+			return new Composition( Z14 );
 		}
 		// eslint-disable-next-line no-use-before-define
-		return new Evaluated( resolvedZ14, ZID );
+		return new Evaluated( Z14 );
 	}
+
 }
 
 class BuiltIn extends Implementation {
 
-	constructor( Z14, ZID, functor, lazyVariables, lazyReturn ) {
-		super( Z14, ZID );
+	constructor( Z14, functor, lazyVariables, lazyReturn ) {
+		super( Z14 );
 		for ( const variable of lazyVariables ) {
 			this.lazyVariables_.add( variable );
 		}
@@ -156,10 +109,6 @@ class BuiltIn extends Implementation {
 }
 
 class Evaluated extends Implementation {
-
-	constructor( Z14, ZID ) {
-		super( Z14, ZID );
-	}
 
 	/**
 	 * Calls this implementation's functor with the provided arguments.
@@ -238,8 +187,8 @@ class Evaluated extends Implementation {
 
 class Composition extends Implementation {
 
-	constructor( Z14, ZID ) {
-		super( Z14, ZID );
+	constructor( Z14 ) {
+		super( Z14 );
 		this.composition_ = Z14.Z14K2.asJSON();
 	}
 
@@ -251,4 +200,4 @@ class Composition extends Implementation {
 
 }
 
-module.exports = { Composition, Evaluated, BuiltIn, Implementation, ZResponseError };
+module.exports = { Composition, Evaluated, Implementation };
