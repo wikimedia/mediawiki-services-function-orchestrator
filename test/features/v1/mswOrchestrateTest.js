@@ -517,6 +517,24 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 	}
 
 	{
+		// Here the functionCall is the same as for 'evaluated function call', except with Z1000
+		// replaced by Z1099.  Z1099 doesn't appear in evaluatorStub, so an exception is thrown.
+		attemptOrchestration(
+			/* testName= */ 'evaluated function call throwing an exception',
+			/* functionCall= */ readJSON( testDataDir( 'evaluated-with-1099.json' ) ),
+			/* expectedResult= */ null,
+			/* expectedResultFile= */ null,
+			/* expectedErrorState= */ true,
+			/* expectedErrorValue= */ null,
+			/* expectedErrorFile= */ testDataDir( 'evaluated-with-1099_expected.json' ),
+			/* expectedExtraMetadata= */ [],
+			// Error gets returned before implementation metadata is recorded
+			/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
+			/* implementationSelector= */ null
+		);
+	}
+
+	{
 		attemptOrchestration(
 			/* testName= */ 'failed evaluated function call',
 			/* functionCall= */ readJSON( testDataDir( 'evaluated-failed.json' ) ),

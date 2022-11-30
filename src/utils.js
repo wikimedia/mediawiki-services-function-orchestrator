@@ -328,11 +328,7 @@ async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = tr
 		for ( const arg of callTuple[ 1 ] ) {
 			args.push( arg );
 		}
-		try {
-			currentResponseEnvelope = await callable( ...args );
-		} catch ( error ) {
-			console.trace( error );
-		}
+		currentResponseEnvelope = await callable( ...args );
 	}
 	return currentResponseEnvelope;
 }

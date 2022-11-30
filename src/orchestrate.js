@@ -130,7 +130,13 @@ async function orchestrate( input, implementationSelector = null,
 	try {
 		currentResponseEnvelope = await returnOnFirstError( currentResponseEnvelope, callTuples );
 	} catch ( e ) {
-		logger.error( `Call tuples failed in returnOnFirstError. Error: ${e}.` );
+		const message = `Call tuples failed in returnOnFirstError. Error: ${e}.`;
+		logger.error( message );
+		// The zobject provides context for a Z507/Evaluation error (and will be quoted there)
+		const zerror = ErrorFormatter.wrapMessageInEvaluationError( message, zobject );
+		// This currentResponseEnvelope will be JSON, not a ZWrapper.
+		// makeMappedResultEnvelope will put zerror into a metadata map.
+		currentResponseEnvelope = makeMappedResultEnvelope( null, zerror );
 	}
 
 	if ( currentResponseEnvelope instanceof ZWrapper ) {
