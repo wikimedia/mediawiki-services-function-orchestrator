@@ -12,7 +12,7 @@ const { MutationType, ZWrapper } = require( './ZWrapper' );
 const { resolveListType } = require( './builtins.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { convertZListToItemArray, getError, setZMapValue } = require( '../function-schemata/javascript/src/utils.js' );
-const { validatesAsArgumentReference, validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
+const { validatesAsArgumentReference, validatesAsFunctionCall, validatesAsReference, validatesAsString, validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
 
 let execute = null;
 
@@ -101,6 +101,126 @@ async function resolveTypes( Z1, invariants, doValidate = true ) {
 			objectQueue.push( nextObject[ key ] );
 		}
 	}
+	return null;
+}
+
+class KeyList {
+
+	constructor( key, lastList ) {
+		this.key = key;
+		this.lastList = lastList;
+		this.length = 1;
+		if ( this.lastList !== null ) {
+			this.length += this.lastList.length;
+			this.seenKeys = new Set( lastList.seenKeys );
+		} else {
+			this.seenKeys = new Set();
+		}
+		this.seenKeys.add( this.key );
+	}
+
+	getAllKeys() {
+		let result;
+		if ( this.lastList !== null ) {
+			result = this.lastList.getAllKeys();
+		}
+		result.push( this.key );
+		return result;
+	}
+
+}
+
+async function eagerlyEvaluate(
+	zobject, invariants, ignoreList, resolveInternals, doValidate, keyList = null ) {
+	if (
+		!( zobject instanceof ZWrapper ) ||
+            validatesAsString( zobject ).isValid() ||
+            validatesAsReference( zobject ).isValid() ) {
+		return null;
+	}
+
+	if ( ignoreList === null ) {
+		ignoreList = new Set();
+	}
+	const ignoreKeys = new Set( [
+		'Z1K1', 'Z4K1', 'Z4K2', 'Z4K3',
+		'Z8K1', 'Z8K2', 'Z8K3', 'Z8K4', 'Z8K5',
+		'Z40K1', 'Z99K1' ] );
+
+	function doResolve( key, someObject, someObjectJSON ) {
+		if (
+			validatesAsArgumentReference( someObjectJSON ).isValid() &&
+            !( ignoreList.has( MutationType.ARGUMENT_REFERENCE ) ) ) {
+			if ( someObject.getScope().hasVariable( someObjectJSON.Z18K1.Z6K1 ) ) {
+				return true;
+			}
+			return false;
+		}
+		if (
+			validatesAsReference( someObjectJSON ).isValid() &&
+            !( ignoreList.has( MutationType.REFERENCE ) ) ) {
+			return true;
+		}
+		if (
+			validatesAsFunctionCall( someObjectJSON ).isValid() &&
+            !( ignoreList.has( MutationType.FUNCTION_CALL ) ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	const subResultPromises = [];
+	for ( const key of zobject.keys() ) {
+		if ( ignoreKeys.has( key ) ) {
+			continue;
+		}
+		if ( keyList !== null && keyList.seenKeys.has( key ) && keyList.length > 20 ) {
+			return makeWrappedResultEnvelope(
+				normalError(
+					[ error.argument_value_error ],
+					[
+						'Aborting because argument resolution contains cyclical references:',
+						keyList.getAllKeys().join( ',' ) ] ) );
+		}
+		const nextKeyList = new KeyList( key, keyList );
+		const oldValue = zobject[ key ];
+		let oldValueJSON = oldValue;
+		if ( oldValueJSON instanceof ZWrapper ) {
+			oldValueJSON = oldValueJSON.asJSON();
+		}
+		if ( doResolve( key, oldValue, oldValueJSON ) ) {
+			const valueEnvelope = await ( oldValue.resolve(
+				invariants, ignoreList, resolveInternals, doValidate ) );
+			// It's okay for some Z18s not to have values assigned.
+			// TODO (T305981): We should formally distinguish between unbound
+			// and unassigned variables. This will constrain further the errors
+			// that we let slide here.
+			if ( containsError( valueEnvelope ) ) {
+				return valueEnvelope;
+			} else {
+				const newValue = valueEnvelope.Z22K1;
+				zobject.setName( key, newValue );
+				if ( newValue instanceof ZWrapper ) {
+					let newScope;
+					if ( oldValue instanceof ZWrapper ) {
+						newScope = oldValue.getScope();
+					} else {
+						newScope = zobject.getScope();
+					}
+					zobject[ key ].setScope( newScope );
+				}
+			}
+		}
+		subResultPromises.push( eagerlyEvaluate(
+			zobject[ key ], invariants, ignoreList, resolveInternals, doValidate, nextKeyList ) );
+	}
+
+	for ( const subResult of await ( Promise.all( subResultPromises ) ) ) {
+		if ( subResult !== null ) {
+			return subResult;
+		}
+	}
+
 	return null;
 }
 
@@ -400,12 +520,13 @@ async function addImplementationMetadata( implementation, result ) {
  * @param {ImplementationSelector} implementationSelector
  * @param {boolean} resolveInternals
  * @param {boolean} topLevel whether this is the top-level Z7 sent to the orchestrator
+ * @param {boolean} doEagerlyEvaluate whether to expand arguments fully
  * @return {ZWrapper}
  */
 async function executeInternal(
 	zobject, invariants, doValidate = true,
 	implementationSelector = null, resolveInternals = true,
-	topLevel = false ) {
+	topLevel = false, doEagerlyEvaluate = true ) {
 
 	const typeKey = createZObjectKey( zobject );
 	if ( typeKey.ZID_ === 'Z881' && !resolveInternals ) {
@@ -495,12 +616,24 @@ async function executeInternal(
 		const instantiationPromises = [];
 		for ( const argumentState of argumentStates ) {
 			const argumentDict = argumentState.argumentDict;
-			instantiationPromises.push(
-				newScope.retrieveArgument(
+			instantiationPromises.push( async function () {
+				const instantiation = await newScope.retrieveArgument(
 					argumentDict.name, invariants,
 					implementation.hasLazyVariable( argumentDict.name ),
-					doValidate
-				) );
+					doValidate );
+				if (
+					instantiation.state !== 'ERROR' &&
+                        doEagerlyEvaluate &&
+                        !( implementation.hasLazyVariable( argumentDict.name ) ) ) {
+					const subResult = await eagerlyEvaluate(
+						instantiation.argumentDict.argument, invariants,
+						/* ignoreList= */ null, resolveInternals, doValidate );
+					if ( subResult !== null ) {
+						return ArgumentState.ERROR( getError( subResult ) );
+					}
+				}
+				return instantiation;
+			}() );
 		}
 		for ( const instantiation of await Promise.all( instantiationPromises ) ) {
 			if ( instantiation.state === 'ERROR' ) {
@@ -521,6 +654,14 @@ async function executeInternal(
 		await ( result.resolveKey(
 			[ 'Z22K1' ], invariants, /* ignoreList= */ null,
 			/* resolveInternals= */ true, doValidate ) );
+		if ( doEagerlyEvaluate ) {
+			const subResult = await eagerlyEvaluate(
+				result.Z22K1, invariants, /* ignoreList= */ null,
+				resolveInternals, doValidate );
+			if ( subResult !== null ) {
+				return subResult;
+			}
+		}
 	}
 	if ( doValidate && resolveInternals ) {
 		result = await validateReturnType( result, zobject, invariants );
@@ -581,14 +722,16 @@ async function resolveDanglingReferences( zobject, invariants ) {
  * @param {boolean} resolveInternals if false, will evaluate typed lists via shortcut
  *      and will not validate attributes of Z7s
  * @param {boolean} topLevel whether this is the top-level Z7 sent to the orchestrator
+ * @param {boolean} doEagerlyEvaluate whether to expand arguments fully
  * @return {ZWrapper} result of executing function call
  */
 execute = async function (
 	zobject, invariants = null, doValidate = true,
-	implementationSelector = null, resolveInternals = true, topLevel = false ) {
+	implementationSelector = null, resolveInternals = true, topLevel = false,
+	doEagerlyEvaluate = true ) {
 	const result = await executeInternal(
 		zobject, invariants, doValidate,
-		implementationSelector, resolveInternals, topLevel );
+		implementationSelector, resolveInternals, topLevel, doEagerlyEvaluate );
 	if ( topLevel ) {
 		await resolveDanglingReferences( result.Z22K1, invariants );
 	}

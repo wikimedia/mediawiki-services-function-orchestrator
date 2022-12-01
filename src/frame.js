@@ -25,6 +25,14 @@ class BaseFrame {
 		}
 		return result;
 	}
+
+	hasVariable( variableName ) {
+		const argumentState = this.names_.get( variableName );
+		if ( argumentState !== undefined ) {
+			return true;
+		}
+		return this.lastFrame_.hasUnevaluatedVariable( variableName );
+	}
 }
 
 class EmptyFrame extends BaseFrame {
@@ -44,6 +52,9 @@ class EmptyFrame extends BaseFrame {
 		return true;
 	}
 
+	hasVariable( variableName ) {
+		return false;
+	}
 }
 
 module.exports = { BaseFrame, EmptyFrame };

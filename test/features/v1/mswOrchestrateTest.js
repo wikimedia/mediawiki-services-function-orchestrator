@@ -1479,4 +1479,23 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		);
 	}
 
+	{
+		wikiStub.setZId( 'Z100005', readJSON( testDataDir( 'Z100005.json' ) ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z801',
+			Z801K1: [
+				'Z6',
+				'Z100005',
+				'less precious string'
+			]
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that non-top-level argument values are resolved',
+			/* functionCall= */ call,
+			/* expectedResultFile= */ testDataDir( 'expected-non-top-level.json' ),
+			/* expectedErrorState= */ false
+		);
+	}
+
 } );
