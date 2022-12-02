@@ -109,14 +109,9 @@ class KeyList {
 	constructor( key, lastList ) {
 		this.key = key;
 		this.lastList = lastList;
-		this.length = 1;
-		if ( this.lastList !== null ) {
-			this.length += this.lastList.length;
-			this.seenKeys = new Set( lastList.seenKeys );
-		} else {
-			this.seenKeys = new Set();
-		}
+		this.seenKeys = new Set( lastList === null ? undefined : lastList.seenKeys );
 		this.seenKeys.add( this.key );
+		this.length = 1 + ( lastList === null ? 0 : lastList.length );
 	}
 
 	getAllKeys() {
