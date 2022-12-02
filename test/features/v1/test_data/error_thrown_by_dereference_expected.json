@@ -1,0 +1,12 @@
+{
+	"Z1K1": "Z5",
+	"Z5K1": "Z500",
+	"Z5K2": {
+		"Z1K1": {
+			"Z1K1": "Z7",
+			"Z7K1": "Z885",
+			"Z885K1": "Z500"
+		},
+		"Z500K1": "Error thrown by dereference(): FetchError: request to http://thewiki/?action=wikilambda_fetch&format=json&zids=Z499 failed, reason: No persistent zobject available for Z499."
+	}
+}

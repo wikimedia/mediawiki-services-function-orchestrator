@@ -27,8 +27,14 @@ function testDataDir( ...pathComponents ) {
 		'features', 'v1', 'test_data', ...pathComponents );
 }
 
+function schemataDefinitionsDir( ...pathComponents ) {
+	return path.join(
+		path.dirname( path.dirname( path.dirname( __filename ) ) ),
+		'function-schemata', 'data', 'definitions', ...pathComponents );
+}
+
 function writeJSON( object, fileName ) {
 	fs.writeFile( fileName, JSON.stringify( object, null, '\t' ), () => {} );
 }
 
-module.exports = { readZObjectsFromDirectory, testDataDir, writeJSON };
+module.exports = { readZObjectsFromDirectory, testDataDir, schemataDefinitionsDir, writeJSON };

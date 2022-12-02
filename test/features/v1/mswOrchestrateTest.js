@@ -6,7 +6,7 @@ const { makeMappedResultEnvelope, makeTrue, setZMapValue, getZMapValue, getError
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
 const { readJSON } = require( '../../../src/fileUtils.js' );
-const { testDataDir, writeJSON } = require( '../../utils/testFileUtils.js' );
+const { testDataDir, writeJSON, schemataDefinitionsDir } = require( '../../utils/testFileUtils.js' );
 const { makeErrorInNormalForm, error } = require( '../../../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../../../function-schemata/javascript/src/utils' );
 const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../../../lib/mockUtils.js' );
@@ -1677,6 +1677,67 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 			/* expectedResultFile= */ testDataDir( 'expected-reified-integer.json' ),
 			/* expectedErrorState= */ false,
 			/* expectedErrorFile = */ null
+		);
+	}
+
+	{
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z828',
+			Z828K1: {
+				Z1K1: 'Z99',
+				Z99K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z811'
+				}
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that Z828 retrieves a Z2 for a built-in',
+			/* functionCall= */ call,
+			/* expectedResultFile= */ schemataDefinitionsDir( 'Z811.json' )
+		);
+	}
+
+	{
+		wikiStub.setZId( 'Z10015', readJSON( testDataDir( 'Z10015.json' ) ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z828',
+			Z828K1: {
+				Z1K1: 'Z99',
+				Z99K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z10015'
+				}
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that Z828 retrieves a Z2 from the mock wiki',
+			/* functionCall= */ call,
+			/* expectedResultFile= */ testDataDir( 'Z10015.json' )
+		);
+	}
+
+	{
+		// An exception is generated in wikiStub, because it doesn't know about Z1001555
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z828',
+			Z828K1: {
+				Z1K1: 'Z99',
+				Z99K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z499'
+				}
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that Z828 catches an error thrown by dereference()',
+			/* functionCall= */ call,
+			/* expectedResultFile= */ null,
+			/* expectedErrorState= */ true,
+			/* expectedErrorFile= */ testDataDir( 'error_thrown_by_dereference_expected.json' )
 		);
 	}
 
