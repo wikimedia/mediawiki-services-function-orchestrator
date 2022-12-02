@@ -171,16 +171,19 @@ function setMetadataValues( envelope, newPairs ) {
  * @return {boolean} true if Z22K2 contains an error; false otherwise
  */
 function responseEnvelopeContainsError( envelope ) {
-	const metadata = envelope.Z22K2;
-	// TODO( T322779 ): Investigate why Z22K2 is sometimes undefined here
-	if ( metadata === undefined ) {
+	// If we've been called with a non-response envelope, it's not a Z22 with an error in it
+	if ( !envelope || !envelope.Z1K1 || !( envelope.Z22K1 && envelope.Z22K2 ) ) {
 		return false;
-	} else if ( isVoid( metadata ) ) {
+	}
+
+	const metadata = envelope.Z22K2;
+	if ( isVoid( metadata ) ) {
 		return false;
 	} else if ( isZMap( metadata ) ) {
-		return ( getZMapValue( metadata, { Z1K1: 'Z6', Z6K1: 'errors' } ) !== undefined );
+		const errorValue = getZMapValue( metadata, { Z1K1: 'Z6', Z6K1: 'errors' } );
+		return ( errorValue !== undefined && !isVoid( errorValue ) );
 	} else {
-		throw new Error( `Invalid value for Z22K2: ${metadata}` );
+		throw new Error( `Invalid value for Z22K2: "${metadata}"` );
 	}
 }
 
