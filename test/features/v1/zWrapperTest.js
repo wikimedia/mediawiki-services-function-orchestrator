@@ -77,4 +77,58 @@ describe( 'ZWrapper test', function () { // eslint-disable-line no-undef
 			baseZWrapper.debugObject()
 		);
 	} );
+
+	it( 'ZWrapper asJSON, asJSONEphemeral respect correct keys', () => { // eslint-disable-line no-undef
+		const theObject = {
+			Z1K1: {
+				Z1K1: 'Z9',
+				Z9K1: 'Z10000'
+			},
+			K1: {
+				Z1K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z18'
+				},
+				Z18K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z10005'
+				}
+			},
+			K2: {
+				Z1K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z18'
+				},
+				Z18K1: {
+					Z1K1: 'Z9',
+					Z9K1: 'Z10006'
+				}
+			}
+		};
+		const replacementStringOne = {
+			Z1K1: 'Z6',
+			Z6K1: 'diamond daimon monad i'
+		};
+		const replacementStringTwo = {
+			Z1K1: 'Z6',
+			Z6K1: 'adam kadmon in the sky'
+		};
+		const wrappedObject = ZWrapper.create( theObject, new EmptyFrame() );
+		wrappedObject.setName( 'K1', replacementStringOne );
+		wrappedObject.setNameEphemeral( 'K2', replacementStringTwo );
+
+		// For asJSON, the non-ephemerally set key should be visible but not the ephemeral one.
+		const actualJSON = wrappedObject.asJSON();
+		const expectedJSON = { ...theObject };
+		expectedJSON.K1 = replacementStringOne;
+		assert.deepEqual( actualJSON, expectedJSON );
+
+		// For asJSONEphemeral, both set keys should be visible.
+		const actualJSONEphemeral = wrappedObject.asJSONEphemeral();
+		const expectedJSONEphemeral = { ...theObject };
+		expectedJSONEphemeral.K1 = replacementStringOne;
+		expectedJSONEphemeral.K2 = replacementStringTwo;
+		assert.deepEqual( actualJSONEphemeral, expectedJSONEphemeral );
+	} );
+
 } );

@@ -520,7 +520,7 @@ class ZWrapper {
 		for ( const key of this.keys() ) {
 			let value = this.getNameEphemeral( key );
 			if ( value instanceof ZWrapper ) {
-				value = value.asJSON();
+				value = value.asJSONEphemeral();
 			}
 			result[ key ] = value;
 		}
