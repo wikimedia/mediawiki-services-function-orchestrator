@@ -170,7 +170,7 @@ function setMetadataValues( envelope, newPairs ) {
  * @param {Object} envelope a Z22
  * @return {boolean} true if Z22K2 contains an error; false otherwise
  */
-function containsError( envelope ) {
+function responseEnvelopeContainsError( envelope ) {
 	const metadata = envelope.Z22K2;
 	// TODO( T322779 ): Investigate why Z22K2 is sometimes undefined here
 	if ( metadata === undefined ) {
@@ -188,13 +188,13 @@ function containsError( envelope ) {
  * Determines whether a responseEnvelope contains a value (i.e., a non-Void first element).
  * The input responseEnvelope should be in normal form.
  *
- * FIXME (T311055): containsValue might require normal form, as validateAsZObject
+ * FIXME (T311055): responseEnvelopeContainsValue might require normal form, as validateAsZObject
  * is a normal validator. Check and document.
  *
  * @param {Object} responseEnvelope a Z22
  * @return {boolean} true if Z22K1 is not Z24 / Void; false otherwise
  */
-function containsValue( responseEnvelope ) {
+function responseEnvelopeContainsValue( responseEnvelope ) {
 	const Z22K1 = responseEnvelope.Z22K1.asJSON();
 	return (
 		validatesAsZObject( Z22K1 ).isValid() &&
@@ -297,7 +297,7 @@ async function returnOnFirstError( Z22, callTuples, callback = null, addZ22 = tr
 	let currentResponseEnvelope = Z22;
 	for ( const callTuple of callTuples ) {
 		if (
-			containsError( currentResponseEnvelope ) ||
+			responseEnvelopeContainsError( currentResponseEnvelope ) ||
 			isVoid( currentResponseEnvelope.Z22K1 )
 		) {
 			break;
@@ -344,8 +344,8 @@ function makeWrappedResultEnvelope( ...args ) {
 }
 
 module.exports = {
-	containsError,
-	containsValue,
+	responseEnvelopeContainsError,
+	responseEnvelopeContainsValue,
 	createSchema,
 	createZObjectKey,
 	generateError,

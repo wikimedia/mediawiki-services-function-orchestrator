@@ -8,7 +8,7 @@ const { error, normalError } = require( '../function-schemata/javascript/src/err
 const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
-const { containsError, isError, makeWrappedResultEnvelope, returnOnFirstError } = require( './utils.js' );
+const { responseEnvelopeContainsError, isError, makeWrappedResultEnvelope, returnOnFirstError } = require( './utils.js' );
 const { Evaluator } = require( './Evaluator.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ReferenceResolver } = require( './db.js' );
@@ -154,7 +154,7 @@ async function orchestrate( input, implementationSelector = null ) {
 
 	const canonicalized = canonicalize( currentResponseEnvelope, /* withVoid= */ true );
 
-	if ( containsError( canonicalized ) ) {
+	if ( responseEnvelopeContainsError( canonicalized ) ) {
 		// If canonicalization fails, return normalized form instead.
 		logger.info( 'Could not canonicalize; outputting in normal form.' );
 	} else {

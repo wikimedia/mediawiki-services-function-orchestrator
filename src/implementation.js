@@ -1,7 +1,7 @@
 'use strict';
 
 const builtins = require( './builtins.js' );
-const { containsError, traverseZList } = require( './utils.js' );
+const { responseEnvelopeContainsError, traverseZList } = require( './utils.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { convertItemArrayToZList, makeMappedResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
@@ -97,7 +97,7 @@ class Implementation {
 		const Z14Envelope = ( await ( Z14.resolve(
 			invariants, /* ignoreList= */null, /* resolveInternals= */ false, doValidate
 		) ) );
-		if ( containsError( Z14Envelope ) ) {
+		if ( responseEnvelopeContainsError( Z14Envelope ) ) {
 			throw new ZResponseError( 'Error returned from call to resolve', Z14Envelope );
 		}
 		const resolvedZ14 = Z14Envelope.Z22K1;
@@ -203,7 +203,7 @@ class Evaluated extends Implementation {
 		const returnTypeEnvelope = await ( Z7K1.Z8K2.resolve(
 			this.invariants_, /* ignoreList= */ null,
 			/* resolveInternals= */ true, this.doValidate_ ) );
-		if ( containsError( returnTypeEnvelope ) ) {
+		if ( responseEnvelopeContainsError( returnTypeEnvelope ) ) {
 			return returnTypeEnvelope;
 		}
 		Z7.Z7K1.Z8K2 = returnTypeEnvelope.Z22K1.asJSON();

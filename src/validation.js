@@ -3,7 +3,7 @@
 const { execute } = require( './execute.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ZWrapper } = require( './ZWrapper' );
-const { containsError, createSchema, createZObjectKey, quoteZObject, makeWrappedResultEnvelope } = require( './utils.js' );
+const { responseEnvelopeContainsError, createSchema, createZObjectKey, quoteZObject, makeWrappedResultEnvelope } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { convertZListToItemArray, isString, getError } = require( '../function-schemata/javascript/src/utils.js' );
@@ -206,7 +206,7 @@ async function validate( zobject, invariants ) {
 		} else {
 			// TODO (T307244): Use ignoreList instead of setting evaluator
 			// to null.
-			if ( containsError( typeEnvelope ) ) {
+			if ( responseEnvelopeContainsError( typeEnvelope ) ) {
 				errors.push( getError( typeEnvelope ) );
 			} else {
 				const noEvaluator = new Invariants( null, invariants.resolver );
@@ -219,7 +219,7 @@ async function validate( zobject, invariants ) {
 	const typeValidatorResults = await Promise.all( typeValidatorPromises );
 
 	typeValidatorResults
-		.filter( containsError )
+		.filter( responseEnvelopeContainsError )
 		.forEach( ( result ) => {
 			const error = getError( result );
 
