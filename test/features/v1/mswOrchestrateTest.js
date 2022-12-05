@@ -136,8 +136,10 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 				];
 
 				standardMetaData.forEach( ( key ) => {
-					if ( !expectedMissingMetadata.includes( key ) ) {
-						const metaDataValue = getZMapValue( result.Z22K2, key );
+					const metaDataValue = getZMapValue( result.Z22K2, key );
+					if ( expectedMissingMetadata.includes( key ) ) {
+						assert.deepEqual( metaDataValue, undefined, testName + ' should not have the `' + key + '` meta-data key set' );
+					} else {
 						assert.isDefined( metaDataValue, testName + ' should have the `' + key + '` meta-data key set' );
 					}
 				} );
