@@ -1531,8 +1531,131 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		attemptOrchestration(
 			/* testName= */ 'Test that non-top-level argument values are resolved',
 			/* functionCall= */ call,
-			/* expectedResultFile= */ testDataDir( 'expected-non-top-level.json' ),
+			/* expectedResultFile= */ testDataDir( 'expected-non-top-level-reference.json' ),
 			/* expectedErrorState= */ false
+		);
+	}
+
+	{
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: {
+				Z1K1: 'Z8',
+				Z8K1: [
+					'Z17',
+					{
+						Z1K1: 'Z17',
+						Z17K1: {
+							Z1K1: 'Z9',
+							Z9K1: 'Z6'
+						},
+						Z17K2: 'Z1000006K1',
+						Z17K3: {
+							Z1K1: 'Z12',
+							Z12K1: [ 'Z11' ]
+						}
+					}
+				],
+				Z8K2: {
+					Z1K1: 'Z7',
+					Z7K1: 'Z881',
+					Z881K1: 'Z6'
+				},
+				Z8K3: [ 'Z20' ],
+				Z8K4: [
+					'Z14',
+					{
+						Z1K1: 'Z14',
+						Z14K1: 'Z1000006',
+						Z14K2: {
+							Z1K1: 'Z7',
+							Z7K1: 'Z801',
+							Z801K1: [
+								'Z6',
+								{
+									Z1K1: 'Z18',
+									Z18K1: 'Z1000006K1'
+								},
+								'less precious string'
+							]
+						}
+					}
+				],
+				Z8K5: 'Z1000006'
+			},
+			Z1000006K1: 'a darling string'
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that non-top-level argument references are resolved',
+			/* functionCall= */ call,
+			/* expectedResultFile= */ testDataDir( 'expected-non-top-level-argref.json' ),
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile = */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
+		);
+	}
+
+	{
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: {
+				Z1K1: 'Z8',
+				Z8K1: [
+					'Z17'
+				],
+				Z8K2: {
+					Z1K1: 'Z7',
+					Z7K1: 'Z881',
+					Z881K1: 'Z6'
+				},
+				Z8K3: [ 'Z20' ],
+				Z8K4: [
+					'Z14',
+					{
+						Z1K1: 'Z14',
+						Z14K1: 'Z1000006',
+						Z14K2: {
+							Z1K1: 'Z7',
+							Z7K1: 'Z801',
+							Z801K1: [
+								'Z6',
+								{
+									Z1K1: 'Z7',
+									Z7K1: {
+										Z1K1: 'Z8',
+										Z8K1: [
+											'Z17'
+										],
+										Z8K2: 'Z6',
+										Z8K3: [ 'Z20' ],
+										Z8K4: [
+											'Z14',
+											{
+												Z1K1: 'Z14',
+												Z14K1: 'Z1000007',
+												Z14K2: 'a real lousy string, just a jerk'
+											}
+										],
+										Z8K5: 'Z1000007'
+									}
+								},
+								'less precious string'
+							]
+						}
+					}
+				],
+				Z8K5: 'Z1000006'
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that non-top-level function calls are resolved',
+			/* functionCall= */ call,
+			/* expectedResultFile= */ testDataDir( 'expected-non-top-level-call.json' ),
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile = */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
 		);
 	}
 
