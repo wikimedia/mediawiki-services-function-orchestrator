@@ -267,15 +267,27 @@ function generateError( errorString = 'An unknown error occurred' ) {
 	};
 }
 
+/**
+ * Convenience function for running a callback over every element of a ZList.
+ *
+ * Note that the callbacks are run using Promise.all, so do not make assumptions
+ * about the order in which they are called.
+ *
+ * @param {Object} ZList a Typed List (instance of Z881)
+ * @param {Function} callback a function to be called over every element of the list
+ * @return {Promise<Array[Object]>} the results of running the callback on all list elements
+ */
 async function traverseZList( ZList, callback ) {
 	let tail = ZList;
 	if ( tail === undefined ) {
 		return;
 	}
+	const callbacks = [];
 	while ( getHead( tail ) !== undefined ) {
-		await callback( tail );
+		callbacks.push( callback( tail ) );
 		tail = getTail( tail );
 	}
+	return await Promise.all( callbacks );
 }
 
 /**
