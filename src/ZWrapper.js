@@ -1,6 +1,6 @@
 'use strict';
 
-const { containsError, createSchema, isGenericType, makeWrappedResultEnvelope } = require( './utils.js' );
+const { responseEnvelopeContainsError, createSchema, isGenericType, makeWrappedResultEnvelope } = require( './utils.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
 const { isString, isUserDefined } = require( '../function-schemata/javascript/src/utils' );
 const {
@@ -206,7 +206,7 @@ class ZWrapper {
 						const refKey = nextObject.Z9K1;
 						const dereferenced = await invariants.resolver.dereference( [ refKey ] );
 						const Z22 = dereferenced.get( refKey );
-						if ( containsError( Z22 ) ) {
+						if ( responseEnvelopeContainsError( Z22 ) ) {
 							return Z22;
 						}
 						nextObject = Z22.Z22K1.Z2K2;
@@ -221,7 +221,7 @@ class ZWrapper {
 					const Z22 = await execute(
 						nextObject, invariants, doValidate,
 						/* implementationSelector= */ null, resolveInternals );
-					if ( containsError( Z22 ) ) {
+					if ( responseEnvelopeContainsError( Z22 ) ) {
 						return Z22;
 					}
 					nextObject = Z22.Z22K1;
@@ -230,7 +230,7 @@ class ZWrapper {
 			}
 			if ( isGenericType( nextObject ) ) {
 				const executionResult = await nextObject.resolveKey( [ 'Z1K1' ], invariants, ignoreList, resolveInternals, doValidate );
-				if ( containsError( executionResult ) ) {
+				if ( responseEnvelopeContainsError( executionResult ) ) {
 					return executionResult;
 				}
 				const Z4 = nextObject.Z1K1;
@@ -271,7 +271,7 @@ class ZWrapper {
 			resultEnvelope = await ( currentValue.resolveInternal_(
 				invariants, ignoreList, resolveInternals, doValidate, /* evenBuiltins */ false
 			) );
-			if ( containsError( resultEnvelope ) ) {
+			if ( responseEnvelopeContainsError( resultEnvelope ) ) {
 				return resultEnvelope;
 			}
 			newValue = resultEnvelope.Z22K1;
@@ -422,7 +422,7 @@ class ZWrapper {
 		if ( !this.resolved_.has( key ) ) {
 			result = await this.resolveKeyInternal_(
 				key, invariants, ignoreList, resolveInternals, doValidate );
-			if ( containsError( result ) ) {
+			if ( responseEnvelopeContainsError( result ) ) {
 				return result;
 			}
 		}
@@ -472,7 +472,7 @@ class ZWrapper {
 		if ( !this.resolvedEphemeral_.has( key ) ) {
 			result = await this.resolveEphemeralInternal_(
 				key, invariants, ignoreList, resolveInternals, doValidate );
-			if ( containsError( result ) ) {
+			if ( responseEnvelopeContainsError( result ) ) {
 				return result;
 			}
 		}

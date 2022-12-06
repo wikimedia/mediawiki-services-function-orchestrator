@@ -6,8 +6,16 @@ const ImplementationSelector = require( './implementationSelector.js' );
 const { BaseFrame, EmptyFrame } = require( './frame.js' );
 const { Composition, Implementation, Evaluated, ZResponseError } = require( './implementation.js' );
 const { RandomImplementationSelector } = require( './implementationSelector.js' );
-const { containsError, containsValue, createZObjectKey, isRefOrString, makeWrappedResultEnvelope,
-	setMetadataValues, quoteZObject, returnOnFirstError } = require( './utils.js' );
+const {
+	responseEnvelopeContainsError,
+	responseEnvelopeContainsValue,
+	createZObjectKey,
+	isRefOrString,
+	makeWrappedResultEnvelope,
+	setMetadataValues,
+	quoteZObject,
+	returnOnFirstError
+} = require( './utils.js' );
 const { MutationType, ZWrapper } = require( './ZWrapper' );
 const { resolveListType } = require( './builtins.js' );
 const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
@@ -91,7 +99,7 @@ async function resolveTypes( Z1, invariants, doValidate = true ) {
 			[ 'Z1K1' ], invariants, /* ignoreList= */ null,
 			/* resolveInternals= */ false, doValidate ) );
 		const typeEnvelope = nextObject.Z1K1;
-		if ( containsError( typeEnvelope ) ) {
+		if ( responseEnvelopeContainsError( typeEnvelope ) ) {
 			return ArgumentState.ERROR( getError( typeEnvelope ) );
 		}
 		for ( const key of nextObject.keys() ) {
@@ -190,7 +198,7 @@ async function eagerlyEvaluate(
 			// TODO (T305981): We should formally distinguish between unbound
 			// and unassigned variables. This will constrain further the errors
 			// that we let slide here.
-			if ( containsError( valueEnvelope ) ) {
+			if ( responseEnvelopeContainsError( valueEnvelope ) ) {
 				return valueEnvelope;
 			} else {
 				const newValue = valueEnvelope.Z22K1;
@@ -251,7 +259,7 @@ class Frame extends BaseFrame {
 		const argumentEnvelope = await ( argumentDict.argument.resolve(
 			invariants, ignoreList, resolveInternals, doValidate,
 			/* evenBuiltins= */ true ) );
-		if ( containsError( argumentEnvelope ) ) {
+		if ( responseEnvelopeContainsError( argumentEnvelope ) ) {
 			return ArgumentState.ERROR( getError( argumentEnvelope ) );
 		}
 		const argument = argumentEnvelope.Z22K1;
@@ -261,7 +269,7 @@ class Frame extends BaseFrame {
 				return typeError;
 			}
 			const actualResult = await validateAsType( argument, invariants );
-			if ( containsError( actualResult ) ) {
+			if ( responseEnvelopeContainsError( actualResult ) ) {
 				return ArgumentState.ERROR(
 					normalError(
 						[ error.object_type_mismatch ],
@@ -327,7 +335,7 @@ class Frame extends BaseFrame {
 					const declaredType = newDict.declaredType;
 					const declaredResult = await validateAsType(
 						argument, invariants, declaredType );
-					if ( containsError( declaredResult ) ) {
+					if ( responseEnvelopeContainsError( declaredResult ) ) {
 						boundValue = ArgumentState.ERROR(
 							normalError(
 								[ error.argument_type_mismatch ],
@@ -359,7 +367,7 @@ async function getArgumentStates( zobject, invariants, doValidate = true ) {
 	const argumentStates = [];
 	const Z7K1Envelope = await ( zobject.resolveKey(
 		[ 'Z7K1' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
-	if ( containsError( Z7K1Envelope ) ) {
+	if ( responseEnvelopeContainsError( Z7K1Envelope ) ) {
 		return [ ArgumentState.ERROR( 'Could not dereference Z7K1' ) ];
 	}
 	const Z7K1 = Z7K1Envelope.Z22K1;
@@ -367,7 +375,7 @@ async function getArgumentStates( zobject, invariants, doValidate = true ) {
 		[ 'Z8K1' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
 	// This usually happens because dereferencing can't occur during validation
 	// (and is expected).
-	if ( containsError( Z8K1Envelope ) ) {
+	if ( responseEnvelopeContainsError( Z8K1Envelope ) ) {
 		return [ ArgumentState.ERROR( 'Could not dereference Z8K1' ) ];
 	}
 	const Z8K1 = Z8K1Envelope.Z22K1;
@@ -421,8 +429,8 @@ async function getArgumentStates( zobject, invariants, doValidate = true ) {
  * @return {Object} zobject if validation succeeds; error tuple otherwise
  */
 async function validateReturnType( result, zobject, invariants ) {
-	if ( !containsError( result ) ) {
-		if ( !containsValue( result ) ) {
+	if ( !responseEnvelopeContainsError( result ) ) {
+		if ( !responseEnvelopeContainsValue( result ) ) {
 			// Neither value nor error.
 			// TODO (T318293): Can we add modification of the Z22 internals to the ZWrapper concept?
 			const modifiableResult = result.asJSON();
@@ -446,7 +454,7 @@ async function validateReturnType( result, zobject, invariants ) {
 		const returnTypeValidation = await validateAsType(
 			result.Z22K1, invariants, returnType
 		);
-		if ( containsError( returnTypeValidation ) ) {
+		if ( responseEnvelopeContainsError( returnTypeValidation ) ) {
 			return makeWrappedResultEnvelope(
 				null,
 				normalError(
@@ -464,7 +472,7 @@ async function validateReturnType( result, zobject, invariants ) {
 		return result;
 	}
 
-	if ( containsValue( result ) ) {
+	if ( responseEnvelopeContainsValue( result ) ) {
 		// Both value and error.
 		return makeWrappedResultEnvelope(
 			null,
@@ -549,13 +557,13 @@ async function executeInternal(
 	// dereferenced (Z8K4 and all elements thereof).
 	const Z7K1Envelope = await ( zobject.Z7K1.resolve(
 		invariants, /* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
-	if ( containsError( Z7K1Envelope ) ) {
+	if ( responseEnvelopeContainsError( Z7K1Envelope ) ) {
 		return Z7K1Envelope;
 	}
 	const Z7K1 = Z7K1Envelope.Z22K1;
 	const Z8K4Envelope = await ( Z7K1.Z8K4.resolve(
 		invariants, /* ignoreList= */ null, /* resolveInternals= */ false, doValidate ) );
-	if ( containsError( Z8K4Envelope ) ) {
+	if ( responseEnvelopeContainsError( Z8K4Envelope ) ) {
 		return Z8K4Envelope;
 	}
 	const Z8K4 = Z8K4Envelope.Z22K1;
@@ -688,7 +696,7 @@ async function resolveDanglingReferences( zobject, invariants ) {
 			// TODO (T305981): We should formally distinguish between unbound
 			// and unassigned variables. This will constrain further the errors
 			// that we let slide here.
-			if ( !containsError( valueEnvelope ) ) {
+			if ( !responseEnvelopeContainsError( valueEnvelope ) ) {
 				const newValue = valueEnvelope.Z22K1;
 				zobject.setName( key, newValue );
 				if ( newValue instanceof ZWrapper ) {
