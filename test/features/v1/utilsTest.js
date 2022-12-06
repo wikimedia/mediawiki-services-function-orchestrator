@@ -1,8 +1,8 @@
 'use strict';
 
 const assert = require( '../../utils/assert.js' );
-const { generateError, returnOnFirstError } = require( '../../../src/utils.js' );
-const { makeMappedResultEnvelope } = require( '../../../function-schemata/javascript/src/utils.js' );
+const { responseEnvelopeContainsError, generateError, returnOnFirstError } = require( '../../../src/utils.js' );
+const { makeMappedResultEnvelope, makeEmptyZResponseEnvelopeMap, setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
 
 describe( 'utils test', function () { // eslint-disable-line no-undef
 
@@ -13,6 +13,64 @@ describe( 'utils test', function () { // eslint-disable-line no-undef
 	const badZ22 = makeMappedResultEnvelope(
 		null, generateError( 'extremely exciting but morally flawed error string' )
 	);
+
+	// responseEnvelopeContainsError
+
+	it( 'responseEnvelopeContainsError finds nothing on undefined', async () => { // eslint-disable-line no-undef
+		assert.equal( responseEnvelopeContainsError(), false );
+	} );
+
+	it( 'responseEnvelopeContainsError finds nothing on an empty object', async () => { // eslint-disable-line no-undef
+		assert.equal( responseEnvelopeContainsError( {} ), false );
+	} );
+
+	it( 'responseEnvelopeContainsError finds nothing on a non-ZResponseEnvelope ZObject', async () => { // eslint-disable-line no-undef
+		assert.equal( responseEnvelopeContainsError( { Z1K1: 'Z6', Z6K1: 'Hello' } ), false );
+	} );
+
+	it( 'responseEnvelopeContainsError finds nothing on an undefined ZResponseEnvelope Map', async () => { // eslint-disable-line no-undef
+		assert.equal( responseEnvelopeContainsError( { Z1K1: 'Z22', Z22K1: 'Z1' } ), false );
+	} );
+
+	it( 'responseEnvelopeContainsError finds nothing on a null ZResponseEnvelope Map', async () => { // eslint-disable-line no-undef
+		assert.equal( responseEnvelopeContainsError( goodZ22 ), false );
+	} );
+
+	it( 'responseEnvelopeContainsError finds nothing on void ZResponseEnvelope Map', async () => { // eslint-disable-line no-undef
+		assert.equal( responseEnvelopeContainsError( makeMappedResultEnvelope( 'Z1', undefined ) ), false );
+	} );
+
+	it( 'responseEnvelopeContainsError finds nothing on empty ZResponseEnvelope Map', async () => { // eslint-disable-line no-undef
+		assert.equal( responseEnvelopeContainsError( makeMappedResultEnvelope( 'Z1', makeEmptyZResponseEnvelopeMap() ) ), false );
+	} );
+
+	it( 'responseEnvelopeContainsError finds nothing on error-less ZResponseEnvelope Map', async () => { // eslint-disable-line no-undef
+		const map = makeEmptyZResponseEnvelopeMap();
+		setZMapValue( map, { Z1K1: 'Z6', Z6K1: 'hello' }, 'Z24' );
+		assert.equal( responseEnvelopeContainsError( makeMappedResultEnvelope( 'Z1', map ) ), false );
+	} );
+
+	it( 'responseEnvelopeContainsError finds a direct error', async () => { // eslint-disable-line no-undef
+		assert.equal( responseEnvelopeContainsError( badZ22 ), true );
+	} );
+
+	it( 'responseEnvelopeContainsError finds nothing on error set to Z24', async () => { // eslint-disable-line no-undef
+		const map = makeEmptyZResponseEnvelopeMap();
+		setZMapValue( map, { Z1K1: 'Z6', Z6K1: 'errors' }, 'Z24' );
+		assert.equal( responseEnvelopeContainsError( makeMappedResultEnvelope( 'Z1', map ) ), false );
+	} );
+
+	// TODO (T300067): responseEnvelopeContainsValue
+	// TODO (T300067): createSchema
+	// TODO (T300067): createZObjectKey
+	// TODO (T300067): isError
+	// TODO (T300067): isGenericType
+	// TODO (T300067): isRefOrString
+	// TODO (T300067): makeBoolean
+	// TODO (T300067): makeWrappedResultEnvelope
+	// TODO (T300067): quoteZObject
+
+	// returnOnFirstError
 
 	it( 'returnOnFirstError encounters error in first function', async () => { // eslint-disable-line no-undef
 		const badFunction = () => {
@@ -69,5 +127,8 @@ describe( 'utils test', function () { // eslint-disable-line no-undef
 			], /* callback= */null, /* addZ22= */false );
 		assert.deepEqual( false, stoolPigeon );
 	} );
+
+	// TODO (T300067): setMetadataValues
+	// TODO (T300067): traverseZList
 
 } );
