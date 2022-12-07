@@ -1,7 +1,7 @@
 'use strict';
 
 const { ArgumentState } = require( './argumentState.js' );
-const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
+const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
 
 class BaseFrame {
 
@@ -42,9 +42,9 @@ class EmptyFrame extends BaseFrame {
 
 	async retrieveArgument( argumentName ) {
 		return ArgumentState.ERROR(
-			normalError(
+			makeErrorInNormalForm(
 				// TODO (T287919): Reconsider error type.
-				[ error.invalid_key ],
+				error.invalid_key,
 				[ 'No argument called ' + argumentName + ' in scope.' ] ) );
 	}
 

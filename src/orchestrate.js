@@ -4,7 +4,7 @@ const canonicalize = require( '../function-schemata/javascript/src/canonicalize.
 const normalize = require( '../function-schemata/javascript/src/normalize.js' );
 const { makeMappedResultEnvelope, setMetadataValue } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
-const { error, normalError } = require( '../function-schemata/javascript/src/error' );
+const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error' );
 const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormatter' );
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
@@ -59,8 +59,8 @@ function Z7OrError( zobject ) {
 	}
 	return makeMappedResultEnvelope(
 		null,
-		normalError(
-			[ error.wrong_content_type ],
+		makeErrorInNormalForm(
+			error.wrong_content_type,
 			[ 'The provided object is not a function call' ]
 		)
 	);

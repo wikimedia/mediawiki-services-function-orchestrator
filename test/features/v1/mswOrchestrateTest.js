@@ -7,7 +7,7 @@ const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../../../src/orchestrate.js' );
 const { readJSON } = require( '../../../src/fileUtils.js' );
 const { testDataDir, writeJSON } = require( '../../utils/testFileUtils.js' );
-const { normalError, error } = require( '../../../function-schemata/javascript/src/error.js' );
+const { makeErrorInNormalForm, error } = require( '../../../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../../../function-schemata/javascript/src/utils' );
 const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../../../lib/mockUtils.js' );
 
@@ -39,7 +39,7 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		null );
 		// Set evaluator response for test "evaluated function call, void result"
 		const evaluatorResponse = readJSON( testDataDir( 'Z22-map-error.json' ) );
-		const errorTerm = normalError( [ error.not_wellformed_value ], [ 'Error placeholder' ] );
+		const errorTerm = makeErrorInNormalForm( error.not_wellformed_value, [ 'Error placeholder' ] );
 		setZMapValue( evaluatorResponse.Z22K2, { Z1K1: 'Z6', Z6K1: 'errors' }, errorTerm );
 		evaluatorStub.setZId( 'Z1003', ( unused ) => evaluatorResponse, null ); // eslint-disable-line no-unused-vars
 		// Set evaluator response for string numeral increment function.

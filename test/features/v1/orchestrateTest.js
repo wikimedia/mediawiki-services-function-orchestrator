@@ -235,7 +235,7 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 		'function call for Z903 (value by key) with bad key',
 		{ doValidate: true, zobject: readJSON( testDataDir( 'Z903_bad_key.json' ) ) },
 		null,
-		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z507', Z507K1: 'Object did not contain key "Z10000K5"' } }
+		{ Z1K1: 'Z5', Z5K1: 'Z507', Z5K2: { Z1K1: { Z1K1: 'Z7', Z7K1: 'Z885', Z885K1: 'Z507' }, Z507K1: 'Object did not contain key "Z10000K5"' } }
 	);
 
 	testFunctionCall(
@@ -320,7 +320,7 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 		'function call (short form) for Z811/Head with empty Z881',
 		{ doValidate: true, zobject: readJSON( testDataDir( 'Z811_empty_Z881.json' ) ) },
 		null,
-		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no head.' } }
+		{ Z1K1: 'Z5', Z5K1: 'Z506', Z5K2: { Z1K1: { Z1K1: 'Z7', Z7K1: 'Z885', Z885K1: 'Z506' }, Z506K1: 'An empty list has no head.' } }
 	);
 
 	testFunctionCall(
@@ -339,14 +339,14 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 		'function call for Z911 (head) with empty List',
 		{ doValidate: true, zobject: readJSON( testDataDir( 'Z911_empty.json' ) ) },
 		null,
-		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no head.' } }
+		{ Z1K1: 'Z5', Z5K1: 'Z506', Z5K2: { Z1K1: { Z1K1: 'Z7', Z7K1: 'Z885', Z885K1: 'Z506' }, Z506K1: 'An empty list has no head.' } }
 	);
 
 	testFunctionCall(
 		'function call for Z811/Head with reference to Z911 and empty Z881',
 		{ doValidate: true, zobject: readJSON( testDataDir( 'Z911_empty_Z881.json' ) ) },
 		null,
-		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no head.' } }
+		{ Z1K1: 'Z5', Z5K1: 'Z506', Z5K2: { Z1K1: { Z1K1: 'Z7', Z7K1: 'Z885', Z885K1: 'Z506' }, Z506K1: 'An empty list has no head.' } }
 	);
 
 	testFunctionCall(
@@ -365,7 +365,7 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 		'function call (short form) for Z812/Tail with empty Z881',
 		{ doValidate: true, zobject: readJSON( testDataDir( 'Z812_empty_Z881.json' ) ) },
 		null,
-		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no tail.' } }
+		{ Z1K1: 'Z5', Z5K1: 'Z506', Z5K2: { Z1K1: { Z1K1: 'Z7', Z7K1: 'Z885', Z885K1: 'Z506' }, Z506K1: 'An empty list has no tail.' } }
 	);
 
 	testFunctionCall(
@@ -384,14 +384,14 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 		'function call for Z812/Tail with reference to Z912 and empty List',
 		{ doValidate: true, zobject: readJSON( testDataDir( 'Z912_empty.json' ) ) },
 		null,
-		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no tail.' } }
+		{ Z1K1: 'Z5', Z5K1: 'Z506', Z5K2: { Z1K1: { Z1K1: 'Z7', Z7K1: 'Z885', Z885K1: 'Z506' }, Z506K1: 'An empty list has no tail.' } }
 	);
 
 	testFunctionCall(
 		'function call for Z812/Tail with reference to Z912 and empty Z881',
 		{ doValidate: true, zobject: readJSON( testDataDir( 'Z912_empty_Z881.json' ) ) },
 		null,
-		{ Z1K1: 'Z5', Z5K1: { Z1K1: 'Z506', Z506K1: 'An empty list has no tail.' } }
+		{ Z1K1: 'Z5', Z5K1: 'Z506', Z5K2: { Z1K1: { Z1K1: 'Z7', Z7K1: 'Z885', Z885K1: 'Z506' }, Z506K1: 'An empty list has no tail.' } }
 	);
 
 	testFunctionCall(

@@ -4,7 +4,7 @@ const builtins = require( './builtins.js' );
 const { responseEnvelopeContainsError, traverseZList } = require( './utils.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { convertItemArrayToZList, makeMappedResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
-const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
+const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../function-schemata/javascript/src/utils' );
 const { Invariants } = require( './Invariants.js' );
 const { validatesAsReference } = require( '../function-schemata/javascript/src/schema.js' );
@@ -229,8 +229,8 @@ class Evaluated extends Implementation {
 		const errorText = await fetchedResult.text();
 		return makeMappedResultEnvelope(
 			null,
-			normalError(
-				[ error.error_in_evaluation ],
+			makeErrorInNormalForm(
+				error.error_in_evaluation,
 				[ `Function evaluation failed with status ${statusCode}: ${errorText}` ] ) );
 	}
 

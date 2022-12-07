@@ -18,7 +18,7 @@ const {
 } = require( './utils.js' );
 const { MutationType, ZWrapper } = require( './ZWrapper' );
 const { resolveListType } = require( './builtins.js' );
-const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
+const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
 const { convertZListToItemArray, getError, setZMapValue } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsArgumentReference, validatesAsFunctionCall, validatesAsReference, validatesAsString, validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
 
@@ -179,8 +179,8 @@ async function eagerlyEvaluate(
 		}
 		if ( keyList !== null && keyList.seenKeys.has( key ) && keyList.length > 20 ) {
 			return makeWrappedResultEnvelope(
-				normalError(
-					[ error.argument_value_error ],
+				makeErrorInNormalForm(
+					error.argument_value_error,
 					[
 						'Aborting because argument resolution contains cyclical references:',
 						keyList.getAllKeys().join( ',' ) ] ) );
@@ -271,9 +271,11 @@ class Frame extends BaseFrame {
 			const actualResult = await validateAsType( argument, invariants );
 			if ( responseEnvelopeContainsError( actualResult ) ) {
 				return ArgumentState.ERROR(
-					normalError(
-						[ error.object_type_mismatch ],
-						[ argument.getName( 'Z1K1' ), argument, getError( actualResult ) ] ) );
+					makeErrorInNormalForm(
+						error.object_type_mismatch,
+						[ argument.getName( 'Z1K1' ), argument, getError( actualResult ) ]
+					)
+				);
 			}
 		}
 		return ArgumentState.EVALUATED( {
@@ -337,8 +339,8 @@ class Frame extends BaseFrame {
 						argument, invariants, declaredType );
 					if ( responseEnvelopeContainsError( declaredResult ) ) {
 						boundValue = ArgumentState.ERROR(
-							normalError(
-								[ error.argument_type_mismatch ],
+							makeErrorInNormalForm(
+								error.argument_type_mismatch,
 								[ declaredType, argument.Z1K1, argument,
 									getError( declaredResult ) ] ) );
 					}
@@ -438,8 +440,8 @@ async function validateReturnType( result, zobject, invariants ) {
 			setZMapValue(
 				metadataResponse,
 				{ Z1K1: 'Z6', Z6K1: 'errors' },
-				normalError(
-					[ error.not_wellformed_value ],
+				makeErrorInNormalForm(
+					error.not_wellformed_value,
 					[ 'Function evaluation returned an empty object.' ]
 				)
 			);
@@ -457,8 +459,8 @@ async function validateReturnType( result, zobject, invariants ) {
 		if ( responseEnvelopeContainsError( returnTypeValidation ) ) {
 			return makeWrappedResultEnvelope(
 				null,
-				normalError(
-					[ error.return_type_mismatch ],
+				makeErrorInNormalForm(
+					error.return_type_mismatch,
 					[
 						returnType,
 						result.Z22K1.Z1K1,
@@ -476,8 +478,8 @@ async function validateReturnType( result, zobject, invariants ) {
 		// Both value and error.
 		return makeWrappedResultEnvelope(
 			null,
-			normalError(
-				[ error.not_wellformed_value ],
+			makeErrorInNormalForm(
+				error.not_wellformed_value,
 				[ 'Function evaluation returned both a value and an error.' ]
 			)
 		);
@@ -545,8 +547,8 @@ async function executeInternal(
 		if ( argumentState.state === 'ERROR' ) {
 			return makeWrappedResultEnvelope(
 				null,
-				normalError(
-					[ error.error_in_evaluation ],
+				makeErrorInNormalForm(
+					error.error_in_evaluation,
 					[ argumentState.error ]
 				)
 			);
@@ -586,8 +588,8 @@ async function executeInternal(
 	if ( implementations.length === 0 ) {
 		return makeWrappedResultEnvelope(
 			null,
-			normalError(
-				[ error.error_in_evaluation ],
+			makeErrorInNormalForm(
+				error.error_in_evaluation,
 				[ 'Could not find any implementations for ' + zobject.Z7K1.Z8K5.Z9K1 + '.' ]
 			)
 		);
@@ -601,8 +603,8 @@ async function executeInternal(
 	if ( implementation === null ) {
 		return makeWrappedResultEnvelope(
 			null,
-			normalError(
-				[ error.error_in_evaluation ],
+			makeErrorInNormalForm(
+				error.error_in_evaluation,
 				[ 'Could not create an implementation for ' + zobject.Z7K1.Z8K5.Z9K1 + '.' ]
 			)
 		);

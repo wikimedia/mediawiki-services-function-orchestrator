@@ -2,7 +2,7 @@
 
 const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { createSchema, createZObjectKey, makeBoolean, traverseZList } = require( './utils.js' );
-const { normalError, error } = require( '../function-schemata/javascript/src/error' );
+const { makeErrorInNormalForm, error } = require( '../function-schemata/javascript/src/error' );
 const {
 	builtInTypes,
 	convertArrayToKnownTypedList,
@@ -154,8 +154,8 @@ function BUILTIN_VALUE_BY_KEY_( Z39, Z1 ) {
 	let goodResult = null, badResult = null;
 	const key = Z39.Z39K1.Z6K1;
 	if ( Z1[ key ] === undefined ) {
-		badResult = normalError(
-			[ error.error_in_evaluation ],
+		badResult = makeErrorInNormalForm(
+			error.error_in_evaluation,
 			[ 'Object did not contain key "' + key + '"' ] );
 	} else {
 		goodResult = Z1[ key ];
@@ -187,8 +187,8 @@ function BUILTIN_VALUES_BY_KEYS_( Z39s, Z1 ) {
 		}
 	}
 	if ( missing.length > 0 ) {
-		const badResult = normalError(
-			[ error.error_in_evaluation ],
+		const badResult = makeErrorInNormalForm(
+			error.error_in_evaluation,
 			[ 'Object did not contain key(s): ' + missing ] );
 		return makeMappedResultEnvelope( null, badResult );
 	} else {
@@ -287,8 +287,8 @@ function BUILTIN_HEAD_( list ) {
 	if ( isEmptyZList( list ) ) {
 		return makeMappedResultEnvelope(
 			null,
-			normalError(
-				[ error.argument_type_mismatch ],
+			makeErrorInNormalForm(
+				error.argument_type_mismatch,
 				[ 'An empty list has no head.' ] ) );
 	}
 	return makeMappedResultEnvelope( list.K1, null );
@@ -298,8 +298,8 @@ function BUILTIN_TAIL_( list ) {
 	if ( isEmptyZList( list ) ) {
 		return makeMappedResultEnvelope(
 			null,
-			normalError(
-				[ error.argument_type_mismatch ],
+			makeErrorInNormalForm(
+				error.argument_type_mismatch,
 				[ 'An empty list has no tail.' ] ) );
 	}
 	return makeMappedResultEnvelope( list.K2, null );
@@ -343,8 +343,8 @@ function BUILTIN_LANGUAGE_CODE_TO_LANGUAGE_( Z6 ) {
 	let result = null;
 
 	if ( !( languageCode in languages ) ) {
-		result = normalError(
-			[ error.invalid_key ],
+		result = makeErrorInNormalForm(
+			error.invalid_key,
 			[ `Invalid language code: ${languageCode}` ]
 		);
 	} else {
@@ -522,7 +522,7 @@ function arrayValidator( list, key, identity ) {
 	}
 
 	return messages.map(
-		( message ) => normalError( [ error.array_element_not_well_formed ], [ message ] )
+		( message ) => makeErrorInNormalForm( error.array_element_not_well_formed, [ message ] )
 	);
 }
 
@@ -577,8 +577,8 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 		const argumentDict = dictDict[ key ];
 		if ( argumentDict === undefined ) {
 			errors.push(
-				normalError(
-					[ error.invalid_key ],
+				makeErrorInNormalForm(
+					error.invalid_key,
 					[ `Invalid key for function call: ${key}` ]
 				)
 			);
@@ -606,8 +606,8 @@ async function BUILTIN_FUNCTION_CALL_VALIDATOR_INTERNAL_(
 		// types (just checking for Z1 is not sufficient).
 		if ( !( declaredType === type || declaredType === 'Z1' || skippableTypes.has( type ) ) ) {
 			errors.push(
-				normalError(
-					[ error.argument_type_mismatch ],
+				makeErrorInNormalForm(
+					error.argument_type_mismatch,
 					[ `Invalid argument type: expected ${declaredType}, got ${type}` ]
 				)
 			);
@@ -634,8 +634,8 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants ) {
 	for ( let i = 0; i < languages.length; ++i ) {
 		if ( seen.has( languages[ i ] ) ) {
 			errors.push(
-				normalError(
-					[ error.array_element_not_well_formed ],
+				makeErrorInNormalForm(
+					error.array_element_not_well_formed,
 					[ `Duplicate Z11K1/language element in Z12/Multilingual text: '${languages[ i ]}'` ]
 				)
 			);
@@ -657,8 +657,8 @@ function BUILTIN_MULTILINGUAL_STRINGSET_VALIDATOR_( Z99 ) {
 	for ( let i = 0; i < languages.length; ++i ) {
 		if ( seen.has( languages[ i ] ) ) {
 			errors.push(
-				normalError(
-					[ error.array_element_not_well_formed ],
+				makeErrorInNormalForm(
+					error.array_element_not_well_formed,
 					[ `Duplicate Z31K1/language element in Z32/Multilingual stringset: '${languages[ i ]}'` ]
 				)
 			);
@@ -754,8 +754,8 @@ function BUILTIN_GENERIC_MAP_TYPE_( keyType, valueType, invariants ) {
 		identity = identity.Z4K1;
 	}
 	if ( !allowedKeyTypes.includes( identity.Z9K1 ) ) {
-		const newError = normalError(
-			[ error.argument_value_error ],
+		const newError = makeErrorInNormalForm(
+			error.argument_value_error,
 			[ 'Z883K1', keyType ]
 		);
 		return makeMappedResultEnvelope( null, newError );

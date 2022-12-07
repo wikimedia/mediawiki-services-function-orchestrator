@@ -4,7 +4,7 @@ const { execute } = require( './execute.js' );
 const { Invariants } = require( './Invariants.js' );
 const { ZWrapper } = require( './ZWrapper' );
 const { responseEnvelopeContainsError, createSchema, createZObjectKey, quoteZObject, makeWrappedResultEnvelope } = require( './utils.js' );
-const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
+const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
 const { validatesAsFunctionCall } = require( '../function-schemata/javascript/src/schema.js' );
 const { convertZListToItemArray, isString, getError } = require( '../function-schemata/javascript/src/utils.js' );
 const { EmptyFrame } = require( './frame.js' );
@@ -88,10 +88,13 @@ async function runTypeValidator( Z1, Z4, invariants ) {
 			quoteZObject( Z4 ) );
 	} catch ( err ) {
 		console.error( err );
-		return makeWrappedResultEnvelope( null, normalError(
-			[ error.zid_not_found ],
-			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
-		) );
+		return makeWrappedResultEnvelope(
+			null,
+			makeErrorInNormalForm(
+				[ error.zid_not_found ],
+				[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
+			)
+		);
 	}
 }
 
@@ -117,10 +120,13 @@ async function runTypeValidatorDynamic( Z1, Z4, invariants ) {
 			validationFunction, invariants, Z1, Z4 );
 	} catch ( err ) {
 		console.error( err );
-		return makeWrappedResultEnvelope( null, normalError(
-			[ error.zid_not_found ],
-			[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
-		) );
+		return makeWrappedResultEnvelope(
+			null,
+			makeErrorInNormalForm(
+				error.zid_not_found,
+				[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
+			)
+		);
 	}
 }
 
@@ -185,8 +191,8 @@ async function validate( zobject, invariants ) {
 			console.error( 'Attempting to validate Z1', Z1, 'produced error', error );
 			errors.push(
 				// Use an empty scope as the error should not refer to any local variable.
-				ZWrapper.create( normalError(
-					[ error.zid_not_found ],
+				ZWrapper.create( makeErrorInNormalForm(
+					error.zid_not_found,
 					[ error.message ] ), new EmptyFrame() ) );
 			return;
 		}

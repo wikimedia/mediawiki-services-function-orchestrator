@@ -1,7 +1,7 @@
 'use strict';
 
 const { responseEnvelopeContainsError, createSchema, isGenericType, makeWrappedResultEnvelope } = require( './utils.js' );
-const { error, normalError } = require( '../function-schemata/javascript/src/error.js' );
+const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
 const { isString, isUserDefined } = require( '../function-schemata/javascript/src/utils' );
 const {
 	validatesAsFunctionCall,
@@ -239,8 +239,8 @@ class ZWrapper {
 					// TODO (T2966681): Return typeStatus.getZ5() as part of this result.
 					return makeWrappedResultEnvelope(
 						null,
-						normalError(
-							[ error.argument_type_mismatch ],
+						makeErrorInNormalForm(
+							error.argument_type_mismatch,
 							[ 'Generic type function did not return a Z4: ' + JSON.stringify( Z4.asJSON() ) ] ) );
 				}
 				continue;
@@ -292,8 +292,8 @@ class ZWrapper {
 					// Should never happen?
 					return makeWrappedResultEnvelope(
 						null,
-						normalError(
-							[ error.invalid_key ],
+						makeErrorInNormalForm(
+							error.invalid_key,
 							[ `ZObject does not have the key ${key}` ] ) );
 				}
 
