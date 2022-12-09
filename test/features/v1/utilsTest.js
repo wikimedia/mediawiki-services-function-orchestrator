@@ -1,7 +1,11 @@
 'use strict';
 
 const assert = require( '../../utils/assert.js' );
-const { responseEnvelopeContainsError, generateError, returnOnFirstError } = require( '../../../src/utils.js' );
+const {
+	generateError, responseEnvelopeContainsError, responseEnvelopeContainsValue, returnOnFirstError
+} = require( '../../../src/utils.js' );
+const { ZWrapper } = require( '../../../src/ZWrapper.js' );
+const { EmptyFrame } = require( '../../../src/frame.js' );
 const { makeMappedResultEnvelope, makeEmptyZResponseEnvelopeMap, setZMapValue } = require( '../../../function-schemata/javascript/src/utils.js' );
 
 describe( 'utils test', function () { // eslint-disable-line no-undef
@@ -58,6 +62,22 @@ describe( 'utils test', function () { // eslint-disable-line no-undef
 		const map = makeEmptyZResponseEnvelopeMap();
 		setZMapValue( map, { Z1K1: 'Z6', Z6K1: 'errors' }, 'Z24' );
 		assert.equal( responseEnvelopeContainsError( makeMappedResultEnvelope( 'Z1', map ) ), false );
+	} );
+
+	it( 'responseEnvelopeContainsError works with ZWrappers', async () => { // eslint-disable-line no-undef
+		const goodWrapper = ZWrapper.create( goodZ22, new EmptyFrame() );
+		const badWrapper = ZWrapper.create( badZ22, new EmptyFrame() );
+		assert.equal( responseEnvelopeContainsError( goodWrapper ), false );
+		assert.equal( responseEnvelopeContainsError( badWrapper ), true );
+	} );
+
+	// responseEnvelopeContainsValue
+
+	it( 'responseEnvelopeContainsValue works with ZWrappers', async () => { // eslint-disable-line no-undef
+		const goodWrapper = ZWrapper.create( goodZ22, new EmptyFrame() );
+		const badWrapper = ZWrapper.create( badZ22, new EmptyFrame() );
+		assert.equal( responseEnvelopeContainsValue( goodWrapper ), true );
+		assert.equal( responseEnvelopeContainsValue( badWrapper ), false );
 	} );
 
 	// TODO (T300067): responseEnvelopeContainsValue
