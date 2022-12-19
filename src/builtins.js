@@ -222,7 +222,7 @@ function reifyRecursive( Z1 ) {
 	};
 	const result = [];
 	for ( const key of Z1.keys() ) {
-		const value = reifyRecursive( Z1[ key ] );
+		const value = reifyRecursive( Z1.getName( key ) );
 		result.push( {
 			Z1K1: pairType,
 			K1: {

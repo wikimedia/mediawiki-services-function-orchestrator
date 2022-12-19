@@ -1661,4 +1661,23 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		);
 	}
 
+	{
+		wikiStub.setZId( 'Z20015', readJSON( testDataDir( 'Z20015.json' ) ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z805',
+			Z805K1: {
+				Z1K1: 'Z20015',
+				Z20015K1: '1'
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that reify avoids infinite expansions',
+			/* functionCall= */ call,
+			/* expectedResultFile= */ testDataDir( 'expected-reified-integer.json' ),
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile = */ null
+		);
+	}
+
 } );
