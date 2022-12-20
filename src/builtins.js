@@ -1,12 +1,21 @@
 'use strict';
 
+const { EmptyFrame } = require( './frame.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
-const { createSchema, createZObjectKey, makeBoolean, traverseZList } = require( './utils.js' );
+const {
+	createSchema,
+	createZObjectKey,
+	makeBoolean,
+	traverseZList,
+	responseEnvelopeContainsError
+} = require( './utils.js' );
 const { makeErrorInNormalForm, error } = require( '../function-schemata/javascript/src/error' );
 const {
 	builtInTypes,
 	convertArrayToKnownTypedList,
 	convertZListToItemArray,
+	getHead,
+	getTail,
 	isEmptyZList,
 	isGlobalKey,
 	isString,
@@ -21,7 +30,8 @@ const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormat
 const {
 	validatesAsType,
 	validatesAsReference,
-	validatesAsFunctionCall
+	validatesAsFunctionCall,
+	validatesAsBoolean
 } = require( '../function-schemata/javascript/src/schema.js' );
 const { Implementation } = require( './implementation.js' );
 const { ZWrapper } = require( './ZWrapper' );
@@ -456,6 +466,37 @@ function BUILTIN_SAME_( Z86_1, Z86_2 ) {
 	return makeMappedResultEnvelope( result, null );
 }
 
+async function BUILTIN_EQUALS_LIST_( list1, list2, Z8, invariants ) {
+	const { execute } = require( './execute.js' );
+	while ( !isEmptyZList( list1 ) && !isEmptyZList( list2 ) ) {
+		const headEqualityZ22 = await execute( ZWrapper.create( {
+			Z1K1: {
+				Z1K1: 'Z9',
+				Z9K1: 'Z7'
+			},
+			Z7K1: Z8,
+			K1: getHead( list1 ),
+			K2: getHead( list2 )
+		}, new EmptyFrame() ), invariants );
+		if ( responseEnvelopeContainsError( headEqualityZ22 ) ) {
+			return headEqualityZ22;
+		} else if ( !validatesAsBoolean( headEqualityZ22.Z22K1.asJSON() ).isValid() ) {
+			return makeMappedResultEnvelope(
+				null,
+				makeErrorInNormalForm(
+					error.argument_value_error,
+					[ 'Provided equality function did not return Boolean.' ] ) );
+		} else if ( !isTrue( headEqualityZ22.Z22K1 ) ) {
+			return makeMappedResultEnvelope( makeFalse() );
+		}
+		list1 = getTail( list1 );
+		list2 = getTail( list2 );
+	}
+	return makeMappedResultEnvelope(
+		makeBoolean( isEmptyZList( list1 ) === isEmptyZList( list2 ) )
+	);
+}
+
 function BUILTIN_UNQUOTE_( Z99 ) {
 	return makeMappedResultEnvelope( Z99.Z99K1, null );
 }
@@ -850,6 +891,7 @@ builtinFunctions.set( 'Z982', BUILTIN_GENERIC_PAIR_TYPE_ );
 builtinFunctions.set( 'Z983', BUILTIN_GENERIC_MAP_TYPE_ );
 builtinFunctions.set( 'Z986', BUILTIN_CHARS_TO_STRING_ );
 builtinFunctions.set( 'Z988', BUILTIN_SAME_ );
+builtinFunctions.set( 'Z989', BUILTIN_EQUALS_LIST_ );
 builtinFunctions.set( 'Z999', BUILTIN_UNQUOTE_ );
 
 // validators
@@ -960,14 +1002,14 @@ const implementationZIDs = [
 	/*
      * 'Z983',
      */
-	'Z986', 'Z988', 'Z999', 'Z931'
+	'Z986', 'Z988', 'Z989', 'Z999', 'Z931'
 ];
 
 // Built-in functions.
 const functionZIDs = [
 	'Z801', 'Z802', 'Z803', 'Z804', 'Z805', 'Z808', 'Z810', 'Z811', 'Z812',
 	'Z813', 'Z820', 'Z821', 'Z822', 'Z823', 'Z828', 'Z844', 'Z860', 'Z866', 'Z868',
-	'Z881', 'Z882', 'Z883', 'Z886', 'Z888', 'Z899', 'Z831'
+	'Z881', 'Z882', 'Z883', 'Z886', 'Z888', 'Z889', 'Z899', 'Z831'
 ];
 
 // Validators for core types.

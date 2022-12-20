@@ -634,4 +634,22 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 		{ doValidate: true, zobject: readJSON( testDataDir( 'Z823.json' ) ) },
 		{ Z1K1: 'Z6', Z6K1: 'arbitrary ZObject' }
 	);
+
+	testFunctionCall(
+		'function call for Z889/List equality with reference to Z989 and lists of different length',
+		{ doValidate: true, zobject: readJSON( testDataDir( 'Z989_different_length.json' ) ) },
+		{ Z1K1: 'Z40', Z40K1: 'Z42' }
+	);
+
+	testFunctionCall(
+		'function call for Z889/List equality with reference to Z989 and lists with different elements',
+		{ doValidate: true, zobject: readJSON( testDataDir( 'Z989_different_elements.json' ) ) },
+		{ Z1K1: 'Z40', Z40K1: 'Z42' }
+	);
+
+	testFunctionCall(
+		'function call for Z889/List equality with reference to Z989 and equal lists',
+		{ doValidate: true, zobject: readJSON( testDataDir( 'Z989_equal.json' ) ) },
+		{ Z1K1: 'Z40', Z40K1: 'Z41' }
+	);
 } );
