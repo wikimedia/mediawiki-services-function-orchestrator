@@ -1741,4 +1741,24 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		);
 	}
 
+	{
+		wikiStub.setZId( 'Z20321', readJSON( testDataDir( 'Z20321.json' ) ) );
+		wikiStub.setZId( 'Z20322', readJSON( testDataDir( 'Z20322.json' ) ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z805',
+			Z805K1: {
+				Z1K1: 'Z20321',
+				Z20321K1: 'Z20322'
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that unresolved Z9s pass validation',
+			/* functionCall= */ call,
+			/* expectedResultFile= */ testDataDir( 'expected-reified-kleenean.json' ),
+			/* expectedErrorState= */ false,
+			/* expectedErrorFile = */ null
+		);
+	}
+
 } );
