@@ -2,7 +2,6 @@
 
 const fetch = require( '../lib/fetch.js' );
 const { convertWrappedZObjectToVersionedBinary } = require( '../function-schemata/javascript/src/serialize.js' );
-const normalize = require( '../function-schemata/javascript/src/normalize.js' );
 const WebSocket = require( 'ws' );
 
 const AVRO_SCHEMA_VERSION_ = '0.0.2';
@@ -72,10 +71,9 @@ class Evaluator {
 					useReentrance: true,
 					doValidate: this.doValidate_
 				};
-				const callResult = await orchestrate( toOrchestrate );
-				const normalized = ( await normalize( callResult.Z22K1 ) ).Z22K1;
-				console.log( 'normalized is', normalized );
-				client.send( JSON.stringify( normalized ) );
+				const normalResult = ( await orchestrate( toOrchestrate,
+					/* implementationSelector= */ null, /* returnNormal= */ true ) ).Z22K1;
+				client.send( JSON.stringify( normalResult ) );
 			}
 		} );
 		client.on( 'close', () => {
