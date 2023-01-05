@@ -29,6 +29,21 @@ your local check-out with:
 git submodule update --init
 ```
 
+<a href='testing'></a>
+## Testing patches
+
+Before submitting, please run the integration tests. Please install Mediawiki core
+and the WikiLambda extension.
+
+- Point the extension to a local orchestrator by over-riding the `$wgWikiLambdaOrchestratorLocation` config value by editing your `LocalSettings.php` file to add something like:
+
+```
+$wgWikiLambdaOrchestratorLocation =  "http://mediawiki-function-orchestrator-1:6254/";
+```
+
+- From the MediaWiki root directory, run the command `docker-compose exec mediawiki php tests/phpunit/phpunit.php extensions/WikiLambda/tests/phpunit/integration/API/ApiFunctionCallTest.php`
+- If your code hasn't made any breaking changes, all tests should pass.
+
 <a href='the-code'></a>
 ## The Code
 The orchestrator's code is complicated. To a certain extent, this is
@@ -51,7 +66,7 @@ evaluator as a parameter when initially requesting function orchestration (this
 will change).
 
 ## Testing
-This repository doesn't really have unit tests. This is a consequence of the 
+This repository doesn't really have unit tests. This is a consequence of the
 [code's complexity](#the-code): it is of limited usefulness to know that a
 given function exhibits a given behavior in isolation from other functions,
 because it is rare for any piece of code in this repository to run without
@@ -87,7 +102,7 @@ the function is called.
 <a href='execute-function'></a>
 ## The Execute Function
 The `execute` function accepts a `Z7` and produces a `Z22` as a result. The
-`Z22` will contain either the result of successful execution or an error. 
+`Z22` will contain either the result of successful execution or an error.
 
 `execute` consults a `Z7`'s `Z8`'s implementations and selects one, then runs it
 as appropriate. Builtin implementations, at present, run directly within the
