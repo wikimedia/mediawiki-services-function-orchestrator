@@ -34,7 +34,7 @@ function schemataDefinitionsDir( ...pathComponents ) {
 }
 
 function writeJSON( object, fileName ) {
-	fs.writeFile( fileName, JSON.stringify( object, null, '\t' ), () => {} );
+	fs.writeFile( fileName, JSON.stringify( object, null, '\t' ) + '\n', () => {} );
 }
 
 module.exports = { readZObjectsFromDirectory, testDataDir, schemataDefinitionsDir, writeJSON };
