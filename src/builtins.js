@@ -704,9 +704,9 @@ async function BUILTIN_MULTILINGUAL_TEXT_VALIDATOR_( Z99, invariants ) {
 	const Z1 = Z99.Z99K1;
 	const errors = [];
 	const Z11s = convertZListToItemArray( Z1.Z12K1 );
-	const languages = await Promise.all( Z11s.map( async ( Z11 ) => await ( Z11.resolveKey(
-		[ 'Z11K1', 'Z60K1', 'Z6K1' ],
-		invariants ).Z22K1 ) ) );
+	const languages = await Promise.all( Z11s.map( async ( Z11 ) =>
+		( await Z11.resolveKey( [ 'Z11K1', 'Z60K1', 'Z6K1' ], invariants ) ).Z22K1.Z6K1
+	) );
 
 	const seen = new Set();
 	for ( let i = 0; i < languages.length; ++i ) {
