@@ -2624,6 +2624,32 @@ describe( 'orchestrate 2', function () { // eslint-disable-line no-undef
 		/* expectedMissingMetadata= */ [],
 		/* implementationSelector= */ null
 	);
+
+	attemptOrchestration(
+		/* testName= */ 'function call containing multilingual text with multiple languages (implicit test for Z212)',
+		/* functionCall= */ readJSON( testDataDir( 'call-with-multilingual-text-with-multiple-langs.json' ) ),
+		/* expectedResult= */ 'abc',
+		/* expectedResultFile= */ null,
+		/* expectedErrorState= */ false,
+		/* expectedErrorValue= */ null,
+		/* expectedErrorFile= */ null,
+		/* expectedExtraMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId' ],
+		/* implementationSelector= */ null
+	);
+
+	attemptOrchestration(
+		/* testName= */ 'function call containing multilingual text with duplicate languages (implicit test for Z212)',
+		/* functionCall= */ readJSON( testDataDir( 'call-with-multilingual-text-with-duplicate-langs.json' ) ),
+		/* expectedResult= */ null,
+		/* expectedResultFile= */ null,
+		/* expectedErrorState= */ true,
+		/* expectedErrorValue= */ null,
+		/* expectedErrorFile= */ testDataDir( 'multilingual-text-duplicate-langs-error.json' ),
+		/* expectedExtraMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
+		/* implementationSelector= */ null
+	);
 } );
 
 describe( 'orchestrate 3', function () { // eslint-disable-line no-undef
