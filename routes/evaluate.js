@@ -17,6 +17,9 @@ const wikiUri = process.env.WIKI_API_URL || null;
 const router = sUtil.router();
 
 async function propagateResult( res, result, logger ) {
+	if ( res.writableEnded ) {
+		return;
+	}
 	logger( result );
 	res.json( result );
 }
