@@ -40,7 +40,7 @@ router.post( '/', async function ( req, res ) {
 				'x-request-id': req.context.reqId
 			} );
 	};
-	setTimeout(
+	const timer = setTimeout(
 		async function () {
 			await propagateResult(
 				res,
@@ -70,6 +70,7 @@ router.post( '/', async function ( req, res ) {
 	);
 
 	const response = await orchestrate( req.body );
+	clearTimeout( timer );
 	await propagateResult( res, response, logFn );
 } );
 
