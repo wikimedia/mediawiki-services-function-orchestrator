@@ -6,6 +6,7 @@ const orchestrate = require( '../src/orchestrate.js' );
 
 const { getLogger } = require( '../src/logger.js' );
 const { makeWrappedResultEnvelope } = require( '../src/utils.js' );
+const { ZWrapper } = require( '../src/ZWrapper.js' );
 
 const evaluatorWs = process.env.FUNCTION_EVALUATOR_WS || null;
 const evaluatorUri = process.env.FUNCTION_EVALUATOR_URL || null;
@@ -16,11 +17,30 @@ const wikiUri = process.env.WIKI_API_URL || null;
  */
 const router = sUtil.router();
 
-async function propagateResult( res, result, logger ) {
+async function propagateResult( req, res, result, logger ) {
 	if ( res.writableEnded ) {
 		return;
 	}
-	logger( result );
+
+	// result should be bare JSON (never a ZWrapper), so convert to JSON and log
+	// an error if it is a ZWrapper.
+	if ( result instanceof ZWrapper ) {
+		logger.error(
+			'trace/req', {
+				msg: 'propagateResult has erroneously received a ZWrapper',
+				response: result,
+				// We repeat the incoming request ID so we can match up load
+				'x-request-id': req.context.reqId
+			} );
+		result = result.asJSON();
+	}
+	logger.log(
+		'trace/req', {
+			msg: 'Outgoing response',
+			response: result,
+			// We repeat the incoming request ID so we can match up load
+			'x-request-id': req.context.reqId
+		} );
 	res.json( result );
 }
 
@@ -31,18 +51,10 @@ router.post( '/', async function ( req, res ) {
 	req.body.evaluatorWs = evaluatorWs;
 
 	const logger = getLogger();
-	const logFn = function ( response ) {
-		logger.log(
-			'trace/req', {
-				msg: 'Outgoing response',
-				response: response,
-				// We repeat the incoming request ID so we can match up load
-				'x-request-id': req.context.reqId
-			} );
-	};
 	const timer = setTimeout(
 		async function () {
 			await propagateResult(
+				req,
 				res,
 				makeWrappedResultEnvelope(
 					null,
@@ -62,7 +74,7 @@ router.post( '/', async function ( req, res ) {
 						}
 					}
 				).asJSON(),
-				logFn
+				logger
 			);
 		},
 		// TODO (T323049): Parameterize this.
@@ -71,7 +83,7 @@ router.post( '/', async function ( req, res ) {
 
 	const response = await orchestrate( req.body );
 	clearTimeout( timer );
-	await propagateResult( res, response, logFn );
+	await propagateResult( req, res, response, logger );
 } );
 
 router.get( '/', function ( req, res ) {
