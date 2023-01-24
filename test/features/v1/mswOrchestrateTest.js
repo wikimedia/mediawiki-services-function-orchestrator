@@ -1761,6 +1761,100 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* expectedErrorFile = */ null
 		);
 	}
+
+	{
+		const argument = {
+			Z1K1: 'Z7',
+			Z7K1: {
+				Z1K1: 'Z8',
+				Z8K1: [
+					'Z17',
+					{
+						Z1K1: 'Z17',
+						Z17K1: {
+							Z1K1: 'Z9',
+							Z9K1: 'Z6'
+						},
+						Z17K2: 'Z60606K1',
+						Z17K3: {
+							Z1K1: 'Z12',
+							Z12K1: [ 'Z11' ]
+						}
+					}
+				],
+				Z8K2: {
+					Z1K1: 'Z7',
+					Z7K1: 'Z881',
+					Z881K1: 'Z6'
+				},
+				Z8K3: [ 'Z20' ],
+				Z8K4: [
+					'Z14',
+					{
+						Z1K1: 'Z14',
+						Z14K1: 'Z60606',
+						Z14K2: {
+							Z1K1: 'Z7',
+							Z7K1: 'Z810',
+							Z810K1: {
+								Z1K1: 'Z18',
+								Z18K1: 'Z60606K1'
+							},
+							Z810K2: [
+								'Z6',
+								{
+									Z1K1: 'Z18',
+									Z18K1: 'Z60606K1'
+								}
+							]
+						}
+					}
+				],
+				Z8K5: 'Z60606'
+			},
+			Z60606K1: 'meow'
+		};
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: {
+				Z1K1: 'Z8',
+				Z8K1: [
+					'Z17'
+				],
+				Z8K2: {
+					Z1K1: 'Z7',
+					Z7K1: 'Z881',
+					Z881K1: 'Z6'
+				},
+				Z8K3: [ 'Z20' ],
+				Z8K4: [
+					'Z14',
+					{
+						Z1K1: 'Z14',
+						Z14K1: 'Z60607',
+						Z14K2: {
+							Z1K1: 'Z7',
+							Z7K1: 'Z801',
+							Z801K1: argument
+						}
+					}
+				],
+				Z8K5: 'Z60607'
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test really tricksy deep-nested function calls in arguments',
+			/* functionCall= */ call,
+			/* expectedResult= */ null,
+			/* expectedResultFile= */ testDataDir( 'expected-tricksy-deep-function-call.json' ),
+			/* expectedErrorState= */ false,
+			/* expectedErrorValue= */ null,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ]
+		);
+	}
+
 } );
 
 describe( 'orchestrate 2', function () { // eslint-disable-line no-undef
