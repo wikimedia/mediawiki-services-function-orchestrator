@@ -1441,6 +1441,28 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 	}
 
 	{
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z803',
+			Z803K1: {
+				Z1K1: 'Z39',
+				Z39K1: {
+					Z1K1: 'Z6',
+					Z6K1: 'Z4K2'
+				}
+			},
+			Z803K2: 'Z40'
+		};
+		attemptOrchestration(
+			/* testName= */ 'Built-ins are still resolved when they are an argument to a function.',
+			/* functionCall= */ call,
+			/* expectedResult= */ null,
+			/* expectedResultFile= */ testDataDir( 'expected-Z40-Z4K2.json' ),
+			/* expectedErrorState= */ false
+		);
+	}
+
+	{
 		wikiStub.setZId( 'Z10144', readJSON( testDataDir( 'Z10144.json' ) ) );
 		wikiStub.setZId( 'Z10143', readJSON( testDataDir( 'Z10143.json' ) ) );
 		wikiStub.setZId( 'Z10139', readJSON( testDataDir( 'Z10139.json' ) ) );
@@ -1740,6 +1762,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 		);
 	}
 } );
+
 describe( 'orchestrate 2', function () { // eslint-disable-line no-undef
 	attemptOrchestration(
 		/* testName= */ 'function call for Z802 with reference to Z902',
