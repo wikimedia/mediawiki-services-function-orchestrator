@@ -333,11 +333,12 @@ function BUILTIN_SECOND_( Z882 ) {
 	return makeMappedResultEnvelope( Z882.K2, null );
 }
 
-async function BUILTIN_GET_ENVELOPE_( QuotedZ7 ) {
-	const orchestrate = require( './orchestrate.js' );
+async function BUILTIN_GET_ENVELOPE_( QuotedZ7, invariants ) {
+	const { orchestrate } = require( './orchestrate.js' );
 	// Requesting envelope in normal form avoids a validation error and unnecessary processing
 	const envelope = await orchestrate(
-		{ zobject: QuotedZ7.Z99K1.asJSON() },
+		QuotedZ7.Z99K1.asJSON(),
+		invariants,
 		/* implementationSelector= */ null,
 		/* returnNormal= */ true
 	);

@@ -214,7 +214,11 @@ class Evaluated extends Implementation {
 		for ( const argumentDict of argumentList ) {
 			Z7[ argumentDict.name ] = argumentDict.argument.asJSON();
 		}
-		const fetchedResult = await this.invariants_.evaluator.evaluate( Z7 );
+
+		// Get programming language from the Function Call's first Implementation.
+		const programmingLanguage = Z7.Z7K1.Z8K4.K1.Z14K3.Z16K1.Z61K1.Z6K1;
+		const fetchedResult = await this.invariants_.evaluatorFor(
+			programmingLanguage ).evaluate( Z7 );
 		if ( fetchedResult.ok ) {
 			// Assume the evaluator is returning Z22s.
 			const resultEnvelope = await fetchedResult.json();

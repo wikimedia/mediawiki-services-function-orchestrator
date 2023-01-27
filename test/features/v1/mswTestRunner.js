@@ -3,7 +3,10 @@
 const assert = require( '../../utils/assert.js' );
 const { getZMapValue, getError } =
 	require( '../../../function-schemata/javascript/src/utils.js' );
-const orchestrate = require( '../../../src/orchestrate.js' );
+const { orchestrate } = require( '../../../src/orchestrate.js' );
+const { Evaluator } = require( '../../../src/Evaluator.js' );
+const { Invariants } = require( '../../../src/Invariants.js' );
+const { ReferenceResolver } = require( '../../../src/db.js' );
 const { readJSON } = require( '../../../src/fileUtils.js' );
 const { writeJSON } = require( '../../utils/testFileUtils.js' );
 const { makeVoid, isZMap } = require( '../../../function-schemata/javascript/src/utils' );
@@ -11,6 +14,24 @@ const canonicalize = require( '../../../function-schemata/javascript/src/canonic
 
 const WIKI_URI = 'http://thewiki';
 const EVAL_URI = 'http://theevaluator';
+
+function getInvariants( doValidate ) {
+	const resolver = new ReferenceResolver( WIKI_URI );
+	const evaluators = [
+		new Evaluator( {
+			programmingLanguages: [
+				'javascript-es2020', 'javascript-es2019', 'javascript-es2018',
+				'javascript-es2017', 'javascript-es2016', 'javascript-es2015',
+				'javascript', 'python-3-9', 'python-3-8', 'python-3-7', 'python-3',
+				'python'
+			],
+			evaluatorUri: EVAL_URI,
+			evaluatorWs: null,
+			useReentrance: false } )
+	];
+	const orchestratorConfig = { doValidate: doValidate };
+	return new Invariants( resolver, evaluators, orchestratorConfig );
+}
 
 /**
  * Orchestrate and test the resulting output, error, and/or metadata.
@@ -51,15 +72,10 @@ const attemptOrchestrationTestMode = function (
 			let result = {};
 			let thrownError = null;
 
-			const executionBlock = {
-				zobject: functionCall,
-				wikiUri: 'http://thewiki',
-				evaluatorUri: 'http://theevaluator',
-				doValidate: doValidate
-			};
+			const invariants = getInvariants( doValidate );
 
 			try {
-				result = await orchestrate( executionBlock, implementationSelector );
+				result = await orchestrate( functionCall, invariants, implementationSelector );
 			} catch ( err ) {
 				console.trace();
 				console.log( err );
@@ -126,17 +142,12 @@ const attemptOrchestrationRegenerationMode = function (
 	( skip ? it.skip : it )( // eslint-disable-line no-undef
 		'regenerating output for ' + testName,
 		async () => {
-			const executionBlock = {
-				zobject: functionCall,
-				wikiUri: 'http://thewiki',
-				evaluatorUri: 'http://theevaluator',
-				doValidate: doValidate
-			};
+			const invariants = getInvariants( doValidate );
 
 			// Run the orchestrator.
 			let result;
 			try {
-				result = await orchestrate( executionBlock, implementationSelector );
+				result = await orchestrate( functionCall, invariants, implementationSelector );
 			} catch ( err ) {
 				assert.isNotNull( null, 'could not regenerate output for ' + testName );
 				return;

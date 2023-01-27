@@ -222,7 +222,8 @@ async function validate( zobject, invariants ) {
 			if ( responseEnvelopeContainsError( typeEnvelope ) ) {
 				errors.push( getError( typeEnvelope ) );
 			} else {
-				const noEvaluator = new Invariants( null, invariants.resolver );
+				const noEvaluator = new Invariants(
+					invariants.resolver, [], invariants.orchestratorConfig );
 				typeValidatorPromises.push( runTypeValidator(
 					Z1, typeEnvelope.Z22K1.Z2K2, noEvaluator ) );
 			}

@@ -2,15 +2,18 @@
 
 const sUtil = require( '../lib/util' );
 
-const orchestrate = require( '../src/orchestrate.js' );
-
+const { ReferenceResolver } = require( '../src/db.js' );
+const { Evaluator } = require( '../src/Evaluator.js' );
+const { Invariants } = require( '../src/Invariants.js' );
 const { getLogger } = require( '../src/logger.js' );
+const { orchestrate } = require( '../src/orchestrate.js' );
 const { makeWrappedResultEnvelope } = require( '../src/utils.js' );
 const { ZWrapper } = require( '../src/ZWrapper.js' );
 
 const evaluatorWs = process.env.FUNCTION_EVALUATOR_WS || null;
 const evaluatorUri = process.env.FUNCTION_EVALUATOR_URL || null;
 const wikiUri = process.env.WIKI_API_URL || null;
+const allConfig = JSON.parse( process.env.ORCHESTRATOR_CONFIG || '{}' );
 
 /**
  * The main router object
@@ -46,9 +49,6 @@ async function propagateResult( req, res, result, logger ) {
 
 /** ROUTE DECLARATIONS GO HERE */
 router.post( '/', async function ( req, res ) {
-	req.body.wikiUri = wikiUri;
-	req.body.evaluatorUri = evaluatorUri;
-	req.body.evaluatorWs = evaluatorWs;
 
 	const logger = getLogger();
 	const timer = setTimeout(
@@ -81,7 +81,45 @@ router.post( '/', async function ( req, res ) {
 		20000
 	);
 
-	const response = await orchestrate( req.body );
+	const ZObject = req.body.zobject;
+	const useReentrance = req.body.useReentrance || false;
+
+	let evaluatorConfigs = allConfig.evaluatorConfigs;
+	if ( evaluatorConfigs === undefined ) {
+		// Legacy request: request does not supply evaluatorConfigs.
+		evaluatorConfigs = [];
+		evaluatorConfigs.push(
+			{
+				programmingLanguages: [
+					'javascript-es2020', 'javascript-es2019', 'javascript-es2018',
+					'javascript-es2017', 'javascript-es2016', 'javascript-es2015',
+					'javascript' ],
+				evaluatorUri: evaluatorUri,
+				evaluatorWs: evaluatorWs,
+				useReentrance: useReentrance } );
+		evaluatorConfigs.push(
+			{
+				programmingLanguages: [
+					'python-3-9', 'python-3-8', 'python-3-7', 'python-3',
+					'python' ],
+				evaluatorUri: evaluatorUri,
+				evaluatorWs: evaluatorWs,
+				useReentrance: useReentrance } );
+	}
+
+	// Capture all stray config.
+	const orchestratorConfig = {
+		doValidate: req.body.doValidate || false
+	};
+
+	// Initialize invariants.
+	const resolver = new ReferenceResolver( wikiUri );
+	const evaluators = evaluatorConfigs.map(
+		( evaluatorConfig ) => new Evaluator( evaluatorConfig ) );
+	const invariants = new Invariants( resolver, evaluators, orchestratorConfig );
+
+	// Orchestrate!
+	const response = await orchestrate( ZObject, invariants );
 	clearTimeout( timer );
 	await propagateResult( req, res, response, logger );
 } );

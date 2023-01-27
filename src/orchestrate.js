@@ -9,9 +9,7 @@ const ErrorFormatter = require( '../function-schemata/javascript/src/errorFormat
 const { validate } = require( './validation.js' );
 const { execute } = require( './execute.js' );
 const { responseEnvelopeContainsError, isError, makeWrappedResultEnvelope, returnOnFirstError } = require( './utils.js' );
-const { Evaluator } = require( './Evaluator.js' );
-const { Invariants } = require( './Invariants.js' );
-const { ReferenceResolver } = require( './db.js' );
+const { Invariants } = require( './Invariants' );
 const { ZWrapper } = require( './ZWrapper' );
 const ImplementationSelector = require( './implementationSelector.js' );
 const { cpuUsage, memoryUsage } = require( 'node:process' );
@@ -72,20 +70,20 @@ function Z7OrError( zobject ) {
  *
  * Takes and returns JSON representation; not ZWrapper.
  *
- * @param {Object} input the input for a function call
+ * @param {Object} zobject the function call
+ * @param {Invariants} invariants encapsulates global orchestrator config and wrappers
+ *      for evaluator and Wiki services
  * @param {ImplementationSelector} implementationSelector
  * @param {boolean} returnNormal return normal form if true; canonical form otherwise
  * @return {Object} a Z22 containing the result of function evaluation or a Z5 (in Z22K2/metadata)
  */
-async function orchestrate( input, implementationSelector = null,
-	returnNormal = false ) {
+async function orchestrate(
+	zobject, invariants, implementationSelector = null, returnNormal = false ) {
 	const startTime = new Date();
 	const startUsage = cpuUsage();
 	const logger = getLogger();
 
-	const zobject = input.zobject;
 	let currentResponseEnvelope;
-
 	if ( isError( zobject ) ) {
 		currentResponseEnvelope = makeMappedResultEnvelope(
 			null, zobject, /* canonicalize= */true
@@ -98,23 +96,12 @@ async function orchestrate( input, implementationSelector = null,
 
 	logger.info( 'Z7K1 is: ' + JSON.stringify( zobject.Z7K1 ) );
 
-	const evaluator = new Evaluator(
-		input.evaluatorWs || null,
-		input.evaluatorUri || null,
-		input.wikiUri || null,
-		input.useReentrance || false,
-		input.doValidate );
-	const resolver = new ReferenceResolver( input.wikiUri || null );
-	const invariants = new Invariants( evaluator, resolver );
-
-	const doValidate = typeof input.doValidate === 'boolean' ? input.doValidate : true;
-
 	const callTuples = [
 		[ normalize, [ /* generically= */true, /* withVoid= */ true ], 'normalize' ],
 		// TODO (T296685): Dereference top-level object if it is a Z9?
 		[ Z7OrError, [], 'Z7OrError' ],
 		[ makeWrappedResultEnvelope, [], 'wrapAsZObject' ],
-		[ maybeValidate, [ doValidate, invariants ], 'maybeValidate' ],
+		[ maybeValidate, [ invariants.orchestratorConfig.doValidate, invariants ], 'maybeValidate' ],
 		[
 			execute, [
 				invariants, /* doValidate= */true,
@@ -171,4 +158,6 @@ async function orchestrate( input, implementationSelector = null,
 	return currentResponseEnvelope;
 }
 
-module.exports = orchestrate;
+module.exports = {
+	orchestrate
+};

@@ -11,13 +11,18 @@ const AVRO_SCHEMA_VERSION_ = '0.0.2';
  * runs native code implementations.
  */
 class Evaluator {
-	constructor( evaluatorWs, evaluatorUri, wikiUri, useReentrance, doValidate ) {
-		this.evaluatorWs_ = evaluatorWs;
-		this.evaluatorUri_ = evaluatorUri;
-		this.wikiUri_ = wikiUri;
-		this.doValidate_ = doValidate;
-		this.useReentrance_ = useReentrance;
+	constructor( evaluatorConfig ) {
+		this.useReentrance_ = evaluatorConfig.useReentrance;
+		this.evaluatorWs_ = evaluatorConfig.evaluatorWs;
+		this.evaluatorUri_ = evaluatorConfig.evaluatorUri;
+		this.invariants_ = null;
 		this.timeout_ = 10000; // wait 10 seconds
+		this.programmingLanguages_ = Object.freeze( evaluatorConfig.programmingLanguages );
+		Object.defineProperty( this, 'programmingLanguages', {
+			get: function () {
+				return this.programmingLanguages_;
+			}
+		} );
 	}
 
 	async evaluate( functionCall ) {
@@ -60,19 +65,12 @@ class Evaluator {
 			theMessage = theMessage.toString();
 			console.log( 'message received:', theMessage );
 			if ( theMessage.startsWith( 'call' ) ) {
-				const orchestrate = require( './orchestrate' );
+				const { orchestrate } = require( './orchestrate' );
 				theMessage = theMessage.replace( /^call\s*/, '' );
 				const Z7 = JSON.parse( theMessage );
-				const toOrchestrate = {
-					zobject: Z7,
-					evaluatorWs: this.evaluatorWs_,
-					evaluatorUri: this.evaluatorUri_,
-					wikiUri: this.wikiUri_,
-					useReentrance: true,
-					doValidate: this.doValidate_
-				};
-				const normalResult = ( await orchestrate( toOrchestrate,
-					/* implementationSelector= */ null, /* returnNormal= */ true ) ).Z22K1;
+				const normalResult = ( await orchestrate(
+					Z7, this.invariants_, /* implementationSelector= */ null,
+					/* returnNormal= */ true ) ).Z22K1;
 				client.send( JSON.stringify( normalResult ) );
 			}
 		} );
@@ -83,6 +81,10 @@ class Evaluator {
 		// TODO: How to wait until connection opens?
 		client.close();
 		return result;
+	}
+
+	setInvariants( invariants ) {
+		this.invariants_ = invariants;
 	}
 }
 
