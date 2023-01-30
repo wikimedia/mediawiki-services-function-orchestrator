@@ -18,4 +18,13 @@ class RandomImplementationSelector {
 
 }
 
-module.exports = { RandomImplementationSelector };
+class FirstImplementationSelector {
+
+	// Each implementation is an instance of class Implementation.
+	select( implementations ) {
+		return implementations[ 0 ];
+	}
+
+}
+
+module.exports = { RandomImplementationSelector, FirstImplementationSelector };

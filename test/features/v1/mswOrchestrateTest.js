@@ -8,6 +8,7 @@ const { testDataDir, schemataDefinitionsDir } = require( '../../utils/testFileUt
 const { makeErrorInNormalForm, error } = require( '../../../function-schemata/javascript/src/error.js' );
 const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../../../lib/mockUtils.js' );
 const { attemptOrchestration, WIKI_URI, EVAL_URI } = require( './mswTestRunner.js' );
+const { FirstImplementationSelector, RandomImplementationSelector } = require( '../../../src/implementationSelector' );
 
 describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 	const wikiStub = new MediaWikiStub();
@@ -961,27 +962,6 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* expectedResult= */ null,
 			/* expectedResultFile= */ testDataDir( 'type-only_expected.json' ),
 			/* expectedErrorState= */ false
-		);
-	}
-
-	{
-		class SecondImplementationSelector {
-			select( implementations ) {
-				return implementations[ 1 ];
-			}
-		}
-
-		attemptOrchestration(
-			/* testName= */ 'multiple implementations',
-			/* functionCall= */ readJSON( testDataDir( 'multiple-implementations.json' ) ),
-			/* expectedResult= */ null,
-			/* expectedResultFile= */ testDataDir( 'multiple-implementations_expected.json' ),
-			/* expectedErrorState= */ false,
-			/* expectedErrorValue= */ null,
-			/* expectedErrorFile= */ null,
-			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [ 'implementationId' ],
-			/* implementationSelector= */ new SecondImplementationSelector()
 		);
 	}
 
@@ -2757,6 +2737,86 @@ describe( 'orchestrate 2', function () { // eslint-disable-line no-undef
 		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 		/* implementationSelector= */ null
 	);
+} );
+
+describe( 'orchestrate with specified implementation selector', function () { // eslint-disable-line no-undef
+
+	// Same as 'function call for Z804', except with specified implementation selector
+	attemptOrchestration(
+		/* testName= */ 'function call for Z804, with FirstImplementationSelector',
+		/* functionCall= */ readJSON( testDataDir( 'Z804.json' ) ),
+		/* expectedResult= */ null,
+		/* expectedResultFile= */ testDataDir( 'Z804_expected.json' ),
+		/* expectedErrorState= */ true,
+		/* expectedErrorValue= */ null,
+		/* expectedErrorFile= */ null,
+		/* expectedExtraMetadata= */ [],
+		/* expectedMissingMetadata= */ [],
+		/* implementationSelector= */ new FirstImplementationSelector()
+	);
+
+	// Same as 'function call for Z804', except with specified implementation selector
+	attemptOrchestration(
+		/* testName= */ 'function call for Z804, with RandomImplementationSelector',
+		/* functionCall= */ readJSON( testDataDir( 'Z804.json' ) ),
+		/* expectedResult= */ null,
+		/* expectedResultFile= */ testDataDir( 'Z804_expected.json' ),
+		/* expectedErrorState= */ true,
+		/* expectedErrorValue= */ null,
+		/* expectedErrorFile= */ null,
+		/* expectedExtraMetadata= */ [],
+		/* expectedMissingMetadata= */ [],
+		/* implementationSelector= */ new RandomImplementationSelector()
+	);
+
+	// Same as 'evaluated function call', except with specified implementation selector
+	attemptOrchestration(
+		/* testName= */ 'evaluated function call, with FirstImplementationSelector',
+		/* functionCall= */ readJSON( testDataDir( 'evaluated.json' ) ),
+		/* expectedResult= */ null,
+		/* expectedResultFile= */ testDataDir( 'evaluated-13.json' ),
+		/* expectedErrorState= */ false,
+		/* expectedErrorValue= */ null,
+		/* expectedErrorFile= */ null,
+		/* expectedExtraMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId' ],
+		/* implementationSelector= */ new FirstImplementationSelector()
+	);
+
+	// Same as 'evaluated function call', except with specified implementation selector
+	attemptOrchestration(
+		/* testName= */ 'evaluated function call, with RandomImplementationSelector',
+		/* functionCall= */ readJSON( testDataDir( 'evaluated.json' ) ),
+		/* expectedResult= */ null,
+		/* expectedResultFile= */ testDataDir( 'evaluated-13.json' ),
+		/* expectedErrorState= */ false,
+		/* expectedErrorValue= */ null,
+		/* expectedErrorFile= */ null,
+		/* expectedExtraMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId' ],
+		/* implementationSelector= */ new RandomImplementationSelector()
+	);
+
+	{
+		class SecondImplementationSelector {
+			select( implementations ) {
+				return implementations[ 1 ];
+			}
+		}
+
+		attemptOrchestration(
+			/* testName= */ 'multiple implementations',
+			/* functionCall= */ readJSON( testDataDir( 'multiple-implementations.json' ) ),
+			/* expectedResult= */ null,
+			/* expectedResultFile= */ testDataDir( 'multiple-implementations_expected.json' ),
+			/* expectedErrorState= */ false,
+			/* expectedErrorValue= */ null,
+			/* expectedErrorFile= */ null,
+			/* expectedExtraMetadata= */ [],
+			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* implementationSelector= */ new SecondImplementationSelector()
+		);
+	}
 } );
 
 describe( 'orchestrate 3', function () { // eslint-disable-line no-undef

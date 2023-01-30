@@ -5,7 +5,7 @@ const { Invariants } = require( './Invariants' );
 const ImplementationSelector = require( './implementationSelector.js' );
 const { BaseFrame, EmptyFrame } = require( './frame.js' );
 const { Composition, Implementation, Evaluated, ZResponseError } = require( './implementation.js' );
-const { RandomImplementationSelector } = require( './implementationSelector.js' );
+const { FirstImplementationSelector } = require( './implementationSelector.js' );
 const {
 	createZObjectKey,
 	isRefOrString,
@@ -613,7 +613,7 @@ async function executeInternal(
 	}
 
 	if ( implementationSelector === null ) {
-		implementationSelector = new RandomImplementationSelector();
+		implementationSelector = new FirstImplementationSelector();
 	}
 	const implementation = implementationSelector.select( implementations );
 
