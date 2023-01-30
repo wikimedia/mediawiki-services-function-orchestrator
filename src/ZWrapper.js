@@ -67,6 +67,9 @@ class ZWrapper {
 			Object.defineProperty( result, key, {
 				get: function () {
 					return this.getNameEphemeral( key );
+				},
+				set: function ( newValue ) {
+					this.setName( key, newValue );
 				}
 			} );
 		}
@@ -102,6 +105,9 @@ class ZWrapper {
 			Object.defineProperty( result, key, {
 				get: function () {
 					return this.getNameEphemeral( key );
+				},
+				set: function ( newValue ) {
+					this.setName( key, newValue );
 				}
 			} );
 		}

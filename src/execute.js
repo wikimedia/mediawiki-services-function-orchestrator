@@ -524,11 +524,11 @@ async function addImplementationMetadata( implementation, result ) {
 	} else {
 		implementationType = 'BuiltIn';
 	}
-	const newPairs = new Map();
+	const newPairs = [];
 	if ( implementationId !== null ) {
-		newPairs.set( { Z1K1: 'Z6', Z6K1: 'implementationId' }, { Z1K1: 'Z6', Z6K1: implementationId } );
+		newPairs.push( [ { Z1K1: 'Z6', Z6K1: 'implementationId' }, { Z1K1: 'Z6', Z6K1: implementationId } ] );
 	}
-	newPairs.set( { Z1K1: 'Z6', Z6K1: 'implementationType' }, { Z1K1: 'Z6', Z6K1: implementationType } );
+	newPairs.push( [ { Z1K1: 'Z6', Z6K1: 'implementationType' }, { Z1K1: 'Z6', Z6K1: implementationType } ] );
 	return setMetadataValues( result, newPairs );
 }
 
