@@ -136,26 +136,32 @@ function setMetadataValues( envelope, newPairs ) {
 		// Get zMap as JSON, and save scope
 		if ( zMap ) {
 			scope = zMap.getScope();
-			zMap = zMap.asJSON();
 		} else {
 			// For this case we'll create a new ZMap, using the envelope's scope
 			scope = envelope.getScope();
 		}
 	}
 
+	function maybeMakeZWrapper( someMap ) {
+		if ( scope !== null ) {
+			return ZWrapper.create( someMap, scope );
+		}
+		return someMap;
+	}
+
 	// Do the ZMap creation (if needed) and insertions using JSON objects
 	if ( zMap === undefined || isVoid( zMap ) ) {
 		const keyType = { Z1K1: 'Z9', Z9K1: 'Z6' };
 		const valueType = { Z1K1: 'Z9', Z9K1: 'Z1' };
-		zMap = makeEmptyZMap( keyType, valueType );
+		zMap = maybeMakeZWrapper( makeEmptyZMap( keyType, valueType ) );
 	}
-	for ( const [ key, value ] of newPairs ) {
-		zMap = setZMapValue( zMap, key, value );
+	for ( let [ key, value ] of newPairs ) {
+		key = maybeMakeZWrapper( key );
+		value = maybeMakeZWrapper( value );
+		zMap = setZMapValue( zMap, key, value, maybeMakeZWrapper );
 	}
 
 	if ( envelope instanceof ZWrapper ) {
-		// Return zMap to ZWrapper form
-		zMap = ZWrapper.create( zMap, scope );
 		envelope.setName( 'Z22K2', zMap );
 	} else {
 		envelope.Z22K2 = zMap;
