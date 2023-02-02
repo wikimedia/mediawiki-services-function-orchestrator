@@ -363,7 +363,7 @@ async function BUILTIN_FETCH_PERSISTENT_ZOBJECT_( quotedZ9, invariants ) {
 	} catch ( e ) {
 		const message = `Error thrown by dereference(): ${e}.`;
 		const zerror = ErrorFormatter.createZErrorInstance(
-			error.generic_error, { errorInformation: message } );
+			error.unknown_error, { errorInformation: message } );
 		return makeMappedResultEnvelope( null, zerror );
 	}
 	// TODO( T325793 ): Eliminate this call to asJSON
