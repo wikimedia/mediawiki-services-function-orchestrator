@@ -453,26 +453,31 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 	}
 
 	{
-		wikiStub.setZId( 'Z10044', {
+		wikiStub.setZId( 'Z20044', {
 			Z1K1: 'Z2',
-			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10044' },
-			Z2K2: readJSON( testDataDir( 'map_function_Z10044.json' ) )
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z20044' },
+			Z2K2: readJSON( testDataDir( 'map_function_Z20044.json' ) )
 		} );
-		wikiStub.setZId( 'Z10045', {
+		wikiStub.setZId( 'Z20045', {
 			Z1K1: 'Z2',
-			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z10045' },
-			Z2K2: readJSON( testDataDir( 'map_implementation_Z10045.json' ) )
+			Z2K1: { Z1K1: 'Z6', Z6K1: 'Z20045' },
+			Z2K2: readJSON( testDataDir( 'map_implementation_Z20045.json' ) )
 		} );
 
 		const mapOverSparseList = {
 			Z1K1: 'Z7',
-			Z7K1: 'Z10044',
-			Z10044K1: 'Z813',
-			Z10044K2: [
-				[],
-				[ 'I am here!' ],
-				[ 'I am not :(' ],
-				[]
+			Z7K1: 'Z20044',
+			Z20044K1: 'Z813',
+			Z20044K2: [
+				{
+					Z1K1: 'Z7',
+					Z7K1: 'Z881',
+					Z881K1: 'Z6'
+				},
+				[ 'Z6' ],
+				[ 'Z6', 'I am here!' ],
+				[ 'Z6', 'I am not :(' ],
+				[ 'Z6' ]
 			]
 		};
 
@@ -488,7 +493,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* expectedMissingMetadata= */[],
 			/* implementationSelector= */ null,
 			/* doValidate= */ true,
-			/* skip= */ true
+			/* skip= */ false
 		);
 	}
 
