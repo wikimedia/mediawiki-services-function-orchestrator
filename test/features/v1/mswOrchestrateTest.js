@@ -1048,11 +1048,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* functionCall= */ validateNonempty,
 			/* expectedResult= */ null,
 			/* expectedResultFile= */ testDataDir( 'Z10084_nonempty_string_expected.json' ),
-			/* expectedErrorState= */ false,
-			/* expectedErrorValue= */ null,
-			/* expectedErrorFile= */ null,
-			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [ 'implementationId' ]
+			/* expectedErrorState= */ false
 		);
 	}
 
@@ -1080,10 +1076,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* expectedResultFile= */ null,
 			/* expectedErrorState= */ true,
 			/* expectedErrorValue= */ null,
-			/* expectedErrorFile= */ testDataDir( 'Z10084_empty_string_expected.json' ),
-			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [ 'implementationId' ],
-			/* implementationSelector= */ null
+			/* expectedErrorFile= */ testDataDir( 'Z10084_empty_string_expected.json' )
 		);
 	}
 
@@ -1187,11 +1180,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* functionCall= */ wrapCall,
 			/* expectedResult= */ null,
 			/* expectedResultFile= */ testDataDir( 'wrap_expected.json' ),
-			/* expectedErrorState= */ false,
-			/* expectedErrorValue= */ null,
-			/* expectedErrorFile= */ null,
-			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [ 'implementationId' ]
+			/* expectedErrorState= */ false
 		);
 	}
 
@@ -1215,11 +1204,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* functionCall= */ naturalNumberCall,
 			/* expectedResult= */ null,
 			/* expectedResultFile= */ testDataDir( 'positive-integer-15.json' ),
-			/* expectedErrorState= */ false,
-			/* expectedErrorValue= */ null,
-			/* expectedErrorFile= */ null,
-			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [ 'implementationId' ]
+			/* expectedErrorState= */ false
 		);
 	}
 
@@ -1250,11 +1235,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* functionCall= */ binaryBindCall,
 			/* expectedResult= */ null,
 			/* expectedResultFile= */ testDataDir( 'bind-binary-expected.json' ),
-			/* expectedErrorState= */ false,
-			/* expectedErrorValue= */ null,
-			/* expectedErrorFile= */ null,
-			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [ 'implementationId' ]
+			/* expectedErrorState= */ false
 		);
 	}
 
@@ -1489,11 +1470,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* functionCall= */ call,
 			/* expectedResult= */ null,
 			/* expectedResultFile= */ testDataDir( 'expected-on-wiki-types.json' ),
-			/* expectedErrorState= */ false,
-			/* expectedErrorValue= */ null,
-			/* expectedErrorFile= */ null,
-			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [ 'implementationId' ]
+			/* expectedErrorState= */ false
 		);
 	}
 

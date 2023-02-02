@@ -7,7 +7,6 @@ const { convertItemArrayToZList, makeMappedResultEnvelope } = require( '../funct
 const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
 const { makeVoid } = require( '../function-schemata/javascript/src/utils' );
 const { Invariants } = require( './Invariants.js' );
-const { validatesAsReference } = require( '../function-schemata/javascript/src/schema.js' );
 
 /**
  * Error class for throwing a Z22/'Evaluation response' (envelope) that
@@ -90,7 +89,12 @@ class Implementation {
 		// for Composition and Evaluated implementations.
 		// TODO( T321998 ): If an ID key is added to Z14, this can be removed
 		let ZID = null;
-		if ( validatesAsReference( Z14 ).isValid() ) {
+
+		// We do not call validatesAsReference here. If we did, we would first
+		// need to call asJSON() on Z14. This is an expensive operation if Z14
+		// is not a reference. Because we are only interested in literal
+		// references here, it is safe just to check whether Z9K1 is undefined.
+		if ( Z14.Z9K1 !== undefined ) {
 			ZID = Z14.Z9K1;
 		}
 
