@@ -57,6 +57,69 @@ passed around throughout the code base. Dear reader, if you have solved similar
 problems--e.g., if you implemented programming languages before--and know the
 better way, have at it :).
 
+### Some Idiosyncrasies
+The orchestrator relies heavily on the `ZWrapper` type. This type represents
+the union of a [ZObject](#idiosyncrasy-zobject) and its [scope](#idiosyncrasy-scope).
+This object must be specially treated, as will be discussed in the section on
+[best practices](#idiosyncratic-practices).
+
+<a href='idiosyncrasy-zobject'></a>
+#### Wrapped ZObject
+The ZWrapper does wrap a ZObject, but the situation is a bit more complex than
+that term implies. Because a ZObject contains other ZObjects which can potentially
+be resolved (`Z9`, `Z7`, and `Z18`s), a ZWrapper holds information about a
+ZObject in multiple phases of resolution.
+
+A ZWrapper is constructed from the bare JSON representation of a normal-form ZObject and a
+scope. This construction is recursive. In the base case, where the original value
+is a string, `ZWrapper.create` returns the string unchanged.
+
+In the recursive case, the ZWrapper maintains an internal `Map` from the original object's
+keys to the result of calling `ZWrapper.create` on its values.
+
+In addition to this `Map` (called `original_`), the ZWrapper maintains two other
+`Map`s: `resolved_` and `resolvedEphemeral_`, corresponding to two different
+resolution strategies: persistent and ephemeral. These strategies affect the
+JSON object that `ZWrapper.asJSON` and `ZWrapper.asJSONEphemeral` will return to the called or other parts of
+the code base. `ZWrapper.asJSON` is the "normal" means of getting the JSON
+version of a `ZWrapper`; `ZWrapper.asJSONEphemeral` is for special cases.
+
+Usually, objects are resolved persistently. This means that, whether `asJSON`
+or `asJSONEphemeral` is called, the result of resolution will be represented
+in the resulting JSON. However, when the `Z1K1` (type) of a ZObject
+is resolved for the purposes of validation, it is resolved ephemerally. This means
+that, when the `ZWrapper` is converted back to JSON, the original value (i.e.,
+the `Z9`, `Z7`, or `Z18` that was resolved) will be returned instead of the 
+resolved value (unless `asJSONEphemeral` is used, which is only part of the
+type validation workflow).
+
+<a href='idiosyncrasy-scope'></a>
+#### Scope
+Scope is a concern of the orchestrator's role as a functional programming language:
+when a `Z7/Function call` is executed, its `Z7K1` `Z8/Function`'s argument
+declarations are consulted in order to populate the scope with unbound names.
+The values supplied as arguments to the `Z7` are then bound to those names. When
+working with `ZWrappers`, one must be careful to keep scope information around
+if one wants to produce new `ZWrappers`.
+
+<a href='idiosyncratic-practices'></a>
+#### Best Practices
+`ZWrapper` is written to be as compatible as possible with utilities from
+`function-schemata`, but there are limitations.
+
+A `ZWrapper` redefines the setters and getters for every key in the original
+JSON object to consult (or write to) its internal `Map`s. This allows code to
+work correctly even when it uses dot or bracket syntax (`ZObject.Z1K1` or
+`ZObject[ 'Z1K1' ]`). However, no getters or setters can be defined for keys that
+were not originally present, so `ZWrapper`s will not play nicely with code that
+tries to do that.
+
+Most functions in `function-schemata` are written in a way that accommodates
+`ZWrapper`s. However, JSON schema validators notably do not work with `ZWrapper`s.
+This means, if you want to validate a `ZWrapper` or use code that calls the
+validators (e.g. `findIdentity`), you must first convert the `ZWrapper` to JSON
+using `asJSON()`.
+
 ## Microservice Architecture
 From the perspective of the orchestrator, there are three other services/entities
 in the universe: MediaWiki, which resolves `Z9`s (References); the caller (which
