@@ -63,7 +63,7 @@ async function doOrchestrate( zobject, expectedOutput, doValidate = true ) {
 	console.assert(
 		expStr === resStr,
 		`Expected ${expStr} but got ${resStr}.\
-Even though this is just a benchmark run, faulty results might indicate\
+Even though this is just a benchmark run, faulty results might indicate \
 the expected sequence wasn't run correctly.` );
 
 }
@@ -143,15 +143,7 @@ suite.add( 'Evaluate generic defined as composition', async function ( deferred 
 		}
 	};
 
-	const resolvedType = readJSON( './test/features/v1/test_data/type-returned-by-generic-composition.json' );
-	const expectedOutput = {
-		Z1K1: resolvedType,
-		K1: [ 'Z6' ],
-		K2: {
-			Z1K1: 'Z40',
-			Z40K1: 'Z42'
-		}
-	};
+	const expectedOutput = readJSON( './test/features/v1/test_data/type-returned-by-generic-composition.json' );
 
 	// Call <Echo> (Z801) on the input.
 	const theFunctionCall = {
