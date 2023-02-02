@@ -383,7 +383,7 @@ class Frame extends BaseFrame {
  */
 async function getArgumentStates( zobject, invariants, doValidate = true ) {
 	const argumentStates = [];
-	const Z7K1Envelope = await ( zobject.resolveKey(
+	const Z7K1Envelope = await ( zobject.resolveEphemeral(
 		[ 'Z7K1' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
 	if ( responseEnvelopeContainsError( Z7K1Envelope ) ) {
 		return [ ArgumentState.ERROR( 'Could not dereference Z7K1' ) ];
@@ -467,7 +467,7 @@ async function validateReturnType( result, zobject, invariants ) {
 		}
 
 		// Value returned; validate its return type..
-		await ( zobject.resolveKey( [ 'Z7K1', 'Z8K2' ], invariants ) );
+		await ( zobject.resolveEphemeral( [ 'Z7K1', 'Z8K2' ], invariants ) );
 		const returnType = zobject.Z7K1.Z8K2;
 		await resolveTypes( result.Z22K1, invariants, /* doValidate= */ true );
 		const returnTypeValidation = await validateAsType(
