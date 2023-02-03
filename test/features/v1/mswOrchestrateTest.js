@@ -1641,15 +1641,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* functionCall= */ call,
 			/* expectedResult= */ null,
 			/* expectedResultFile= */ testDataDir( 'expected-reified-integer.json' ),
-			/* expectedErrorState= */ false,
-			/* expectedErrorValue= */ null,
-			/* expectedErrorFile= */ null,
-			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [],
-			/* implementationSelector= */ null,
-			/* doValidate= */ true,
-			// TODO (T326518): This test result has changed after T326357 and is now skipped
-			/* skip= */ true
+			/* expectedErrorState= */ false
 		);
 	}
 
