@@ -1660,8 +1660,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 		attemptOrchestration(
 			/* testName= */ 'Test that Z828 retrieves a Z2 for a built-in',
 			/* functionCall= */ call,
-			/* expectedResult= */ null,
-			/* expectedResultFile= */ schemataDefinitionsDir( 'Z811.json' )
+			/* expectedResult= */ readJSON( schemataDefinitionsDir( 'Z811.json' ) )
 		);
 	}
 
