@@ -76,7 +76,7 @@ describe( 'orchestration endpoint', function () { // eslint-disable-line no-unde
 			// TODO( T323402 ): Check the content of Z22K2/metadata
 			assert.isTrue( isZMap( envelope.Z22K2 ), name );
 			// TODO( T323402 ): Check the content of K2/metadata
-			// TODO( T327415 ): Check isZMap( envelope.Z22K1.K2 ) once isZMap is fixed.
+			assert.isTrue( isZMap( envelope.Z22K1.K2 ) );
 			assert.deepEqual( makeVoid( /* canonical */ true ), getError( envelope ), name );
 			assert.strictEqual( undefined, getZMapValue( envelope.Z22K1.K2, 'errors' ), name );
 		} );
