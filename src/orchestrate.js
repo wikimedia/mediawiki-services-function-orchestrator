@@ -83,10 +83,7 @@ async function orchestrate( input, implementationSelector = null,
 	const startUsage = cpuUsage();
 	const logger = getLogger();
 
-	let zobject = input.zobject;
-	if ( zobject === undefined ) {
-		zobject = input;
-	}
+	const zobject = input.zobject;
 	let currentResponseEnvelope;
 
 	if ( isError( zobject ) ) {
