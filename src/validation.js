@@ -91,7 +91,7 @@ async function runTypeValidator( Z1, Z4, invariants ) {
 		return makeWrappedResultEnvelope(
 			null,
 			makeErrorInNormalForm(
-				[ error.zid_not_found ],
+				error.zid_not_found,
 				[ `Builtin validator "${validationFunction.Z8K5.Z9K1}" not found for "${Z4.Z4K1.Z9K1}"` ]
 			)
 		);
