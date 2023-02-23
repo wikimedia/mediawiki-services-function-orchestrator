@@ -2710,6 +2710,20 @@ describe( 'orchestrate 2', function () { // eslint-disable-line no-undef
 		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 		/* implementationSelector= */ null
 	);
+
+	attemptOrchestration(
+		/* testName= */ 'function call with wrong typed implementation Z20 instead of a Z14 in Z8K4',
+		/* functionCall= */ readJSON( testDataDir( 'function-call-with-wrong-typed-implementation.json' ) ),
+		/* expectedResult= */ null,
+		/* expectedResultFile= */ null,
+		/* expectedErrorState= */ true,
+		/* expectedErrorValue= */ null,
+		/* expectedErrorFile= */ testDataDir( 'wrong-typed-implementation-expected.json' ),
+		/* expectedExtraMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
+		/* implementationSelector= */ null
+
+	);
 } );
 
 describe( 'orchestrate with specified implementation selector', function () { // eslint-disable-line no-undef

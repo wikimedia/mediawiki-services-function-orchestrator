@@ -119,8 +119,13 @@ class Implementation {
 			// eslint-disable-next-line no-use-before-define
 			return new Composition( resolvedZ14, ZID );
 		}
-		// eslint-disable-next-line no-use-before-define
-		return new Evaluated( resolvedZ14, ZID );
+
+		if ( resolvedZ14.Z14K3 !== undefined ) {
+			// eslint-disable-next-line no-use-before-define
+			return new Evaluated( resolvedZ14, ZID );
+		}
+
+		throw new ZResponseError( 'Implementation did not specify Z14K[234]', Z14Envelope );
 	}
 }
 
