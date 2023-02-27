@@ -14,6 +14,12 @@ class Evaluator {
 	constructor( evaluatorConfig ) {
 		this.useReentrance_ = evaluatorConfig.useReentrance;
 		this.evaluatorWs_ = evaluatorConfig.evaluatorWs;
+		if ( this.evaluatorWs_ === null && this.useReentrance_ ) {
+			console.warn(
+				'useReentrance was specified but no websocket location was supplied; ',
+				'setting useReentrance to false' );
+			this.useReentrance_ = false;
+		}
 		this.evaluatorUri_ = evaluatorConfig.evaluatorUri;
 		this.invariants_ = null;
 		this.timeout_ = 10000; // wait 10 seconds
