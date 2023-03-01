@@ -1,28 +1,38 @@
 'use strict';
 
-const { BuiltIn } = require( './implementation.js' );
+/**
+ * Implementation of Knuth's Algorithm P for random shuffling. We don't want to
+ * reorder implementations in-place (for now), so this function returns indices
+ * into the original list.
+ *
+ * @param {number} numberOfElements an array of implementations
+ * @return {Array[Number]} randomly-sorted indices
+ */
+function randomlyShuffledIndices( numberOfElements ) {
+	const resultIndices = [ ...Array( numberOfElements ).keys() ];
+	for ( let i = resultIndices.length - 1; i > 0; --i ) {
+		const j = Math.ceiling( Math.random() * i );
+		[ resultIndices[ j ], resultIndices[ i ] ] = [ resultIndices[ i ], resultIndices[ j ] ];
+	}
+	return resultIndices;
+}
 
 class RandomImplementationSelector {
 
-	// Each implementation is an instance of class Implementation.
-	select( implementations ) {
-		// TODO (T296677): Implement heuristics to decide which implementation to
-		// use. Implicitly, current heuristic is to use a builtin if available;
-		// otherwise, choose a random implementation and return that.
-		const builtin = implementations.find( ( impl ) => ( impl instanceof BuiltIn ) );
-		if ( builtin !== undefined ) {
-			return builtin;
+	* generate( implementations ) {
+		for ( const index of randomlyShuffledIndices( implementations.length ) ) {
+			yield implementations[ index ];
 		}
-		return implementations[ Math.floor( Math.random() * implementations.length ) ];
 	}
 
 }
 
 class FirstImplementationSelector {
 
-	// Each implementation is an instance of class Implementation.
-	select( implementations ) {
-		return implementations[ 0 ];
+	* generate( implementations ) {
+		for ( const implementation of implementations ) {
+			yield implementation;
+		}
 	}
 
 }

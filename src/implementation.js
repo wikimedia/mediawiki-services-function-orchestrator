@@ -3,8 +3,7 @@
 const builtins = require( './builtins.js' );
 const { responseEnvelopeContainsError, traverseZList } = require( './utils.js' );
 const { ZWrapper } = require( './ZWrapper' );
-const { convertItemArrayToZList, makeMappedResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
-const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
+const { convertItemArrayToZList } = require( '../function-schemata/javascript/src/utils.js' );
 const { makeVoid } = require( '../function-schemata/javascript/src/utils' );
 const { Invariants } = require( './Invariants.js' );
 
@@ -19,6 +18,8 @@ class ZResponseError extends Error {
 		this.envelope = envelope;
 	}
 }
+
+class EvaluatorError extends Error { }
 
 class Implementation {
 
@@ -222,8 +223,16 @@ class Evaluated extends Implementation {
 
 		// Get programming language from the Function Call's first Implementation.
 		const programmingLanguage = Z7.Z7K1.Z8K4.K1.Z14K3.Z16K1.Z61K1.Z6K1;
-		const fetchedResult = await this.invariants_.evaluatorFor(
-			programmingLanguage ).evaluate( Z7 );
+		const evaluator = this.invariants_.evaluatorFor( programmingLanguage );
+		if ( evaluator === null ) {
+			throw new EvaluatorError( `No evaluator is available for ${programmingLanguage}` );
+		}
+		let fetchedResult;
+		try {
+			fetchedResult = await evaluator.evaluate( Z7 );
+		} catch ( e ) {
+			throw new EvaluatorError( e.message );
+		}
 		if ( fetchedResult.ok ) {
 			// Assume the evaluator is returning Z22s.
 			const resultEnvelope = await fetchedResult.json();
@@ -240,11 +249,7 @@ class Evaluated extends Implementation {
 		}
 		const statusCode = fetchedResult.status;
 		const errorText = await fetchedResult.text();
-		return makeMappedResultEnvelope(
-			null,
-			makeErrorInNormalForm(
-				error.error_in_evaluation,
-				[ `Function evaluation failed with status ${statusCode}: ${errorText}` ] ) );
+		throw new EvaluatorError( `Function evaluation failed with status ${statusCode}: ${errorText}` );
 	}
 
 }
@@ -264,4 +269,11 @@ class Composition extends Implementation {
 
 }
 
-module.exports = { Composition, Evaluated, BuiltIn, Implementation, ZResponseError };
+module.exports = {
+	BuiltIn,
+	Composition,
+	Evaluated,
+	EvaluatorError,
+	Implementation,
+	ZResponseError
+};

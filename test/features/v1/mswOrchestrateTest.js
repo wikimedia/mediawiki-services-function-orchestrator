@@ -604,7 +604,7 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 			/* expectedErrorValue= */ null,
 			/* expectedErrorFile= */ testDataDir( 'evaluated-failed_expected.json' ),
 			/* expectedExtraMetadata= */ [],
-			/* expectedMissingMetadata= */ [ 'implementationId' ],
+			/* expectedMissingMetadata= */ [ 'implementationId', 'implementationType' ],
 			/* implementationSelector= */ null
 		);
 	}
@@ -2786,8 +2786,12 @@ describe( 'orchestrate with specified implementation selector', function () { //
 
 	{
 		class SecondImplementationSelector {
-			select( implementations ) {
-				return implementations[ 1 ];
+			* generate( implementations ) {
+				yield implementations[ 1 ];
+				yield implementations[ 0 ];
+				for ( let i = 2; i < implementations.length; ++i ) {
+					yield implementations[ i ];
+				}
 			}
 		}
 
@@ -2804,6 +2808,32 @@ describe( 'orchestrate with specified implementation selector', function () { //
 			/* implementationSelector= */ new SecondImplementationSelector()
 		);
 	}
+
+	attemptOrchestration(
+		/* testName= */ 'first implementation\'s programming language is nonexistent',
+		/* functionCall= */ readJSON( testDataDir( 'first-implementation-programming-language-nonexistent.json' ) ),
+		/* expectedResult= */ null,
+		/* expectedResultFile= */ testDataDir( 'first-implementation-nonexistent_expected.json' ),
+		/* expectedErrorState= */ false,
+		/* expectedErrorValue= */ null,
+		/* expectedErrorFile= */ null,
+		/* expectedExtraMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId' ],
+		/* implementationSelector= */ new FirstImplementationSelector()
+	);
+
+	attemptOrchestration(
+		/* testName= */ 'first implementation\'s evaluator is down',
+		/* functionCall= */ readJSON( testDataDir( 'first-implementation-evaluator-down.json' ) ),
+		/* expectedResult= */ null,
+		/* expectedResultFile= */ testDataDir( 'first-implementation-evaluator-down_expected.json' ),
+		/* expectedErrorState= */ false,
+		/* expectedErrorValue= */ null,
+		/* expectedErrorFile= */ null,
+		/* expectedExtraMetadata= */ [],
+		/* expectedMissingMetadata= */ [ 'implementationId' ],
+		/* implementationSelector= */ new FirstImplementationSelector()
+	);
 } );
 
 describe( 'orchestrate 3', function () { // eslint-disable-line no-undef

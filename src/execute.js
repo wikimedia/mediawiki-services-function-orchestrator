@@ -4,7 +4,7 @@ const { ArgumentState } = require( './argumentState.js' );
 const { Invariants } = require( './Invariants' );
 const ImplementationSelector = require( './implementationSelector.js' );
 const { BaseFrame, EmptyFrame } = require( './frame.js' );
-const { Composition, Implementation, Evaluated, ZResponseError } = require( './implementation.js' );
+const { Composition, Implementation, Evaluated, EvaluatorError, ZResponseError } = require( './implementation.js' );
 const { FirstImplementationSelector } = require( './implementationSelector.js' );
 const {
 	createZObjectKey,
@@ -533,6 +533,84 @@ async function addImplementationMetadata( implementation, result ) {
 }
 
 /**
+ * Run an implementation. Raise an exception if the implmentation was Evaluated
+ * and the evaluator service fails or is not running.
+ *
+ * @param {ZWrapper} zobject the Function Call to be run
+ * @param {Invariants} invariants
+ * @param {boolean} doValidate
+ * @param {Implementation} implementation
+ * @param {boolean} resolveInternals
+ * @param {Map} argumentStates
+ * @param {boolean} doEagerlyEvaluate
+ * @throws {EvaluatorError}
+ * @return {ZWrapper}
+ */
+async function runThatImplementation(
+	zobject,
+	invariants,
+	doValidate,
+	implementation,
+	resolveInternals,
+	argumentStates,
+	doEagerlyEvaluate
+) {
+	if ( implementation === null ) {
+		return makeWrappedResultEnvelope(
+			null,
+			makeErrorInNormalForm(
+				error.error_in_evaluation,
+				[ 'Could not create an implementation for ' + zobject.Z7K1.Z8K5.Z9K1 + '.' ]
+			)
+		);
+	}
+
+	const newScope = new Frame( implementation.getZ14().getScope() );
+	for ( const argumentState of argumentStates ) {
+		newScope.setArgument( argumentState.argumentDict.name, argumentState );
+	}
+
+	const argumentInstantiations = [];
+	if ( !( implementation instanceof Composition ) ) {
+		// Populate arguments from scope.
+		const instantiationPromises = [];
+		for ( const argumentState of argumentStates ) {
+			const argumentDict = argumentState.argumentDict;
+			instantiationPromises.push( async function () {
+				const instantiation = await newScope.retrieveArgument(
+					argumentDict.name, invariants,
+					implementation.hasLazyVariable( argumentDict.name ),
+					doValidate );
+				if (
+					instantiation.state !== 'ERROR' &&
+                        doEagerlyEvaluate &&
+                        !( implementation.hasLazyVariable( argumentDict.name ) ) ) {
+					const subResult = await eagerlyEvaluate(
+						instantiation.argumentDict.argument, invariants,
+						/* ignoreList= */ null, resolveInternals, doValidate );
+					if ( subResult !== null ) {
+						return ArgumentState.ERROR( getError( subResult ) );
+					}
+				}
+				return instantiation;
+			}() );
+		}
+		for ( const instantiation of await Promise.all( instantiationPromises ) ) {
+			if ( instantiation.state === 'ERROR' ) {
+				return makeWrappedResultEnvelope( null, instantiation.error );
+			}
+			argumentInstantiations.push( instantiation.argumentDict );
+		}
+	}
+
+	// Equip the implementation for its journey and execute.
+	implementation.setScope( newScope );
+	implementation.setInvariants( invariants );
+	implementation.setDoValidate( doValidate );
+	return await implementation.execute( zobject, argumentInstantiations );
+}
+
+/**
  * Same as {@link execute} but assumes a new frame has already been created in the scope and does
  * not recursively resolve the subobjects.
  *
@@ -599,7 +677,11 @@ async function executeInternal(
 				throw err; // unknown error; rethrow
 			}
 		}
-		implementations.push( impl );
+		if ( impl ) {
+			implementations.push( impl );
+		} else {
+			console.warn( 'Could not create implementation from ' + JSON.stringify( Z14 ) );
+		}
 	}
 
 	if ( implementations.length === 0 ) {
@@ -615,61 +697,33 @@ async function executeInternal(
 	if ( implementationSelector === null ) {
 		implementationSelector = new FirstImplementationSelector();
 	}
-	const implementation = implementationSelector.select( implementations );
 
-	if ( implementation === null ) {
+	let implementation = null, result = null, lastError = null;
+	for ( const generatedImplementation of implementationSelector.generate( implementations ) ) {
+		implementation = generatedImplementation;
+		try {
+			result = await runThatImplementation(
+				zobject, invariants, doValidate, implementation, resolveInternals,
+				argumentStates, doEagerlyEvaluate );
+			break;
+		} catch ( err ) {
+			if ( err instanceof EvaluatorError ) {
+				lastError = err;
+				continue;
+			} else {
+				throw err; // unknown error; rethrow
+			}
+		}
+	}
+
+	if ( result === null ) {
+		// lastError is guaranteed to be set.
 		return makeWrappedResultEnvelope(
 			null,
 			makeErrorInNormalForm(
 				error.error_in_evaluation,
-				[ 'Could not create an implementation for ' + zobject.Z7K1.Z8K5.Z9K1 + '.' ]
-			)
-		);
+				[ lastError.message ] ) );
 	}
-
-	const newScope = new Frame( implementation.getZ14().getScope() );
-	for ( const argumentState of argumentStates ) {
-		newScope.setArgument( argumentState.argumentDict.name, argumentState );
-	}
-
-	const argumentInstantiations = [];
-	if ( !( implementation instanceof Composition ) ) {
-		// Populate arguments from scope.
-		const instantiationPromises = [];
-		for ( const argumentState of argumentStates ) {
-			const argumentDict = argumentState.argumentDict;
-			instantiationPromises.push( async function () {
-				const instantiation = await newScope.retrieveArgument(
-					argumentDict.name, invariants,
-					implementation.hasLazyVariable( argumentDict.name ),
-					doValidate );
-				if (
-					instantiation.state !== 'ERROR' &&
-                        doEagerlyEvaluate &&
-                        !( implementation.hasLazyVariable( argumentDict.name ) ) ) {
-					const subResult = await eagerlyEvaluate(
-						instantiation.argumentDict.argument, invariants,
-						/* ignoreList= */ null, resolveInternals, doValidate );
-					if ( subResult !== null ) {
-						return ArgumentState.ERROR( getError( subResult ) );
-					}
-				}
-				return instantiation;
-			}() );
-		}
-		for ( const instantiation of await Promise.all( instantiationPromises ) ) {
-			if ( instantiation.state === 'ERROR' ) {
-				return makeWrappedResultEnvelope( null, instantiation.error );
-			}
-			argumentInstantiations.push( instantiation.argumentDict );
-		}
-	}
-
-	// Equip the implementation for its journey and execute.
-	implementation.setScope( newScope );
-	implementation.setInvariants( invariants );
-	implementation.setDoValidate( doValidate );
-	let result = await implementation.execute( zobject, argumentInstantiations );
 
 	// Execute result if implementation is lazily evaluated.
 	if ( implementation.returnsLazy() ) {
