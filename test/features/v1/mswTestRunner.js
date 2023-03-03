@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require( '../../utils/assert.js' );
-const { getZMapValue, getError } =
+const { getZMapValue, getError, isVoid, isZMap } =
 	require( '../../../function-schemata/javascript/src/utils.js' );
 const { orchestrate } = require( '../../../src/orchestrate.js' );
 const { Evaluator } = require( '../../../src/Evaluator.js' );
@@ -9,8 +9,7 @@ const { Invariants } = require( '../../../src/Invariants.js' );
 const { ReferenceResolver } = require( '../../../src/db.js' );
 const { readJSON } = require( '../../../src/fileUtils.js' );
 const { writeJSON } = require( '../../utils/testFileUtils.js' );
-const { makeVoid, isZMap } = require( '../../../function-schemata/javascript/src/utils' );
-const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize' );
+const canonicalize = require( '../../../function-schemata/javascript/src/canonicalize.js' );
 
 const WIKI_URI = 'http://thewiki';
 const EVAL_URI = 'http://theevaluator';
@@ -31,6 +30,20 @@ function getInvariants( doValidate ) {
 	];
 	const orchestratorConfig = { doValidate: doValidate };
 	return new Invariants( resolver, evaluators, orchestratorConfig );
+}
+
+function createExpectation( expectedValue, failureString, doCanonicalize = false ) {
+	if ( expectedValue === null ) {
+		return function ( actualResult ) {
+			assert.deepEqual( isVoid( actualResult ), true, failureString );
+		};
+	}
+	if ( doCanonicalize ) {
+		expectedValue = canonicalize( expectedValue ).Z22K1;
+	}
+	return function ( actualValue ) {
+		assert.deepEqual( actualValue, expectedValue, failureString );
+	};
 }
 
 /**
@@ -62,12 +75,10 @@ const attemptOrchestrationTestMode = function (
 	( skip ? it.skip : it )( // eslint-disable-line no-undef
 		'orchestration test: ' + testName,
 		async () => {
-			if ( expectedResult === null ) {
-				expectedResult = makeVoid( /* canonical= */ true );
-			} else {
-				// There are still some expected result files in normal form
-				expectedResult = canonicalize( expectedResult, /* withVoid= */ true ).Z22K1;
-			}
+			const resultExpectationFailure = testName + ' returns the expected output, if any';
+			// There are still some expected result files in normal form, so canonicalize here.
+			const resultExpectation = createExpectation(
+				expectedResult, resultExpectationFailure, /* doCanonicalize= */ true );
 
 			let result = {};
 			let thrownError = null;
@@ -83,21 +94,19 @@ const attemptOrchestrationTestMode = function (
 			}
 			assert.isNull( thrownError, testName + ' should not throw an execution/validation error' );
 
-			assert.deepEqual( result.Z22K1, expectedResult, testName + ' returns the expected output, if any' );
+			resultExpectation( result.Z22K1 );
 
 			assert.isTrue( isZMap( result.Z22K2 ), testName + ' returns a ZMap for Z22K2' );
 			const responseError = getError( result );
 			if ( expectedErrorState ) {
 				assert.isNotNull( responseError, testName + ' should be in an execution/validation error state' );
 				if ( expectedErrorValue !== null ) {
-					assert.deepEqual(
-						responseError,
-						expectedErrorValue,
-						testName + ' returns the expected error, if any'
-					);
+					const errorExpectation = createExpectation( expectedErrorValue, testName + ' returns the expected error, if any' );
+					errorExpectation( responseError );
 				}
 			} else {
-				assert.deepEqual( responseError, makeVoid( /* canonical= */ true ), testName + ' should not be in an execution/validation error state' );
+				const errorExpectation = createExpectation( expectedErrorValue, testName + ' should not be in an execution/validation error state' );
+				errorExpectation( responseError );
 			}
 
 			// Note: Keep this list in sync with the key block in the orchestrate() function,
