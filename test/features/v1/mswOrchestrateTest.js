@@ -10,7 +10,7 @@ const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhos
 const { attemptOrchestration, WIKI_URI, EVAL_URI } = require( './mswTestRunner.js' );
 const { FirstImplementationSelector, RandomImplementationSelector } = require( '../../../src/implementationSelector' );
 
-describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
+describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	const wikiStub = new MediaWikiStub();
 	const evaluatorStub = new EvaluatorStub();
 
@@ -1824,9 +1824,6 @@ describe( 'orchestrate 1', function () { // eslint-disable-line no-undef
 		);
 	}
 
-} );
-
-describe( 'orchestrate 2', function () { // eslint-disable-line no-undef
 	attemptOrchestration(
 		/* testName= */ 'function call for Z802 with reference to Z902',
 		/* functionCall= */ readJSON( testDataDir( 'Z802_false.json' ) ),
@@ -2724,9 +2721,6 @@ describe( 'orchestrate 2', function () { // eslint-disable-line no-undef
 		/* implementationSelector= */ null
 
 	);
-} );
-
-describe( 'orchestrate with specified implementation selector', function () { // eslint-disable-line no-undef
 
 	// Same as 'function call for Z804', except with specified implementation selector
 	attemptOrchestration(
@@ -2834,9 +2828,7 @@ describe( 'orchestrate with specified implementation selector', function () { //
 		/* expectedMissingMetadata= */ [ 'implementationId' ],
 		/* implementationSelector= */ new FirstImplementationSelector()
 	);
-} );
 
-describe( 'orchestrate 3', function () { // eslint-disable-line no-undef
 	const testBadFunctionCall = function ( name, zobject ) {
 		return attemptOrchestration(
 			/* testName= */ name,
