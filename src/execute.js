@@ -18,7 +18,7 @@ const {
 const { MutationType, ZWrapper } = require( './ZWrapper' );
 const { resolveListType } = require( './builtins.js' );
 const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
-const { convertZListToItemArray, getError, isString, setZMapValue } = require( '../function-schemata/javascript/src/utils.js' );
+const { convertZListToItemArray, findIdentity, getError, isString, setZMapValue } = require( '../function-schemata/javascript/src/utils.js' );
 const { validatesAsArgumentReference, validatesAsFunctionCall, validatesAsReference, validatesAsString, validatesAsType } = require( '../function-schemata/javascript/src/schema.js' );
 const { compareTypes } = require( '../function-schemata/javascript/src/compareTypes.js' );
 
@@ -130,18 +130,22 @@ async function resolveTypes( Z1, invariants, doValidate = true ) {
 
 class KeyList {
 
-	constructor( key, lastList ) {
+	constructor( key, lastList, lastType ) {
 		this.key = key;
 		this.lastList = lastList;
 		this.seenKeys = new Set( lastList === null ? undefined : lastList.seenKeys );
 		this.seenKeys.add( this.key );
+		this.seenTypes = new Set( lastList === null ? undefined : lastList.seenTypes );
+		this.seenTypes.add( lastType );
 		this.length = 1 + ( lastList === null ? 0 : lastList.length );
 	}
 
 	getAllKeys() {
 		let result;
 		if ( this.lastList !== null ) {
-			result = this.lastList.getAllKeys();
+			result = new Array( this.lastList.getAllKeys() );
+		} else {
+			result = [];
 		}
 		result.push( this.key );
 		return result;
@@ -189,21 +193,31 @@ async function eagerlyEvaluate(
 	}
 
 	const subResultPromises = [];
+	let typeIdentity;
+	if ( isString( zobject.Z1K1 ) ) {
+		typeIdentity = zobject.Z1K1;
+	} else {
+		typeIdentity = JSON.stringify( findIdentity( zobject.Z1K1 ) );
+	}
 	for ( const key of zobject.keys() ) {
 		if ( ignoreKeys.has( key ) ) {
 			continue;
 		}
-		if ( keyList !== null && keyList.seenKeys.has( key ) && keyList.length > 20 ) {
-			// TODO (T332944): Test that this error is propagated correctly.
-			return makeWrappedResultEnvelope(
-				null,
-				makeErrorInNormalForm(
-					error.argument_value_error,
-					[
-						'Aborting because argument resolution contains cyclical references:',
-						keyList.getAllKeys().join( ',' ) ] ) );
+		if ( keyList !== null && keyList.seenKeys.has( key ) ) {
+			if ( keyList.seenTypes.has( typeIdentity ) ) {
+				continue;
+			} else if ( keyList.length > 20 ) {
+				// TODO (T332944): Test that this error is propagated correctly.
+				return makeWrappedResultEnvelope(
+					null,
+					makeErrorInNormalForm(
+						error.argument_value_error,
+						[
+							'Aborting because argument resolution contains cyclical references:',
+							keyList.getAllKeys().join( ',' ) ] ) );
+			}
 		}
-		const nextKeyList = new KeyList( key, keyList );
+		const nextKeyList = new KeyList( key, keyList, typeIdentity );
 		const oldValue = zobject[ key ];
 		let oldValueJSON = oldValue;
 		if ( oldValueJSON instanceof ZWrapper ) {
