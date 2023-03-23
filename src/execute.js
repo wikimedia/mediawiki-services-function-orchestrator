@@ -194,7 +194,9 @@ async function eagerlyEvaluate(
 			continue;
 		}
 		if ( keyList !== null && keyList.seenKeys.has( key ) && keyList.length > 20 ) {
+			// TODO (T332944): Test that this error is propagated correctly.
 			return makeWrappedResultEnvelope(
+				null,
 				makeErrorInNormalForm(
 					error.argument_value_error,
 					[
