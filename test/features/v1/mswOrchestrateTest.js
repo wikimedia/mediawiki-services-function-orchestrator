@@ -1033,6 +1033,24 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
+		wikiStub.setZId( 'Z1010101', null, /* error= */ true );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z801',
+			Z801K1: 'Z1010101'
+		};
+		attemptOrchestration(
+			/* testName= */ 'attempt to retrieve object not present on wiki',
+			/* functionCall= */ call,
+			/* expectedResult= */ null,
+			/* expectedResultFile= */ null,
+			/* expectedErrorState= */ true,
+			/* expectedErrorValue= */ null,
+			/* expectedErrorFile= */ testDataDir( 'reference-to-unused-ZID_expected.json' )
+		);
+	}
+
+	{
 		wikiStub.setZId( 'Z10081', readJSON( testDataDir( 'Z10081.json' ) ) );
 		wikiStub.setZId( 'Z10086', readJSON( testDataDir( 'Z10086.json' ) ) );
 		wikiStub.setZId( 'Z10084', readJSON( testDataDir( 'Z10084.json' ) ) );

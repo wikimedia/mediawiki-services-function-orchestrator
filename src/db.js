@@ -1,6 +1,7 @@
 'use strict';
 
 const fetch = require( '../lib/fetch.js' );
+const { error, makeErrorInNormalForm } = require( '../function-schemata/javascript/src/error.js' );
 const normalize = require( '../function-schemata/javascript/src/normalize' );
 const { makeWrappedResultEnvelope } = require( './utils.js' );
 const { ZWrapper } = require( './ZWrapper' );
@@ -58,17 +59,25 @@ class ReferenceResolver {
 			const result = await fetched.json();
 
 			await Promise.all( [ ...unresolved ].map( async ( ZID ) => {
-				const zobject = JSON.parse( result[ ZID ].wikilambda_fetch );
+				const fetchResult = result[ ZID ];
+				if ( fetchResult === undefined ) {
+					const Z5 = makeWrappedResultEnvelope(
+						null,
+						makeErrorInNormalForm(
+							error.zid_not_found,
+							[ ZID ]
+						)
+					);
+					dereferenced.set( ZID, Z5 );
+					this.referenceMap.set( ZID, Z5 );
+					return;
+				}
+				const zobject = JSON.parse( fetchResult.wikilambda_fetch );
 				// Dereferenced objects are created in an empty scope because they are not supposed
 				// to refer to any local variable.
 				const normalized =
 					ZWrapper.create( normalize( zobject,
 						/* generically= */true, /* withVoid= */ true ), new EmptyFrame() );
-				// TODO (T304971): We should include the entire Z22 in the result.
-				// We should also generate Z22s when the call to the wiki fails.
-				// Given that the wiki will return no results if any single ZID
-				// fails, we should provisionally consider making separate calls
-				// to the wiki for each ZID.
 				dereferenced.set( ZID, normalized );
 				this.referenceMap.set( ZID, normalized );
 			} ) );
