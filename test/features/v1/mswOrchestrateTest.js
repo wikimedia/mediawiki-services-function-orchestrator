@@ -1750,6 +1750,52 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 	}
 
 	{
+		wikiStub.setZId( 'Z30321', readJSON( testDataDir( 'Z30321.json' ) ) );
+		wikiStub.setZId( 'Z30322', readJSON( testDataDir( 'Z30322.json' ) ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z801',
+			Z801K1: {
+				Z1K1: 'Z30321',
+				Z30321K1: 'Z30322'
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that cyclical references are handled kinda intelligently',
+			/* functionCall= */ call,
+			/* expectedResult= */ null,
+			/* expectedResultFile= */ testDataDir( 'expected-echoed-kleenean-reference.json' ),
+			/* expectedErrorState= */ false,
+			/* expectedErrorValue= */ null,
+			/* expectedErrorFile = */ null
+		);
+	}
+
+	{
+		wikiStub.setZId( 'Z40321', readJSON( testDataDir( 'Z40321.json' ) ) );
+		wikiStub.setZId( 'Z40322', readJSON( testDataDir( 'Z40322.json' ) ) );
+		wikiStub.setZId( 'Z40421', readJSON( testDataDir( 'Z40421.json' ) ) );
+		wikiStub.setZId( 'Z40422', readJSON( testDataDir( 'Z40422.json' ) ) );
+		const call = {
+			Z1K1: 'Z7',
+			Z7K1: 'Z801',
+			Z801K1: {
+				Z1K1: 'Z40321',
+				Z40321K1: 'Z40322'
+			}
+		};
+		attemptOrchestration(
+			/* testName= */ 'Test that mutually recursive cyclical references are handled kinda intelligently',
+			/* functionCall= */ call,
+			/* expectedResult= */ null,
+			/* expectedResultFile= */ testDataDir( 'expected-echoed-unkleenean-reference.json' ),
+			/* expectedErrorState= */ false,
+			/* expectedErrorValue= */ null,
+			/* expectedErrorFile = */ null
+		);
+	}
+
+	{
 		const argument = {
 			Z1K1: 'Z7',
 			Z7K1: {
