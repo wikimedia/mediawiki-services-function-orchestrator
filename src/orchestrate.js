@@ -114,6 +114,7 @@ async function orchestrate(
 	try {
 		currentResponseEnvelope = await returnOnFirstError( currentResponseEnvelope, callTuples );
 	} catch ( e ) {
+		logger.error( e );
 		const message = `Call tuples failed in returnOnFirstError. Error: ${e}.`;
 		logger.error( message );
 		// The zobject provides context for a Z507/Evaluation error (and will be quoted there)
