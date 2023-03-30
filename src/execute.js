@@ -402,6 +402,7 @@ async function getArgumentStates( zobject, invariants, doValidate = true ) {
 	const Z7K1Envelope = await ( zobject.resolveEphemeral(
 		[ 'Z7K1' ], invariants, /* ignoreList= */ null, /* resolveInternals= */ true, doValidate ) );
 	if ( responseEnvelopeContainsError( Z7K1Envelope ) ) {
+		// TODO (T314927): Actually return the error in Z7K1Envelope too.
 		return [ ArgumentState.ERROR( 'Could not dereference Z7K1' ) ];
 	}
 	const Z7K1 = Z7K1Envelope.Z22K1;
@@ -410,6 +411,7 @@ async function getArgumentStates( zobject, invariants, doValidate = true ) {
 	// This usually happens because dereferencing can't occur during validation
 	// (and is expected).
 	if ( responseEnvelopeContainsError( Z8K1Envelope ) ) {
+		// TODO (T314927): Actually return the error in Z8K1Envelope too.
 		return [ ArgumentState.ERROR( 'Could not dereference Z8K1' ) ];
 	}
 	const Z8K1 = Z8K1Envelope.Z22K1;
