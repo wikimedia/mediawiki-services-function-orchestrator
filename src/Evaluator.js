@@ -4,7 +4,7 @@ const fetch = require( '../lib/fetch.js' );
 const { convertWrappedZObjectToVersionedBinary } = require( '../function-schemata/javascript/src/serialize.js' );
 const WebSocket = require( 'ws' );
 
-const AVRO_SCHEMA_VERSION_ = '0.0.2';
+const AVRO_SCHEMA_VERSION_ = '0.0.4';
 
 /**
  * Function evaluator. Wraps API calls to the function-evaluator service, which
@@ -42,7 +42,8 @@ class Evaluator {
 	async evaluate_( functionCall ) {
 		const serialized = convertWrappedZObjectToVersionedBinary( {
 			zobject: functionCall,
-			reentrant: this.useReentrance_
+			reentrant: this.useReentrance_,
+			remainingTime: this.invariants_.getRemainingTime()
 		}, /* version= */ AVRO_SCHEMA_VERSION_ );
 		return await fetch(
 			this.evaluatorUri_, {

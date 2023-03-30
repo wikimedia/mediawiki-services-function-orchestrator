@@ -14,7 +14,7 @@ const canonicalize = require( '../../../function-schemata/javascript/src/canonic
 const WIKI_URI = 'http://thewiki';
 const EVAL_URI = 'http://theevaluator';
 
-function getInvariants( doValidate ) {
+function getInvariants( doValidate, remainingTime ) {
 	const resolver = new ReferenceResolver( WIKI_URI );
 	const evaluators = [
 		new Evaluator( {
@@ -29,7 +29,10 @@ function getInvariants( doValidate ) {
 			useReentrance: false } )
 	];
 	const orchestratorConfig = { doValidate: doValidate };
-	return new Invariants( resolver, evaluators, orchestratorConfig );
+	function getRemainingTime() {
+		return remainingTime;
+	}
+	return new Invariants( resolver, evaluators, orchestratorConfig, getRemainingTime );
 }
 
 function createExpectation( expectedValue, failureString, doCanonicalize = false ) {
@@ -83,7 +86,7 @@ const attemptOrchestrationTestMode = function (
 			let result = {};
 			let thrownError = null;
 
-			const invariants = getInvariants( doValidate );
+			const invariants = getInvariants( doValidate, 15 );
 
 			try {
 				result = await orchestrate( functionCall, invariants, implementationSelector );
@@ -151,7 +154,7 @@ const attemptOrchestrationRegenerationMode = function (
 	( skip ? it.skip : it )( // eslint-disable-line no-undef
 		'regenerating output for ' + testName,
 		async () => {
-			const invariants = getInvariants( doValidate );
+			const invariants = getInvariants( doValidate, 15 );
 
 			// Run the orchestrator.
 			let result;

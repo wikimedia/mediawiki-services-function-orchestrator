@@ -4,10 +4,11 @@
  * Encapsulates objects which will not change over the course of a function execution.
  */
 class Invariants {
-	constructor( resolver, evaluators, orchestratorConfig ) {
+	constructor( resolver, evaluators, orchestratorConfig, getRemainingTime ) {
 		this.resolver_ = resolver;
 		this.languageToEvaluatorIndex_ = new Map();
 		this.orchestratorConfig_ = Object.freeze( orchestratorConfig );
+		this.getRemainingTime_ = getRemainingTime;
 
 		// We rely on the ordering of these evaluators, so we prohibit modifications
 		// of the list.
@@ -39,6 +40,10 @@ class Invariants {
 			return null;
 		}
 		return this.evaluators_[ evaluatorIndex ];
+	}
+
+	getRemainingTime() {
+		return this.getRemainingTime_();
 	}
 }
 

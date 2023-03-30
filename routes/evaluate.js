@@ -81,6 +81,10 @@ router.post( '/', async function ( req, res ) {
 		20000
 	);
 
+	function getRemainingTime() {
+		return timer._idleStart + timer._idleTimeout - Date.now();
+	}
+
 	const ZObject = req.body.zobject;
 	const useReentrance = req.body.useReentrance || false;
 
@@ -116,7 +120,7 @@ router.post( '/', async function ( req, res ) {
 	const resolver = new ReferenceResolver( wikiUri );
 	const evaluators = evaluatorConfigs.map(
 		( evaluatorConfig ) => new Evaluator( evaluatorConfig ) );
-	const invariants = new Invariants( resolver, evaluators, orchestratorConfig );
+	const invariants = new Invariants( resolver, evaluators, orchestratorConfig, getRemainingTime );
 
 	// Orchestrate!
 	const response = await orchestrate( ZObject, invariants );
