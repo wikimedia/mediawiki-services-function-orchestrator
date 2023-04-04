@@ -22,7 +22,7 @@
 const Benchmark = require( 'benchmark' );
 const { makeMappedResultEnvelope } = require( '../function-schemata/javascript/src/utils.js' );
 const { readJSON } = require( '../src/fileUtils.js' );
-const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../lib/mockUtils.js' );
+const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../test/mockUtils.js' );
 const { setupServer } = require( 'msw/node' );
 const orchestrate = require( '../src/orchestrate.js' );
 

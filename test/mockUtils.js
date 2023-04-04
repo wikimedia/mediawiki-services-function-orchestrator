@@ -36,12 +36,13 @@ class MediaWikiStub {
 	 *
 	 * @param {string} zid The ZID you want to set up a fake for.
 	 * @param {*} value The JSON definition for this zid.
+	 * @param {*} error
 	 */
 	setZId( zid, value = null, error = false ) {
 		this.wiki_[ zid ] = {
-            'value': value,
-            'error': error
-        };
+			value: value,
+			error: error
+		};
 	}
 
 	/**
@@ -130,13 +131,13 @@ function mockMediaWiki( mediaWikiUri, mediaWikiStub ) {
 		let result = {};
 
 		for ( const ZID of zids.split( '|' ) ) {
-            const retrievedObject = mediaWikiStub.getZId( ZID );
-            if ( retrievedObject.error ) {
-                // TODO (T333022): This behavior reflects the current wikilambda_fetch
-                // API; change it if that changes.
-                result = { 'problem': 'bad' };
-                break;
-            }
+			const retrievedObject = mediaWikiStub.getZId( ZID );
+			if ( retrievedObject.error ) {
+				// TODO (T333022): This behavior reflects the current wikilambda_fetch
+				// API; change it if that changes.
+				result = { problem: 'bad' };
+				break;
+			}
 			result[ ZID ] = {
 				wikilambda_fetch: JSON.stringify( retrievedObject.value )
 			};
@@ -155,14 +156,14 @@ function mockMediaWiki( mediaWikiUri, mediaWikiStub ) {
  * @return {*} A REST mock handler. Needed for server setup.
  */
 function mockEvaluator( evaluatorUri, evaluatorStub ) {
-    return rest.post( evaluatorUri, ( req, res, ctx ) => {
-        const buffer = Buffer.from( req.body );
-        const functionCall = getWrappedZObjectFromVersionedBinary( buffer );
-        const ZID = functionCall.functionName;
-        const { statusCode, callback } = evaluatorStub.getZId( ZID );
-        const value = normalize( callback( functionCall ) ).Z22K1;
-        return res( ctx.status( statusCode ), ctx.json( value ) );
-    } );
+	return rest.post( evaluatorUri, ( req, res, ctx ) => {
+		const buffer = Buffer.from( req.body );
+		const functionCall = getWrappedZObjectFromVersionedBinary( buffer );
+		const ZID = functionCall.functionName;
+		const { statusCode, callback } = evaluatorStub.getZId( ZID );
+		const value = normalize( callback( functionCall ) ).Z22K1;
+		return res( ctx.status( statusCode ), ctx.json( value ) );
+	} );
 }
 
 /**
@@ -171,6 +172,7 @@ function mockEvaluator( evaluatorUri, evaluatorStub ) {
  * @return {*} A REST mock handler. Needed for server setup.
  */
 function mockLocalhost() {
+	// eslint-disable-next-line no-unused-vars
 	return rest.get( 'http://localhost:6254/*', ( req, res, ctx ) => {} );
 }
 
