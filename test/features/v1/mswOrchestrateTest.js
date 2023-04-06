@@ -40,9 +40,15 @@ describe( 'orchestrate', function () { // eslint-disable-line no-undef
 		evaluatorStub.setZId( 'Z1003', ( unused ) => evaluatorResponse, null ); // eslint-disable-line no-unused-vars
 		// Set evaluator response for string numeral increment function.
 		// Used in scott numeral tests to convert scott numerals to strings.
-		evaluatorStub.setZId( 'Z40002', ( zobject ) => makeMappedResultEnvelope( ( parseInt( zobject.Z40002K1.Z6K1 ) + 1 ).toString(), null ) );
+		evaluatorStub.setZId(
+			'Z40002',
+			( zobject ) => makeMappedResultEnvelope(
+				( parseInt( zobject.functionArguments.Z40002K1.Z6K1 ) + 1 ).toString() ) );
 		// Set evaluator response for test "Test with many on-wiki custom types."
-		evaluatorStub.setZId( 'Z10143', ( Z10143 ) => makeMappedResultEnvelope( JSON.stringify( Z10143.Z10143K1 ), null ) );
+		evaluatorStub.setZId(
+			'Z10143',
+			( zobject ) => makeMappedResultEnvelope(
+				JSON.stringify( zobject.functionArguments.Z10143K1 ) ) );
 		return mockServiceWorker.listen();
 	} );
 
