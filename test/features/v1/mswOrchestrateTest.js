@@ -6,7 +6,7 @@ const { setupServer } = require( 'msw/node' );
 const { readJSON } = require( '../../../src/fileUtils.js' );
 const { testDataDir, schemataDefinitionsDir } = require( '../../utils/testFileUtils.js' );
 const { makeErrorInNormalForm, error } = require( '../../../function-schemata/javascript/src/error.js' );
-const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../../../lib/mockUtils.js' );
+const { MediaWikiStub, EvaluatorStub, mockMediaWiki, mockEvaluator, mockLocalhost } = require( '../../mockUtils.js' );
 const { attemptOrchestration, WIKI_URI, EVAL_URI } = require( './mswTestRunner.js' );
 const { FirstImplementationSelector, RandomImplementationSelector } = require( '../../../src/implementationSelector' );
 
