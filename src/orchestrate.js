@@ -94,7 +94,7 @@ async function orchestrate(
 		);
 	}
 
-	logger.info( 'Z7K1 is: ' + JSON.stringify( zobject.Z7K1 ) );
+	logger.info( 'function call is: ' + JSON.stringify( zobject ) );
 
 	const callTuples = [
 		[ normalize, [ /* generically= */true, /* withVoid= */ true ], 'normalize' ],
