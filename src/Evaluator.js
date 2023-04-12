@@ -75,10 +75,14 @@ class Evaluator {
 				const { orchestrate } = require( './orchestrate' );
 				theMessage = theMessage.replace( /^call\s*/, '' );
 				const Z7 = JSON.parse( theMessage );
-				const normalResult = ( await orchestrate(
-					Z7, this.invariants_, /* implementationSelector= */ null,
-					/* returnNormal= */ true ) ).Z22K1;
-				client.send( JSON.stringify( normalResult ) );
+				if ( this.invariants_.getRemainingTime() > 0 ) {
+					const normalResult = ( await orchestrate(
+						Z7, this.invariants_, /* implementationSelector= */ null,
+						/* returnNormal= */ true ) ).Z22K1;
+					client.send( JSON.stringify( normalResult ) );
+				}
+				// TODO (T334485): Send a death threat to the evaluator if getRemainingTime
+				// <= 0.
 			}
 		} );
 		client.on( 'close', () => {
