@@ -201,8 +201,14 @@ class Evaluated extends Implementation {
 		// Implementation may need to be dereferenced.
 		await traverseZList( Z8K4, async function ( tail ) {
 			if ( tail.K1.Z14K3 !== undefined ) {
+				// Code string.
 				await ( tail.resolveKey(
 					[ 'K1', 'Z14K3', 'Z16K2' ], implementation.invariants_,
+					/* ignoreList= */ null,
+					/* resolveInternals= */ false, implementation.doValidate_ ) );
+				// Programming language string.
+				await ( tail.resolveKey(
+					[ 'K1', 'Z14K3', 'Z16K1', 'Z61K1' ], implementation.invariants_,
 					/* ignoreList= */ null,
 					/* resolveInternals= */ false, implementation.doValidate_ ) );
 			}
@@ -222,7 +228,9 @@ class Evaluated extends Implementation {
 		}
 
 		// Get programming language from the Function Call's first Implementation.
-		const programmingLanguage = Z7.Z7K1.Z8K4.K1.Z14K3.Z16K1.Z61K1.Z6K1;
+		const firstImplementation = Z7.Z7K1.Z8K4.K1;
+		const codeObject = firstImplementation.Z14K3;
+		const programmingLanguage = codeObject.Z16K1.Z61K1.Z6K1;
 		const evaluator = this.invariants_.evaluatorFor( programmingLanguage );
 		if ( evaluator === null ) {
 			throw new EvaluatorError( `No evaluator is available for ${programmingLanguage}` );
